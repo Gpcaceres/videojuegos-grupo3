@@ -81,7 +81,7 @@ type Mode struct {
 var Modes = []Mode{
 	{LevelMediumAI, "medium-ai", "MediumAI", "IA intermedia: gana y bloquea con el método numérico, si no, juega al azar.", "MediumAIController", true, "Paul Moreno"},
 	{LevelUnbeatableAI, "unbeatable-ai", "UnbeatableAI", "Método numérico heurístico (pesos 1/3/0). Casos 1, 2 y 3.", "UnbeatableAIController", true, "Grupo 3"},
-	{LevelMinimax, "unbeatable-minmax", "UnbeatableAI · MinMax", "IA imbatible con el algoritmo Minimax.", "UnbeatableAIController (MiniMax)", false, "Diana Guerra"},
+	{LevelMinimax, "unbeatable-minmax", "UnbeatableAI · MinMax", "IA imbatible con el algoritmo Minimax.", "UnbeatableAIController (MiniMax)", true, "Diana Guerra"},
 }
 
 // FindMode busca un modo por nivel.
