@@ -95,25 +95,157 @@ func (c *MediumAIController) ShowNPCMove(b *Board, index int) {
 	c.ArrayMoves[index] = 3
 }
 
-// HeuristicNumericalMethod keeps the original line order: sum 6 wins for the
-// NPC; otherwise sum 2 blocks the user; otherwise choose a random empty cell.
 func (c *MediumAIController) HeuristicNumericalMethod() int {
-	for _, target := range []int{6, 2} {
-		for _, line := range WinningLines {
-			if c.ArrayMoves[line[0]]+c.ArrayMoves[line[1]]+c.ArrayMoves[line[2]] == target {
-				if c.ArrayMoves[line[0]] == 0 {
-					return line[0]
-				} else if c.ArrayMoves[line[1]] == 0 {
-					return line[1]
-				} else if c.ArrayMoves[line[2]] == 0 {
-					return line[2]
-				}
-			}
+	index := 0
+	if c.ArrayMoves[0]+c.ArrayMoves[1]+c.ArrayMoves[2] == 6 {
+		if c.ArrayMoves[0] == 0 {
+			index = 0
+		} else if c.ArrayMoves[1] == 0 {
+			index = 1
+		} else if c.ArrayMoves[2] == 0 {
+			index = 2
 		}
+		return index
+	} else if c.ArrayMoves[3]+c.ArrayMoves[4]+c.ArrayMoves[5] == 6 {
+		if c.ArrayMoves[3] == 0 {
+			index = 3
+		} else if c.ArrayMoves[4] == 0 {
+			index = 4
+		} else if c.ArrayMoves[5] == 0 {
+			index = 5
+		}
+		return index
+	} else if c.ArrayMoves[6]+c.ArrayMoves[7]+c.ArrayMoves[8] == 6 {
+		if c.ArrayMoves[6] == 0 {
+			index = 6
+		} else if c.ArrayMoves[7] == 0 {
+			index = 7
+		} else if c.ArrayMoves[8] == 0 {
+			index = 8
+		}
+		return index
+	} else if c.ArrayMoves[0]+c.ArrayMoves[3]+c.ArrayMoves[6] == 6 {
+		if c.ArrayMoves[0] == 0 {
+			index = 0
+		} else if c.ArrayMoves[3] == 0 {
+			index = 3
+		} else if c.ArrayMoves[6] == 0 {
+			index = 6
+		}
+		return index
+	} else if c.ArrayMoves[1]+c.ArrayMoves[4]+c.ArrayMoves[7] == 6 {
+		if c.ArrayMoves[1] == 0 {
+			index = 1
+		} else if c.ArrayMoves[4] == 0 {
+			index = 4
+		} else if c.ArrayMoves[7] == 0 {
+			index = 7
+		}
+		return index
+	} else if c.ArrayMoves[2]+c.ArrayMoves[5]+c.ArrayMoves[8] == 6 {
+		if c.ArrayMoves[2] == 0 {
+			index = 2
+		} else if c.ArrayMoves[5] == 0 {
+			index = 5
+		} else if c.ArrayMoves[8] == 0 {
+			index = 8
+		}
+		return index
+	} else if c.ArrayMoves[0]+c.ArrayMoves[4]+c.ArrayMoves[8] == 6 {
+		if c.ArrayMoves[0] == 0 {
+			index = 0
+		} else if c.ArrayMoves[4] == 0 {
+			index = 4
+		} else if c.ArrayMoves[8] == 0 {
+			index = 8
+		}
+		return index
+	} else if c.ArrayMoves[2]+c.ArrayMoves[4]+c.ArrayMoves[6] == 6 {
+		if c.ArrayMoves[2] == 0 {
+			index = 2
+		} else if c.ArrayMoves[4] == 0 {
+			index = 4
+		} else if c.ArrayMoves[6] == 0 {
+			index = 6
+		}
+		return index
+	} else if c.ArrayMoves[0]+c.ArrayMoves[1]+c.ArrayMoves[2] == 2 {
+		if c.ArrayMoves[0] == 0 {
+			index = 0
+		} else if c.ArrayMoves[1] == 0 {
+			index = 1
+		} else if c.ArrayMoves[2] == 0 {
+			index = 2
+		}
+		return index
+	} else if c.ArrayMoves[3]+c.ArrayMoves[4]+c.ArrayMoves[5] == 2 {
+		if c.ArrayMoves[3] == 0 {
+			index = 3
+		} else if c.ArrayMoves[4] == 0 {
+			index = 4
+		} else if c.ArrayMoves[5] == 0 {
+			index = 5
+		}
+		return index
+	} else if c.ArrayMoves[6]+c.ArrayMoves[7]+c.ArrayMoves[8] == 2 {
+		if c.ArrayMoves[6] == 0 {
+			index = 6
+		} else if c.ArrayMoves[7] == 0 {
+			index = 7
+		} else if c.ArrayMoves[8] == 0 {
+			index = 8
+		}
+		return index
+	} else if c.ArrayMoves[0]+c.ArrayMoves[3]+c.ArrayMoves[6] == 2 {
+		if c.ArrayMoves[0] == 0 {
+			index = 0
+		} else if c.ArrayMoves[3] == 0 {
+			index = 3
+		} else if c.ArrayMoves[6] == 0 {
+			index = 6
+		}
+		return index
+	} else if c.ArrayMoves[1]+c.ArrayMoves[4]+c.ArrayMoves[7] == 2 {
+		if c.ArrayMoves[1] == 0 {
+			index = 1
+		} else if c.ArrayMoves[4] == 0 {
+			index = 4
+		} else if c.ArrayMoves[7] == 0 {
+			index = 7
+		}
+		return index
+	} else if c.ArrayMoves[2]+c.ArrayMoves[5]+c.ArrayMoves[8] == 2 {
+		if c.ArrayMoves[2] == 0 {
+			index = 2
+		} else if c.ArrayMoves[5] == 0 {
+			index = 5
+		} else if c.ArrayMoves[8] == 0 {
+			index = 8
+		}
+		return index
+	} else if c.ArrayMoves[0]+c.ArrayMoves[4]+c.ArrayMoves[8] == 2 {
+		if c.ArrayMoves[0] == 0 {
+			index = 0
+		} else if c.ArrayMoves[4] == 0 {
+			index = 4
+		} else if c.ArrayMoves[8] == 0 {
+			index = 8
+		}
+		return index
+	} else if c.ArrayMoves[2]+c.ArrayMoves[4]+c.ArrayMoves[6] == 2 {
+		if c.ArrayMoves[2] == 0 {
+			index = 2
+		} else if c.ArrayMoves[4] == 0 {
+			index = 4
+		} else if c.ArrayMoves[6] == 0 {
+			index = 6
+		}
+		return index
+	} else {
+		index = c.GenerateRandomNPCMove()
+		return index
 	}
-	return c.GenerateRandomNPCMove()
 }
-
 func (c *MediumAIController) PlayNPC(b *Board) {
 	if c.CurrentGameState == Active {
 		index := CenterIndex
