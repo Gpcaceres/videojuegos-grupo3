@@ -1,6 +1,6 @@
 package game
 
-// ControlWeakIntelligentMoves — APARTADO PENDIENTE (compañero). MediumAI.
+// ControlWeakIntelligentMoves — APARTADO PENDIENTE (Paul Moreno). MediumAI.
 //
 // Portar 1:1 TicTacToeGameLibrary/ControlWeakIntelligentMoves.cs. No cambiar
 // la lógica. Usa como guía strong.go (mismo estilo: helper pick(a,b,d) para

@@ -27,7 +27,7 @@ import { GameMode } from '../../core/game.models';
           @if (m.implemented) {
             <span class="badge ok">{{ m.owner }}</span>
           } @else {
-            <span class="badge wip">🚧 En construcción</span>
+            <span class="badge wip">🚧 En construcción · {{ m.owner }}</span>
           }
         </button>
       }

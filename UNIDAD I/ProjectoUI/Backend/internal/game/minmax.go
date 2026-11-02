@@ -1,6 +1,6 @@
 package game
 
-// ControlMinMaxMoves — APARTADO PENDIENTE (compañero). UnbeatableAI -> MinMax.
+// ControlMinMaxMoves — APARTADO PENDIENTE (Diana Guerra). UnbeatableAI -> MinMax.
 //
 // Mismo flujo que los demás controladores (usuario = "X" con peso 1,
 // JCC = "0" con peso 3), pero la jugada de la JCC se elige con Minimax:

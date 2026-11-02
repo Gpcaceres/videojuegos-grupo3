@@ -1,6 +1,6 @@
 # Tres en Raya IA · Proyecto 3 · Grupo 3
 
-**Integrantes:** Diana Guerra · Paul Moreno · Germán Cáceres
+**Integrantes y responsables:** Germán Cáceres (UnbeatableAI) · Paul Moreno (MediumAI) · Diana Guerra (MinMax, Scrum Master)
 **Stack:** Backend **Go** (API REST, solo librería estándar) + Frontend **Angular 22**.
 
 La lógica es un port 1:1 del proyecto C# de referencia (`TicTacToeGameWindows2`).
@@ -16,9 +16,9 @@ ProjectoUI/
 │           ├── board.go          reemplaza ListButtons + GroupBox + MessageBox
 │           ├── form.go           = frmTicTacToe (despacha clics por GameLevel)
 │           ├── controller.go     interfaz común + catálogo de modos
-│           ├── strong.go         ✅ UnbeatableAI  (ControlStrongIntelligentMoves)
-│           ├── weak.go           🚧 MediumAI      (ControlWeakIntelligentMoves)
-│           ├── minmax.go         🚧 UnbeatableAI → MinMax
+│           ├── strong.go         ✅ UnbeatableAI  (ControlStrongIntelligentMoves) — Germán
+│           ├── weak.go           🚧 MediumAI      (ControlWeakIntelligentMoves) — Paul
+│           ├── minmax.go         🚧 UnbeatableAI → MinMax — Diana
 │           ├── random.go         🚧 Principiante  (ControlRandomMoves)
 │           ├── two_users.go      🚧 Dos jugadores (ControlTwoUsers)
 │           └── strong_test.go    pruebas (Casos 1, 2, 3 del PDF + exploración exhaustiva)

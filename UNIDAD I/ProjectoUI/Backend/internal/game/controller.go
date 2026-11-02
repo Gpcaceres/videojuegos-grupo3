@@ -37,9 +37,9 @@ type Mode struct {
 var Modes = []Mode{
 	{LevelTwoUsers, "two-users", "Dos jugadores", "Humano contra humano en el mismo equipo.", "ControlTwoUsers", false, "Pendiente"},
 	{LevelRandom, "random", "Principiante", "La computadora juega al azar.", "ControlRandomMoves", false, "Pendiente"},
-	{LevelMediumAI, "medium-ai", "MediumAI", "IA intermedia: bloquea, pero se le puede ganar.", "ControlWeakIntelligentMoves", false, "Pendiente"},
-	{LevelUnbeatableAI, "unbeatable-ai", "UnbeatableAI", "Método numérico heurístico (pesos 1/3/0). Caso 1, 2 y 3.", "ControlStrongIntelligentMoves", true, "Grupo 3"},
-	{LevelUnbeatableMinMax, "unbeatable-minmax", "UnbeatableAI · MinMax", "IA imbatible con el algoritmo Minimax.", "— (nuevo)", false, "Pendiente"},
+	{LevelMediumAI, "medium-ai", "MediumAI", "IA intermedia: bloquea, pero se le puede ganar.", "ControlWeakIntelligentMoves", false, "Paul Moreno"},
+	{LevelUnbeatableAI, "unbeatable-ai", "UnbeatableAI", "Método numérico heurístico (pesos 1/3/0). Caso 1, 2 y 3.", "ControlStrongIntelligentMoves", true, "Germán Cáceres"},
+	{LevelUnbeatableMinMax, "unbeatable-minmax", "UnbeatableAI · MinMax", "IA imbatible con el algoritmo Minimax.", "— (nuevo)", false, "Diana Guerra"},
 }
 
 // FindMode busca un modo por nivel.
