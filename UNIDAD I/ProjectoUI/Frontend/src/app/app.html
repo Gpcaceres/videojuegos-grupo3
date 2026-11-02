@@ -38,7 +38,7 @@
         @if (store.outcome()) {
           <span>{{ store.resultText() }}</span>
         } @else if (store.thinking()) {
-          <span>Turno de la <b class="o">JCC (0)</b></span>
+          <span>Turno de la <b class="o">JCC (O)</b></span>
         } @else {
           <span>Tu turno · juegas con <b class="x">X</b></span>
         }
@@ -87,7 +87,7 @@
         </div>
       </div>
 
-      @if (store.level() === 3) {
+      @if (store.mode()?.key !== 'unbeatable-minmax') {
         <app-ai-inspector [weights]="store.weights()" [lastMove]="store.lastMove()" />
       }
 
@@ -103,7 +103,7 @@
   </main>
 
   <footer class="foot">
-    ESPE · Videojuegos · Port fiel de <code>ControlStrongIntelligentMoves</code> (C#) a Go
+    ESPE · Videojuegos · Port fiel de <code>UnbeatableAIController</code> (C#, versión del profesor) a Go
   </footer>
 </div>
 

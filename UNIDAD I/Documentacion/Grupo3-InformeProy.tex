@@ -119,8 +119,25 @@ proyectos web en Go y JavaScript:
 
 El equipo eligió \textbf{Go} para el backend y \textbf{Angular} para el
 frontend. Por especificación, la lógica del juego es \emph{exactamente la
-misma} que la del proyecto de referencia en C\# (\texttt{TicTacToeGameWindows2});
-solo cambia la tecnología.
+misma} que la de la versión oficial del docente
+(\texttt{Tic-Tac-Toe-Game-Windows-Professor}); solo cambia la tecnología.
+Esa versión trae una aplicación de Windows Forms por variante:
+
+\begin{table}[H]
+\centering
+\caption{Versiones de referencia del docente}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Variante} & \textbf{Carpeta} & \textbf{Clase}\\
+\midrule
+UnbeatableAI & \texttt{Tic-Tac-Toe-Versión-IA-Fuerte} & \texttt{UnbeatableAIController}\\
+MediumAI & \texttt{Tic-Tac-Toe-Versión-IA-Debil} & \texttt{MediumAIController}\\
+MinMax & \texttt{Tic-Tac-Toe-Version-MiniMax} & \texttt{UnbeatableAIController}\textsuperscript{*}\\
+\bottomrule
+\end{tabular}\\[2pt]
+{\footnotesize \textsuperscript{*}Misma clase, pero implementada con el algoritmo Minimax en lugar del método numérico.}
+\end{table}
 
 % =====================================================================
 \section{Especificación de Requerimientos (IEEE 830)}
@@ -139,12 +156,11 @@ El sistema permite que un usuario juegue al Tres en Raya contra un
 JCC decide sus jugadas con el método numérico heurístico de la referencia
 (pesos usuario = 1, JCC = 3, vacío = 0). El nivel implementado es
 \textbf{UnbeatableAI}; la arquitectura deja preparados los niveles
-\textbf{MediumAI}, \textbf{UnbeatableAI $\rightarrow$ MinMax},
-\textbf{Principiante} y \textbf{Dos jugadores}.
+\textbf{MediumAI} y \textbf{UnbeatableAI $\rightarrow$ MinMax}.
 
 \subsubsection{Definiciones, acrónimos y abreviaturas}
 \begin{description}[leftmargin=2.6cm,style=nextline]
-  \item[JCC] Jugador Controlado por la Computadora (marca ``0'').
+  \item[JCC] Jugador Controlado por la Computadora (marca ``O'').
   \item[Usuario] Jugador humano (marca ``X''); siempre empieza.
   \item[mArrayMoves] Vector $V_k$ de 9 posiciones con los pesos 0/1/3.
   \item[API REST] Interfaz HTTP/JSON entre el frontend y el backend.
@@ -157,6 +173,7 @@ JCC decide sus jugadas con el método numérico heurístico de la referencia
   \item Villacís, C. et al., \emph{Optimización del Juego del Tres en Raya con
         Niveles de Dificultad, Utilizando Técnicas Heurísticas de IA}, ESPE.
   \item Material de clase: \emph{Caso 1}, \emph{Caso 2} y \emph{Caso 3 TTT}.
+  \item Código del docente: \texttt{Tic-Tac-Toe-Game-Windows-Professor} (IA fuerte, IA débil y MiniMax).
 \end{itemize}
 
 \subsection{Descripción general}
@@ -169,8 +186,8 @@ clics y anima los eventos que devuelve el servidor.
 
 \subsubsection{Funciones del producto}
 Seleccionar modo de juego, iniciar una partida nueva, marcar una casilla,
-recibir la jugada de la JCC, conocer el resultado (``Ganó X'', ``Ganó 0'' o
-``Empate''), ver el marcador y ver cómo razona la IA (pesos y sumas por línea).
+recibir la jugada de la JCC, conocer el resultado (``¡Ganó X!'', ``¡Ganó O!'' o
+``¡Empate!''), ver el marcador y ver cómo razona la IA (pesos y sumas por línea).
 
 \subsubsection{Características de los usuarios}
 Niños de 7 a 11 años (público objetivo del juego original) y estudiantes.
@@ -203,10 +220,10 @@ RF01 & El sistema mostrará un tablero de 3$\times$3 casillas numeradas 0--8 (Ta
 RF02 & El usuario podrá seleccionar el modo de juego; los modos no implementados se mostrarán como ``en construcción''. & Alta\\
 RF03 & El usuario siempre inicia con la marca ``X''. & Alta\\
 RF04 & Al marcar una casilla libre, el sistema registrará peso 1 en \texttt{mArrayMoves}; una casilla ocupada se ignora. & Alta\\
-RF05 & En su primera jugada la JCC tomará el centro (4) si está libre; si no, una esquina aleatoria (0, 2, 6, 8). & Alta\\
-RF06 & La JCC aplicará el método numérico: suma 6 $\Rightarrow$ gana; suma 2 $\Rightarrow$ bloquea; suma 5 en diagonal $\Rightarrow$ caso trivial; dos lados adyacentes del usuario $\Rightarrow$ esquina intermedia; en otro caso, casilla aleatoria. & Alta\\
-RF07 & Si la JCC está en el centro y la regla de suma 5 aplica, jugará un lado aleatorio (1, 3, 5, 7). & Alta\\
-RF08 & El sistema verificará ganador en el orden original (8 líneas de ``0'', 8 de ``X'', empate) y mostrará el mensaje correspondiente. & Alta\\
+RF05 & En su primera jugada la JCC tomará el centro (4) si está libre; si no, una esquina aleatoria (0, 2, 6, 8). En las jugadas siguientes, si el centro está libre, lo toma. & Alta\\
+RF06 & La JCC aplicará el método numérico: suma 6 $\Rightarrow$ gana; suma 2 $\Rightarrow$ bloquea; suma 5 en diagonal $\Rightarrow$ caso trivial; dos lados adyacentes del usuario $\Rightarrow$ esquina intermedia (orden 1+3$\to$0, 1+5$\to$2, 3+7$\to$6, 5+7$\to$8); en otro caso, casilla aleatoria. & Alta\\
+RF07 & Si la JCC está en el centro y la regla de suma 5 aplica, jugará un lado aleatorio entre 1, 5 y 7 (comportamiento del código del docente, ver sección~\ref{sec:hallazgos}). & Alta\\
+RF08 & El sistema verificará ganador recorriendo las 8 líneas (filas, columnas, diagonales); con 9 jugadas sin ganador declara empate. Mensajes: ``¡Ganó X!'', ``¡Ganó O!'', ``¡Empate!''. & Alta\\
 RF09 & Al terminar la partida el tablero se deshabilitará (equivalente a \texttt{grbTicTacToe.Enabled = false}). & Alta\\
 RF10 & El usuario podrá iniciar un juego nuevo en cualquier momento. & Media\\
 RF11 & El sistema mostrará un marcador de partidas ganadas, empatadas y perdidas por modo. & Media\\
@@ -223,7 +240,7 @@ RF12 & El sistema mostrará los pesos de \texttt{mArrayMoves} y la suma de cada 
 \toprule
 \textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
 \midrule\endhead
-RNF01 & Fidelidad & La lógica de la IA será idéntica a \texttt{ControlStrongIntelligentMoves.cs}.\\
+RNF01 & Fidelidad & La lógica de la IA será idéntica a \texttt{UnbeatableAIController.cs} (versión IA Fuerte del docente).\\
 RNF02 & Rendimiento & El servidor responderá a cada jugada en menos de 50 ms.\\
 RNF03 & Usabilidad & Interfaz animada, con sonido opcional y soporte de teclado (1--9 y teclado numérico).\\
 RNF04 & Accesibilidad & Respeta \texttt{prefers-reduced-motion} y usa etiquetas ARIA en el tablero.\\
@@ -261,12 +278,12 @@ La regla de bloqueo en Go conserva el mismo orden de evaluación que el C\#:
 
 \begin{lstlisting}[language=Go]
 // pick devuelve el primer casillero vacío de la línea (a, b, d).
-func (c *ControlStrongIntelligentMoves) pick(a, b, d int) int {
+func (c *UnbeatableAIController) pick(a, b, d int) int {
 	index := 0
 	if c.ArrayMoves[a] == 0 { index = a
 	} else if c.ArrayMoves[b] == 0 { index = b
 	} else if c.ArrayMoves[d] == 0 { index = d }
-	c.sum = c.ArrayMoves[a] + c.ArrayMoves[b] + c.ArrayMoves[d]
+	c.heuristicSum = c.ArrayMoves[a] + c.ArrayMoves[b] + c.ArrayMoves[d]
 	return index
 }
 \end{lstlisting}
@@ -312,7 +329,7 @@ func (c *ControlStrongIntelligentMoves) pick(a, b, d int) int {
   \node[obj] (b) at (3.3,0)  {:Angular\\Board};
   \node[obj] (c) at (6.8,0)  {:GameStore};
   \node[obj] (d) at (10.3,0) {:API Go};
-  \node[obj] (e) at (13.8,0) {:Form /\\Strong};
+  \node[obj] (e) at (13.8,0) {:Form /\\UnbeatableAI};
   \foreach \n in {a,b,c,d,e} \draw[dashed,gray] (\n.south) -- ++(0,-10.2);
   \draw[->] (0,-1.2) -- node[above]{clic casilla $i$} (3.3,-1.2);
   \draw[->] (3.3,-1.9) -- node[above]{play($i$)} (6.8,-1.9);
@@ -323,7 +340,7 @@ func (c *ControlStrongIntelligentMoves) pick(a, b, d int) int {
   \draw[->] (13.8,-6.4) -- ++(0.8,0) -- node[right]{CheckWinner} ++(0,-0.6) -- (13.8,-7.0);
   \draw[->,dashed] (13.8,-7.9) -- node[above]{eventos} (10.3,-7.9);
   \draw[->,dashed] (10.3,-8.5) -- node[above]{GameState JSON} (6.8,-8.5);
-  \draw[->] (6.8,-9.1) -- node[above]{animar X, ``pensando'', 0} (3.3,-9.1);
+  \draw[->] (6.8,-9.1) -- node[above]{animar X, ``pensando'', O} (3.3,-9.1);
   \draw[->,dashed] (3.3,-9.8) -- node[above]{tablero + resultado} (0,-9.8);
 \end{tikzpicture}}
 \caption{Diagrama de secuencia del caso de uso ``Marcar casilla''. Si hay
@@ -341,21 +358,21 @@ muestra el resultado con animación.}
   pend/.style={cls,draw=pend}]
   \node[draw,fill=gray!10,text width=3.4cm,align=center] (api) at (-5.4,0) {\textbf{api.Server}\\sesiones (map + mutex)\\rutas REST, CORS};
   \node[cls] (form) at (0,0) {\centering\textbf{Form} (frmTicTacToe)
-    \nodepart{second}+Global: GlobalClassGame\\+Board: *Board\\+Strong, Weak, MinMax,\\\ \ Random, TwoUsers
-    \nodepart{third}+NewForm(level)\\+SetLevel(level) error\\+InitializeGame()\\+Click(index) error};
+    \nodepart{second}+GameLevel: int\\+ControlPlayer: bool\\+Board: *Board\\+Medium, Unbeatable, Minimax
+    \nodepart{third}+NewForm(level)\\+Controller() Controller\\+SetLevel(level) error\\+InitializeGame()\\+Click(index) error};
   \node[cls] (board) at (6.4,0) {\centering\textbf{Board}
     \nodepart{second}+Buttons: [9]string\\+Enabled: bool\\+Events: []Event
     \nodepart{third}+SetText(i, mark, who)\\+ClearTexts()\\+ShowMessage(text, caption)\\+TakeEvents() []Event};
   \node[cls] (ctrl) at (0,-4.6) {\centering$\ll$interface$\gg$ \textbf{Controller}
     \nodepart{second}---
-    \nodepart{third}+InitializeData()\\+InitializeControls(b)\\+PlayUser(b, i) bool\\+PlayNPC(b)};
-  \node[cls] (strong) at (6.4,-5.0) {\centering\textbf{ControlStrongIntelligentMoves}
-    \nodepart{second}+Flag: string\\+MoveNumber, GameControl: int\\+ArrayMoves: [9]int\\-sum: int
-    \nodepart{third}+PlayUser(b, i) bool\\+PlayNPC(b)\\+CheckWinner(b) int\\-heuristicNumericalMethod() int\\-pick(a, b, d) int\\-randomFreeAmong(...) (int, bool)};
-  \node[pend] (weak) at (-3.0,-9.4) {\centering\textbf{ControlWeakIntelligentMoves}\\(MediumAI -- pendiente)
-    \nodepart{second}Flag, MoveNumber, ArrayMoves \nodepart{third}PlayUser / PlayNPC};
-  \node[pend] (minmax) at (3.0,-9.4) {\centering\textbf{ControlMinMaxMoves}\\(MinMax -- pendiente)
-    \nodepart{second}Flag, MoveNumber, ArrayMoves \nodepart{third}PlayUser / PlayNPC};
+    \nodepart{third}+InitializeData()\\+InitializeControls(b)\\+PlayUser(b, i) bool\\+PlayNPC(b)\\+Flag() string\\+Weights() [9]int};
+  \node[cls] (strong) at (6.4,-5.2) {\centering\textbf{UnbeatableAIController}
+    \nodepart{second}-currentPlayerFlag: Player\\+MoveCount: int\\+CurrentGameState: GameState\\+BoardState: [9]Player\\+ArrayMoves: [9]int\\-heuristicSum: int
+    \nodepart{third}+InitializeGameData()\\+PlayUser(b, i) bool\\+PlayNPC(b)\\+CheckWinner(b) GameState\\-heuristicNumericalMethod() int\\-pick(a, b, d) int\\-randomFreeAmong(...) (int, bool)};
+  \node[pend] (weak) at (-3.0,-9.8) {\centering\textbf{MediumAIController}\\(Paul Moreno -- pendiente)
+    \nodepart{second}MoveCount, BoardState, ArrayMoves \nodepart{third}PlayUser / PlayNPC};
+  \node[pend] (minmax) at (3.0,-9.8) {\centering\textbf{MinimaxAIController}\\(Diana Guerra -- pendiente)
+    \nodepart{second}board: [3][3]byte \nodepart{third}GetBestMove / Minimax / EvaluateBoard};
   \draw[->] (api) -- node[above]{usa} (form);
   \draw[{Diamond[open]}-] (form) -- node[above]{1} (board);
   \draw[{Diamond[open]}-] (form) -- node[right]{1..*} (ctrl);
@@ -415,7 +432,7 @@ HU10 & Como usuario quiero jugar contra UnbeatableAI con MinMax. & 8 & 3\\
 \subsection{Sprints}
 \begin{description}
   \item[Sprint 1 -- Núcleo del juego.] Port del método numérico a Go
-        (\texttt{strong.go}), tablero (\texttt{board.go}), despacho de clics
+        (\texttt{unbeatable\_ai.go}), tablero (\texttt{board.go}), despacho de clics
         (\texttt{form.go}), API REST y pruebas de los Casos 1--3.
   \item[Sprint 2 -- Experiencia web.] Frontend Angular 22: tablero 3D con
         trazos animados, fondo de partículas, sonidos sintetizados, inspector
@@ -429,7 +446,7 @@ HU10 & Como usuario quiero jugar contra UnbeatableAI con MinMax. & 8 & 3\\
 \begin{itemize}
   \item \textbf{Diseño simple:} un archivo por modo y una interfaz común.
   \item \textbf{Pruebas primero:} los ejemplos de los PDF se escribieron como
-        pruebas (\texttt{strong\_test.go}) antes de conectar la interfaz.
+        pruebas (\texttt{unbeatable\_ai\_test.go}) antes de conectar la interfaz.
   \item \textbf{Estándar de código:} \texttt{gofmt}/\texttt{go vet} en Go y Prettier en Angular.
   \item \textbf{Integración continua y entregas pequeñas:} cada incremento se
         sube al repositorio \texttt{github.com/Gpcaceres/videojuegos-grupo3}.
@@ -458,11 +475,11 @@ La arquitectura separa responsabilidades en dos capas:
 \toprule
 \textbf{Método} & \textbf{Ruta} & \textbf{Equivale a (original)}\\
 \midrule
-GET & /api/modes & RadioButtons de nivel\\
-POST & /api/games & Abrir el formulario\\
+GET & /api/modes & Elegir qué aplicación (variante) abrir\\
+POST & /api/games & Abrir el formulario (\texttt{frmTicTacToe\_Load})\\
 POST & /api/games/\{id\}/moves & \texttt{btnTicTacToeN\_Click}\\
 POST & /api/games/\{id\}/new & \texttt{btnNew\_Click}\\
-PUT & /api/games/\{id\}/level & \texttt{rdbXxx\_CheckedChanged}\\
+PUT & /api/games/\{id\}/level & Cambiar de variante\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -473,6 +490,7 @@ La correspondencia entre el original y el port es directa:
 \begin{table}[H]
 \centering
 \caption{Correspondencia C\# $\rightarrow$ Go}
+\small
 \begin{tabular}{ll}
 \toprule
 \textbf{C\# (original)} & \textbf{Go}\\
@@ -480,9 +498,13 @@ La correspondencia entre el original y el port es directa:
 \texttt{ListButtons[i].Text} & \texttt{Board.Buttons[i]}\\
 \texttt{grbTicTacToe.Enabled} & \texttt{Board.Enabled}\\
 \texttt{MessageBox.Show(...)} & \texttt{Board.ShowMessage(...)} $\rightarrow$ evento\\
+\texttt{enum Player} / \texttt{enum GameState} & \texttt{type Player int} / \texttt{type GameState int}\\
+\texttt{mBoardState} (\texttt{Player[]}) & \texttt{BoardState [9]Player}\\
+\texttt{mArrayMoves} (\texttt{int[]}) & \texttt{ArrayMoves [9]int}\\
+\texttt{CENTER\_INDEX}, \texttt{CORNER\_/SIDE\_INDICES} & \texttt{CenterIndex}, \texttt{Corner/SideIndices}\\
 \texttt{new Random().Next(0, 9)} & \texttt{rand.Intn(9)}\\
-\texttt{mSum} (miembro) & \texttt{sum} (se conserva entre turnos)\\
-\texttt{GlobalClassGame} (estática) & \texttt{GlobalClassGame} por sesión\\
+\texttt{mHeuristicSum} (miembro) & \texttt{heuristicSum} (se conserva entre turnos)\\
+\texttt{static bool ControlPlayer} & \texttt{Form.ControlPlayer} (por sesión)\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -506,6 +528,8 @@ TestFirstMoveCornerWhenCenterTaken & Si el centro está ocupado, toma una esquin
 TestCase1Blocks & Caso 1: bloquea al usuario (suma 2) & PASS\\
 TestCase2Wins & Caso 2: completa la línea y gana (suma 6) & PASS\\
 TestTakesImmediateWin & Prioriza ganar en la diagonal & PASS\\
+TestAdjacentSidesCornerOrder & Orden oficial de las esquinas (1+3$\to$0 antes que 1+5$\to$2) & PASS\\
+TestSideRuleNeverPicksThree & Con suma 5 y JCC en el centro, elige lado 1, 5 o 7, nunca 3 (200 repeticiones) & PASS\\
 TestOriginalLogicExhaustive & Recorre todas las partidas posibles & PASS\\
 \bottomrule
 \end{tabular}
@@ -532,9 +556,8 @@ Se contaron las líneas efectivas de código (sin comentarios ni líneas en blan
 \toprule
 \textbf{Proyecto} & \textbf{Archivos} & \textbf{LOC} & \textbf{Coment.} & \textbf{Blanco}\\
 \midrule
-Referencia Java (NetBeans) & 8 & 2\,347 & 291 & 210\\
-Referencia C\# (Windows Forms) & 7 & 1\,708 & 455 & 195\\
-\textbf{Backend Go (este proyecto)} & 11 & 863 & 132 & 114\\
+Referencia del docente, IA Fuerte (C\#) & 3 & 559 & 87 & 56\\
+\textbf{Backend Go (este proyecto)} & 9 & 854 & 156 & 116\\
 \textbf{Frontend Angular (TS + HTML + SCSS)} & 24 & 2\,179 & 36 & 292\\
 \bottomrule
 \end{tabular}
@@ -547,23 +570,23 @@ Referencia C\# (Windows Forms) & 7 & 1\,708 & 455 & 195\\
 \toprule
 \textbf{Archivo} & \textbf{LOC} & \textbf{Funciones/métodos}\\
 \midrule
-ControlStrongIntelligentMoves.java & 561 & 13\\
-ControlStrongIntelligentMoves.cs & 462 & 12\\
-\textbf{strong.go} & \textbf{196} & \textbf{14}\\
+UnbeatableAIController.cs (docente) & 417 & 15\\
+\textbf{unbeatable\_ai.go} & \textbf{223} & \textbf{17}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-El port en Go reduce un 58\,\% las líneas de la clase de IA frente al C\#.
+El port en Go reduce un 47\,\% las líneas de la clase de IA frente al C\#.
 Las mismas reglas se expresan con un \texttt{switch} sin repetir bloques, y
-una función auxiliar \texttt{pick} reemplaza los bloques \texttt{if/else if}
-iguales de cada línea. La verificación de ganador se centraliza en
-\texttt{CheckWinnerBoard}, que en el original estaba copiada en cada
-controlador.
+una función auxiliar \texttt{pick} reemplaza los 16 bloques
+\texttt{if/else if} iguales (uno por línea y por suma). Las constantes y
+enumeraciones compartidas (\texttt{Player}, \texttt{GameState},
+\texttt{WinningLines}) quedan en \texttt{controller.go} para que MediumAI las
+reutilice.
 
 \subsection{Otras métricas}
 \begin{itemize}
-  \item \textbf{Pruebas automatizadas:} 6 de 6 aprobadas; la exploración
+  \item \textbf{Pruebas automatizadas:} 8 de 8 aprobadas; la exploración
         exhaustiva cubre alrededor de 15\,000 partidas en 0,02 s.
   \item \textbf{Tamaño del frontend:} 216 kB sin comprimir (62 kB
         transferidos) en el \emph{build} de producción.
@@ -571,16 +594,33 @@ controlador.
   \item \textbf{Tiempo de respuesta:} menos de 1 ms por jugada en el servidor local.
 \end{itemize}
 
-\subsection{Hallazgo sobre la lógica original}
-La prueba exhaustiva muestra que la JCC del método numérico \textbf{pierde en
-cerca del 1,2\,\% de los caminos posibles}. Esto no es un error del port: la
-lógica original cae en \texttt{GenerateRandomNPCMove} cuando ninguna regla
-aplica, y a veces deja al usuario un \emph{tenedor} (dos amenazas a la vez).
-Ejemplo: X en 0, JCC en 4, X en 7, JCC en 2 (al azar), X en 6. La JCC solo
-puede tapar una de las amenazas (0--3--6 y 6--7--8), y el usuario gana.
+\subsection{Hallazgos sobre la lógica del docente}\label{sec:hallazgos}
+Al portar y probar \texttt{UnbeatableAIController.cs} se encontró lo siguiente.
+Como la especificación exige conservar la lógica, todo se mantiene igual y se
+documenta aquí.
 
-Como la especificación exige conservar la lógica, el comportamiento se
-mantiene y se documenta. Es justamente la motivación de la variante
+\begin{enumerate}
+  \item \textbf{No es 100\,\% imbatible.} La prueba exhaustiva muestra que la
+        JCC \textbf{pierde en cerca del 1,1\,\% de los caminos posibles}. Cuando
+        ninguna regla aplica, la lógica cae en \texttt{GenerateRandomNPCMove}
+        y a veces deja al usuario un \emph{tenedor} (dos amenazas a la vez).
+        Ejemplo: X en 0, O en 4, X en 7, O en 2 (al azar), X en 6. La JCC solo
+        puede tapar una de las amenazas (0--3--6 y 6--7--8), y el usuario gana.
+  \item \textbf{El lado 3 nunca se elige.} En \texttt{PlayNPC}, la condición del
+        lado aleatorio compara \texttt{SIDE\_INDICES[0]} dos veces
+        (\texttt{index == SIDE\_INDICES[0] || index == SIDE\_INDICES[0] || ...}),
+        así que el lado 3 queda fuera. Se reprodujo tal cual y la prueba
+        \texttt{TestSideRuleNeverPicksThree} lo verifica.
+  \item \textbf{Posible bloqueo.} Los \texttt{do/while} aleatorios no tienen
+        salida si no queda ninguna casilla válida del grupo. En las cerca de
+        15\,000 partidas exploradas eso \textbf{no ocurrió nunca}, pero el
+        servidor tiene una protección (RNF07) por si acaso.
+  \item \textbf{Regla del centro sin efecto.} A partir de la segunda jugada,
+        \texttt{PlayNPC} revisa si el centro está libre; nunca lo está a esa
+        altura, porque la primera jugada de alguno de los dos ya lo ocupó.
+\end{enumerate}
+
+El primer punto es justamente la motivación de la variante
 \textbf{UnbeatableAI $\rightarrow$ MinMax}, que explora el árbol completo de
 jugadas y no puede caer en un tenedor.
 
@@ -591,13 +631,14 @@ jugadas y no puede caer en un tenedor.
 % =====================================================================
 \subsection{Conclusiones}
 \begin{itemize}
-  \item Se migró la IA UnbeatableAI de C\# a Go sin alterar su lógica. Las
-        pruebas reproducen los Casos 1, 2 y 3 del material de clase.
+  \item Se migró \texttt{UnbeatableAIController} (versión IA Fuerte del
+        docente) de C\# a Go sin alterar su lógica. Las pruebas reproducen los
+        Casos 1, 2 y 3 del material de clase.
   \item Separar la lógica (backend) de la presentación (frontend) permitió
         sustituir Windows Forms por una interfaz web animada sin tocar el
         algoritmo.
   \item El método numérico basado en pesos 1/3/0 es simple y eficiente, pero
-        no es estrictamente imbatible: su caída al azar deja un 1,2\,\% de
+        no es estrictamente imbatible: su caída al azar deja un 1,1\,\% de
         caminos perdedores.
 \end{itemize}
 

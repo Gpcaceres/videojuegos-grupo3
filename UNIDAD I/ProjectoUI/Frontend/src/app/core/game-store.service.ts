@@ -12,7 +12,7 @@ export interface LogEntry {
   text: string;
 }
 
-const UNBEATABLE = 3;
+const UNBEATABLE = 2;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
@@ -153,13 +153,15 @@ export class GameStore {
       this.weights.update((w) => w.map((v, i) => (i === idx ? (ev.type === 'user' ? 1 : 3) : v)));
       this.lastMove.set(idx);
       this.sound.place(ev.type === 'user');
-      this.push(ev.type, `${ev.type === 'user' ? 'Tú' : 'JCC'} marcó «${ev.mark}» en la casilla ${idx + 1}`);
+      this.push(ev.type, `${ev.type === 'user' ? 'Marcaste' : 'La JCC marcó'} «${ev.mark}» en la casilla ${idx + 1}`);
       await sleep(120);
     }
   }
 
   private finish(text: string): void {
-    const o: Outcome = text === 'Empate' ? 'draw' : text.endsWith('X') ? 'win' : 'loss';
+    // Mensajes del profesor: "¡Ganó X!" / "¡Ganó O!" / "¡Empate!" (y en MiniMax:
+    // "You Win!" / "AI Wins!" / "It's a Draw!").
+    const o: Outcome = /empate|draw/i.test(text) ? 'draw' : /ganó x|you win/i.test(text) ? 'win' : 'loss';
     this.outcome.set(o);
     this.resultText.set(text);
     this.push('system', text);

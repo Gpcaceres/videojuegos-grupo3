@@ -1,6 +1,6 @@
 /** Contrato con el backend Go (internal/api/server.go). */
 
-export type Mark = '' | 'X' | '0';
+export type Mark = '' | 'X' | 'O';
 
 export interface GameMode {
   level: number;

@@ -58,27 +58,30 @@ type GameState struct {
 	Board      [9]string    `json:"board"`      // textos de los 9 botones
 	Enabled    bool         `json:"enabled"`    // grbTicTacToe.Enabled
 	ArrayMoves [9]int       `json:"arrayMoves"` // mArrayMoves (pesos 0/1/3), útil para explicar la IA
-	MoveNumber int          `json:"moveNumber"`
-	Flag       string       `json:"flag"`   // a quién le toca: "X" o "0"
-	Events     []game.Event `json:"events"` // lo que pasó en esta petición, en orden
+	MoveNumber int          `json:"moveNumber"` // casillas ocupadas
+	Flag       string       `json:"flag"`       // a quién le toca: "X" u "O"
+	Events     []game.Event `json:"events"`     // lo que pasó en esta petición, en orden
 }
 
 func stateOf(id string, f *game.Form) GameState {
-	mode, _ := game.FindMode(f.Global.GameLevel)
+	mode, _ := game.FindMode(f.GameLevel)
 	st := GameState{
 		ID:      id,
-		Level:   f.Global.GameLevel,
+		Level:   f.GameLevel,
 		Mode:    mode,
 		Board:   f.Board.Buttons,
 		Enabled: f.Board.Enabled,
 		Events:  f.Board.TakeEvents(),
 	}
-	if f.Global.GameLevel == game.LevelUnbeatableAI {
-		st.ArrayMoves = f.Strong.ArrayMoves
-		st.MoveNumber = f.Strong.MoveNumber
-		st.Flag = f.Strong.Flag
+	for _, t := range f.Board.Buttons {
+		if t != "" {
+			st.MoveNumber++
+		}
 	}
-	// TODO(compañeros): exponer ArrayMoves/MoveNumber/Flag de su controlador.
+	if c := f.Controller(); c != nil {
+		st.ArrayMoves = c.Weights()
+		st.Flag = c.Flag()
+	}
 	return st
 }
 
