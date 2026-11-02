@@ -18,7 +18,7 @@ ProjectoUI/
 │           ├── form.go              = frmTicTacToe (despacha los clics al controlador del modo)
 │           ├── controller.go        interfaz común, enums Player/GameState, constantes, catálogo de modos
 │           ├── unbeatable_ai.go     ✅ UnbeatableAI  (IA-Fuerte/UnbeatableAIController.cs) — Germán
-│           ├── medium_ai.go         🚧 MediumAI      (IA-Debil/MediumAIController.cs) — Paul
+│           ├── medium_ai.go         IMPLEMENTADO  (IA-Debil/MediumAIController.cs) - Paul
 │           ├── minimax_ai.go        🚧 MinMax        (MiniMax/UnbeatableAIController.cs) — Diana
 │           └── unbeatable_ai_test.go pruebas (Casos 1, 2, 3 del PDF + exploración exhaustiva)
 └── Frontend/                        Angular 22 (zoneless, signals)
@@ -58,9 +58,9 @@ npm start
 Cada respuesta trae `events` (jugada del usuario, jugada de la JCC, `MessageBox`) en orden, para animarlos.
 La JCC juega con la letra **O** y los mensajes son los del docente: `¡Ganó X!`, `¡Ganó O!`, `¡Empate!`.
 
-## Cómo completar tu modo (Paul y Diana)
+## Cómo completar tu modo (Diana)
 
-1. Abre tu archivo en `Backend/internal/game/` (`medium_ai.go` o `minimax_ai.go`): arriba dice qué archivo del docente portar y qué cambia.
+1. Abre tu archivo en `Backend/internal/game/` (`minimax_ai.go`): arriba dice qué archivo del docente portar y qué cambia.
 2. Porta **1:1** la clase del docente. Usa `unbeatable_ai.go` como guía (`showUserMove`, `showNPCMove`, `pick`, `CheckWinner`). Los enums y constantes ya están en `controller.go`.
 3. Implementa los métodos de la interfaz `Controller` (`PlayUser`, `PlayNPC`, `Flag`, `Weights`).
 4. En `controller.go` → `Modes`, pon `Implemented: true`.
@@ -72,3 +72,4 @@ La JCC juega con la letra **O** y los mensajes son los del docente: `¡Ganó X!`
 - **No es 100 % imbatible.** `TestOriginalLogicExhaustive` recorre todas las partidas: la JCC pierde en ~1,1 % de los caminos. Cuando ninguna regla aplica, juega al azar y puede dejar un *tenedor* (ej.: X0, O4, X7, O2, X6).
 - **El lado 3 nunca se elige.** En `PlayNPC`, la condición del lado aleatorio compara `SIDE_INDICES[0]` dos veces, así que solo salen 1, 5 o 7 (`TestSideRuleNeverPicksThree`).
 - **Protección añadida:** si un `do/while` aleatorio no tiene casillero válido, el original se quedaría en un bucle infinito. Aquí se sigue con la jugada heurística para no colgar el servidor. En ~15 000 partidas exploradas no ocurrió nunca.
+

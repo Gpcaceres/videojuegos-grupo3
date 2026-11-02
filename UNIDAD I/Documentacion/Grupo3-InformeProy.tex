@@ -75,7 +75,7 @@
   {\color{espe}\rule{\linewidth}{1pt}}\par\vspace{0.3cm}
   {\LARGE\bfseries Tres en Raya con Inteligencia Artificial\par}
   \vspace{0.2cm}
-  {\large Proyecto 3: Tic-Tac-Toe (UnbeatableAI) -- Go (Web) + Angular\par}
+  {\large Proyecto 3: Tic-Tac-Toe (UnbeatableAI + MediumAI) -- Go (Web) + Angular\par}
   \vspace{0.3cm}
   {\color{espe}\rule{\linewidth}{1pt}}\par
   \vspace{1.2cm}
@@ -108,7 +108,7 @@ proyectos web en Go y JavaScript:
 \textbf{N.º} & \textbf{Variante de IA} & \textbf{Tecnología} & \textbf{Estado} \\
 \midrule
 1 & UnbeatableAI & Go (Web) + Angular & \textbf{Implementado} \\
-2 & MediumAI & Go (Web) + Angular & Apartado preparado \\
+2 & MediumAI & Go (Web) + Angular & \textbf{Implementado} \\
 3 & UnbeatableAI & JavaScript (Web) & -- \\
 4 & MediumAI & JavaScript (Web) & -- \\
 5 & UnbeatableAI $\rightarrow$ MinMax & Go (Web) + Angular & Apartado preparado \\
@@ -154,9 +154,8 @@ asignatura y a los integrantes del grupo.
 El sistema permite que un usuario juegue al Tres en Raya contra un
 \emph{Jugador Controlado por la Computadora} (JCC) desde un navegador. La
 JCC decide sus jugadas con el método numérico heurístico de la referencia
-(pesos usuario = 1, JCC = 3, vacío = 0). El nivel implementado es
-\textbf{UnbeatableAI}; la arquitectura deja preparados los niveles
-\textbf{MediumAI} y \textbf{UnbeatableAI $\rightarrow$ MinMax}.
+(pesos usuario = 1, JCC = 3, vacío = 0). Los niveles implementados son \textbf{UnbeatableAI} y \textbf{MediumAI};
+\textbf{UnbeatableAI $\rightarrow$ MinMax} permanece preparado.
 
 \subsubsection{Definiciones, acrónimos y abreviaturas}
 \begin{description}[leftmargin=2.6cm,style=nextline]
@@ -289,6 +288,32 @@ func (c *UnbeatableAIController) pick(a, b, d int) int {
 \end{lstlisting}
 
 % =====================================================================
+
+\subsection{Variante MediumAI}
+\texttt{MediumAIController} porta la versi\'on de IA d\'ebil del docente y
+conserva sus pesos: 0 para una casilla vac\'ia, 1 para X y 3 para O. El turno
+humano siempre inicia con X. Despu\'es de cada jugada v\'alida, el controlador
+comprueba las ocho l\'ineas ganadoras y el empate; al terminar, registra el
+mensaje del resultado y deshabilita el tablero.
+
+La JCC (O) aplica las reglas en este orden:
+\begin{enumerate}
+  \item Si el centro (\texttt{CenterIndex = 4}) est\'a vac\'io, lo elige de inmediato.
+  \item Si el centro est\'a ocupado, recorre filas, columnas y diagonales en el
+        orden de \texttt{WinningLines}. Primero busca una suma de 6
+        ($3+3+0$) para completar una l\'inea y ganar.
+  \item Si no hay una suma de 6, busca una suma de 2 ($1+1+0$) para bloquear
+        la primera amenaza de X, eligiendo la primera casilla vac\'ia de esa l\'inea.
+  \item Si ninguna regla aplica, elige al azar una casilla vac\'ia.
+\end{enumerate}
+
+La prioridad global de suma 6 antes de suma 2 permite que O gane cuando tiene
+una jugada ganadora disponible, aunque exista una amenaza de X. Esta variante
+no incluye las reglas de suma 5 ni la estrategia de esquinas y lados de
+\texttt{UnbeatableAI}. El backend expone los pesos por medio de
+\texttt{Weights()} y comunica jugadas y resultados como eventos del tablero;
+la interfaz Angular los presenta sin decidir movimientos.
+
 \section{Diagramas}
 % =====================================================================
 
@@ -369,8 +394,9 @@ muestra el resultado con animación.}
   \node[cls] (strong) at (6.4,-5.2) {\centering\textbf{UnbeatableAIController}
     \nodepart{second}-currentPlayerFlag: Player\\+MoveCount: int\\+CurrentGameState: GameState\\+BoardState: [9]Player\\+ArrayMoves: [9]int\\-heuristicSum: int
     \nodepart{third}+InitializeGameData()\\+PlayUser(b, i) bool\\+PlayNPC(b)\\+CheckWinner(b) GameState\\-heuristicNumericalMethod() int\\-pick(a, b, d) int\\-randomFreeAmong(...) (int, bool)};
-  \node[pend] (weak) at (-3.0,-9.8) {\centering\textbf{MediumAIController}\\(Paul Moreno -- pendiente)
-    \nodepart{second}MoveCount, BoardState, ArrayMoves \nodepart{third}PlayUser / PlayNPC};
+  \node[cls] (weak) at (-3.0,-9.8) {\centering\textbf{MediumAIController}\\(Paul Moreno -- implementado)
+    \nodepart{second}MoveCount, BoardState, ArrayMoves
+    \nodepart{third}InitializeData / CheckWinner / PlayUser / PlayNPC\\HeuristicNumericalMethod};
   \node[pend] (minmax) at (3.0,-9.8) {\centering\textbf{MinimaxAIController}\\(Diana Guerra -- pendiente)
     \nodepart{second}board: [3][3]byte \nodepart{third}GetBestMove / Minimax / EvaluateBoard};
   \draw[->] (api) -- node[above]{usa} (form);
@@ -437,10 +463,10 @@ HU10 & Como usuario quiero jugar contra UnbeatableAI con MinMax. & 8 & 3\\
   \item[Sprint 2 -- Experiencia web.] Frontend Angular 22: tablero 3D con
         trazos animados, fondo de partículas, sonidos sintetizados, inspector
         de IA, marcador y pantalla de resultado con confeti.
-  \item[Sprint 3 -- Modos restantes.] MediumAI y MinMax sobre la interfaz
-        \texttt{Controller} ya preparada.
+  \item[Sprint 3 -- MediumAI.] Port del controlador de IA d\'ebil e
+        integraci\'on del modo en la interfaz \texttt{Controller}.
 \end{description}
-\pendiente{Sprint 3 -- documentar aquí el avance de MediumAI y MinMax.}
+\pendiente{Completar y documentar el modo MinMax.}
 
 \subsection{Prácticas XP aplicadas}
 \begin{itemize}
@@ -624,7 +650,7 @@ El primer punto es justamente la motivación de la variante
 \textbf{UnbeatableAI $\rightarrow$ MinMax}, que explora el árbol completo de
 jugadas y no puede caer en un tenedor.
 
-\pendiente{métricas de MediumAI y MinMax (LOC, pruebas, porcentaje de derrotas) cuando estén implementados.}
+\pendiente{Agregar m\'etricas de MinMax (LOC, pruebas y porcentaje de derrotas) cuando est\'e implementado.}
 
 % =====================================================================
 \section{Conclusiones y Recomendaciones}
@@ -634,7 +660,9 @@ jugadas y no puede caer en un tenedor.
   \item Se migró \texttt{UnbeatableAIController} (versión IA Fuerte del
         docente) de C\# a Go sin alterar su lógica. Las pruebas reproducen los
         Casos 1, 2 y 3 del material de clase.
-  \item Separar la lógica (backend) de la presentación (frontend) permitió
+  \item Se integr\'o MediumAI con prioridad al centro, reglas de suma 6 y 2,
+        y selecci\'on aleatoria como respaldo, conservando la l\'ogica del docente.
+  \item Separar la l\'ogica (backend) de la presentaci\'on (frontend) permiti\'o
         sustituir Windows Forms por una interfaz web animada sin tocar el
         algoritmo.
   \item El método numérico basado en pesos 1/3/0 es simple y eficiente, pero
