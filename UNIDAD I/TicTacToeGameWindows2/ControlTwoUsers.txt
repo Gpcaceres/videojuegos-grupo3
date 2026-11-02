@@ -1,0 +1,257 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace TicTacToeGameLibrary
+{
+    public class ControlTwoUsers
+    {
+        #region Atributes of the class
+        ///<summary>
+        /// Member data (variables).
+        ///</summary>
+
+        // Semáforo -> X o 0
+        private string mFlag;
+
+        #endregion
+
+        #region Properties
+        ///<summary>
+        /// Manage access descriptors (get & set).
+        ///</summary>
+
+        public string Flag
+        {
+            get { return mFlag; }
+            set { mFlag = value; }
+        }
+
+        #endregion
+
+        #region Constructors of the class
+        ///<summary>
+        /// Constructors Functions.
+        ///</summary>
+
+        // Constructor by defect.
+        public ControlTwoUsers()
+        {
+            mFlag = "X";
+            //Flag = "X";
+        }
+
+        #endregion
+
+        #region Methods
+        ///<summary>
+        /// Member functions.
+        ///</summary>
+
+        public void InitializeData()
+        {
+            mFlag = "X";
+            //Flag = "X";
+        }
+
+        // ObjectControlTwoUsers.InitializeControls(ListButtons, grbTicTacToe);
+        // ListButtons = ListButtons; grbTicTacToe = grbTicTacToe;
+        public void InitializeControls(List<Button> ListButtons,
+                                         GroupBox grbTicTacToe)
+        {
+            // Borrar el texto de los botones que están dentro de la lista enlazada.
+            // Se accede a cada nodo que contiene un objeto de tipo Button
+            // Count = 9;
+            for (int i = 0; i < ListButtons.Count; i++)
+                ListButtons[i].Text = "";
+
+            EnabledControls(grbTicTacToe);
+        }
+
+        public void DisabledControls(GroupBox grbTicTacToe)
+        {
+            grbTicTacToe.Enabled = false;
+        }
+
+        public void EnabledControls(GroupBox grbTicTacToe)
+        {
+            grbTicTacToe.Enabled = true;
+        }
+
+        // ObjectControlTwoUsers.MarkButton(btnTicTacToe5);
+        // ObjectButton = btnTicTacToe5;     
+        // mFlag = "X";
+        // btnTicTacToe5.Text = "X";
+        // mFlag = "0";
+        // ObjectControlTwoUsers.MarkButton(btnTicTacToe3);
+        // ObjectButton = btnTicTacToe3;
+        // mFlag = "0";
+        // btnTicTacToe3.Text = "0";
+        // mFlag = "X";
+        // ObjectControlTwoUsers.MarkButton(btnTicTacToe1);
+        // ObjectButton = btnTicTacToe3; 
+        // mFlag = "X";
+        // btnTicTacToe3.Text = "X";
+        // mFlag = "0";
+        // ObjectControlTwoUsers.MarkButton(btnTicTacToe6);
+        // mFlag = "0";
+        // ObjectButton = btnTicTacToe6;
+        // btnTicTacToe6.Text = "0";
+        // mFlag = "X";
+        // ObjectControlTwoUsers.MarkButton(btnTicTacToe7);
+        // ObjectButton = btnTicTacToe7; 
+        // mFlag = "X";
+        // btnTicTacToe7.Text = "X";
+        // mFlag = "0";
+        // ObjectControlTwoUsers.MarkButton(btnTicTacToe9);
+        // ObjectButton = btnTicTacToe9; 
+        // btnTicTacToe9.Text = "0";
+        // mFlag = "X";
+        public void MarkButton(Button ObjectButton)
+        {
+            if (ObjectButton.Text == "")
+            {
+                if (mFlag == "X")
+                {
+                    ObjectButton.Text = mFlag;
+                    mFlag = "0";
+                }
+                else //(mFlag != "X")
+                {
+                    ObjectButton.Text = mFlag;
+                    mFlag = "X";
+                }
+
+            }
+            //else //(ObjectButton.Text != "")
+            //{
+            //    MessageBox.Show("Casillero Ocupado...",
+            //                    "Mensaje de Control",
+            //                    MessageBoxButtons.OK,
+            //                    MessageBoxIcon.Exclamation);
+            //    return;
+            //}
+        }
+
+        // 8 casos
+        //000 // 1era Fila de nodos 0,1,2
+        //000 // 2da Fila de nodos  3,4,5
+        //000 // 3ra Fila de nodos  6,7,8
+
+        // 8 casos
+        //xxx // 1era Fila de nodos 0,1,2
+        //xxx // 2da Fila de nodos  3,4,5
+        //xxx // 3era Fila de nodos 6,7,8
+
+        // 3era Columna de ceros
+        // 0,1,2
+        // (ListButtons[2].Text == ListButtons[5].Text && ListButtons[5].Text == ListButtons[8].Text && ListButtons[8].Text == "0")
+        // btnTicTacToe3.Text == btnTicTacToe6.Text && btnTicTacToe6.Text == btnTicTacToe9.Text && btnTicTacToe9.Text == "0"
+
+        // 1era Fila de ceros
+        // 0,1,2
+        // (ListButtons[0].Text == ListButtons[1].Text && ListButtons[1].Text == ListButtons[2].Text && ListButtons[2].Text == "0")
+        // btnTicTacToe1.Text == btnTicTacToe2.Text && btnTicTacToe2.Text == btnTicTacToe3.Text && btnTicTacToe3.Text == "0"
+        public void CheckWinner(List<Button> ListButtons,
+                                GroupBox grbTicTacToe)
+        {
+            // Jugador 0 - 8 casos
+            if (ListButtons[0].Text == ListButtons[1].Text && ListButtons[1].Text == ListButtons[2].Text && ListButtons[2].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[2].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[3].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[5].Text && ListButtons[5].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[5].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[6].Text == ListButtons[7].Text && ListButtons[7].Text == ListButtons[8].Text && ListButtons[8].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[0].Text == ListButtons[3].Text && ListButtons[3].Text == ListButtons[6].Text && ListButtons[6].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[6].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[1].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[7].Text && ListButtons[7].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[7].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[2].Text == ListButtons[5].Text && ListButtons[5].Text == ListButtons[8].Text && ListButtons[8].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[0].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[8].Text && ListButtons[8].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[6].Text == ListButtons[4].Text && ListButtons[6].Text == ListButtons[2].Text && ListButtons[2].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[2].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            // Jugador X - 8 casos
+            else if (ListButtons[0].Text == ListButtons[1].Text && ListButtons[1].Text == ListButtons[2].Text && ListButtons[2].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[2].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[3].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[5].Text && ListButtons[5].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[5].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[6].Text == ListButtons[7].Text && ListButtons[7].Text == ListButtons[8].Text && ListButtons[8].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[0].Text == ListButtons[3].Text && ListButtons[3].Text == ListButtons[6].Text && ListButtons[6].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[6].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[1].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[7].Text && ListButtons[7].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[7].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[2].Text == ListButtons[5].Text && ListButtons[5].Text == ListButtons[8].Text && ListButtons[8].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[0].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[8].Text && ListButtons[8].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            else if (ListButtons[6].Text == ListButtons[4].Text && ListButtons[6].Text == ListButtons[2].Text && ListButtons[2].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[2].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+            // Empate (Se jugó una partida entre X y 0) -> Todos los casilleros están ocupados.
+            else if (ListButtons[0].Text != "" && ListButtons[1].Text != "" &&
+                     ListButtons[2].Text != "" && ListButtons[3].Text != "" && ListButtons[4].Text != "" &&
+                     ListButtons[5].Text != "" && ListButtons[6].Text != "" && ListButtons[7].Text != "" &&
+                     ListButtons[8].Text != "")
+            {
+                MessageBox.Show("Empate", "Resultado");
+                DisabledControls(grbTicTacToe);
+            }
+        }
+
+        #endregion
+
+    }
+}

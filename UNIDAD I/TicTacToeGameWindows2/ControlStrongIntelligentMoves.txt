@@ -1,0 +1,533 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Drawing;
+using System.Windows.Forms;
+
+
+namespace TicTacToeGameLibrary
+{
+    public class ControlStrongIntelligentMoves
+    {
+        #region Atributes of the class
+        ///<summary>
+        /// Member data (variables).
+        ///</summary>
+
+        private string mFlag;
+        private int mMoveNumber;
+        private int mGameControl;
+        private int[] mArrayMoves = new int[9];
+        private int mSum;
+
+        #endregion
+
+        #region Properties
+        ///<summary>
+        /// Manage access descriptors (get & set).
+        ///</summary>
+
+        public string Flag
+        {
+            get { return mFlag; }
+            set { mFlag = value; }
+        }
+
+        public int MoveNumber
+        {
+            get { return mMoveNumber; }
+            set { mMoveNumber = value; }
+        }
+
+        public int GameControl
+        {
+            get { return mGameControl; }
+            set { mGameControl = value; }
+        }
+
+        public int[] ArrayMoves
+        {
+            get { return mArrayMoves; }
+            set { mArrayMoves = value; }
+        }
+
+        #endregion
+
+        #region Constructors of the class
+        ///<summary>
+        /// Constructors Functions.
+        ///</summary>
+
+        // Constructor by defect.
+        public ControlStrongIntelligentMoves()
+        {
+            for (int i = 0; i < mArrayMoves.Length; i++)
+                mArrayMoves[i] = 0;
+
+            mFlag = "X";
+            mMoveNumber = 0;
+            mGameControl = 0;
+            mSum = 0;
+        }
+
+        #endregion
+
+        #region Methods
+        ///<summary>
+        /// Member functions.
+        ///</summary>
+
+        public void InitializeData()
+        {
+            for (int i = 0; i < mArrayMoves.Length; i++)
+                mArrayMoves[i] = 0;
+
+            mFlag = "X";
+            mMoveNumber = 0;
+            mGameControl = 0;
+            mSum = 0;
+        }
+
+        public void InitializeControls(List<Button> ListButtons,
+                                         GroupBox grbTicTacToe)
+        {
+            for (int i = 0; i < ListButtons.Count; i++)
+                ListButtons[i].Text = "";
+
+            EnabledControls(grbTicTacToe);
+        }
+
+        public void DisabledControls(GroupBox grbTicTacToe)
+        {
+            grbTicTacToe.Enabled = false;
+        }
+
+        public void EnabledControls(GroupBox grbTicTacToe)
+        {
+            grbTicTacToe.Enabled = true;
+        }
+
+        public int CheckWinner(List<Button> ListButtons,
+                                GroupBox grbTicTacToe)
+        {
+            if (ListButtons[0].Text == ListButtons[1].Text && ListButtons[1].Text == ListButtons[2].Text && ListButtons[2].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[2].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[3].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[5].Text && ListButtons[5].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[5].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[6].Text == ListButtons[7].Text && ListButtons[7].Text == ListButtons[8].Text && ListButtons[8].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[0].Text == ListButtons[3].Text && ListButtons[3].Text == ListButtons[6].Text && ListButtons[6].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[6].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[1].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[7].Text && ListButtons[7].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[7].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[2].Text == ListButtons[5].Text && ListButtons[5].Text == ListButtons[8].Text && ListButtons[8].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[0].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[8].Text && ListButtons[8].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[6].Text == ListButtons[4].Text && ListButtons[6].Text == ListButtons[2].Text && ListButtons[2].Text == "0")
+            {
+                MessageBox.Show("Ganó " + ListButtons[2].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[0].Text == ListButtons[1].Text && ListButtons[1].Text == ListButtons[2].Text && ListButtons[2].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[2].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[3].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[5].Text && ListButtons[5].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[5].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[6].Text == ListButtons[7].Text && ListButtons[7].Text == ListButtons[8].Text && ListButtons[8].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[0].Text == ListButtons[3].Text && ListButtons[3].Text == ListButtons[6].Text && ListButtons[6].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[6].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[1].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[7].Text && ListButtons[7].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[7].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[2].Text == ListButtons[5].Text && ListButtons[5].Text == ListButtons[8].Text && ListButtons[8].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[0].Text == ListButtons[4].Text && ListButtons[4].Text == ListButtons[8].Text && ListButtons[8].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[8].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[6].Text == ListButtons[4].Text && ListButtons[6].Text == ListButtons[2].Text && ListButtons[2].Text == "X")
+            {
+                MessageBox.Show("Ganó " + ListButtons[2].Text, "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else if (ListButtons[0].Text != "" && ListButtons[1].Text != "" &&
+                     ListButtons[2].Text != "" && ListButtons[3].Text != "" && ListButtons[4].Text != "" &&
+                     ListButtons[5].Text != "" && ListButtons[6].Text != "" && ListButtons[7].Text != "" &&
+                     ListButtons[8].Text != "")
+            {
+                MessageBox.Show("Empate", "Resultado");
+                DisabledControls(grbTicTacToe);
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        private void ShowUserMove(Button ObjectButton)
+        {
+            ObjectButton.Text = mFlag;
+            mArrayMoves[ObjectButton.TabIndex] = 1;
+            mMoveNumber++;
+            mFlag = "0";
+        }
+
+        private void ShowNPCMove(List<Button> ListButtons, int index)
+        {
+            ListButtons[index].Text = mFlag;
+            mArrayMoves[index] = 3;
+            mMoveNumber++;
+            mFlag = "X";
+        }
+
+        private int GenerateRandomNPCMove(List<Button> ListButtons)
+        {
+            int index = 0;
+            Random RandomNumber = new Random();
+
+            do
+            {
+                index = RandomNumber.Next(0, 9);
+                if (mArrayMoves[index] == 0 && index < mArrayMoves.Length)
+                    return index;
+            }
+            while (true);
+        }
+
+        public bool PlayUser(Button ObjectButton, List<Button> ListButtons,
+                             GroupBox grbTicTacToe)
+        {
+            if (ObjectButton.Text == "")
+            {
+                if (mFlag == "X")
+                {
+                    ShowUserMove(ObjectButton);
+                    mGameControl = CheckWinner(ListButtons, grbTicTacToe);
+                }
+                return true;
+            }
+            else
+                return false;
+            //else
+            //{
+            //    MessageBox.Show("Casillero ocupado...", "Mensaje de Control",
+            //                    MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            //}
+        }
+
+        private int HeuristicNumericalMethod(List<Button> ListButtons)
+        {
+            int index = 0;
+            if (mArrayMoves[0] + mArrayMoves[1] + mArrayMoves[2] == 6)
+            {
+                if (mArrayMoves[0] == 0) index = 0;
+                else if (mArrayMoves[1] == 0) index = 1;
+                else if (mArrayMoves[2] == 0) index = 2;
+                mSum = mArrayMoves[0] + mArrayMoves[1] + mArrayMoves[2];
+                return index;
+            }
+            else if (mArrayMoves[3] + mArrayMoves[4] + mArrayMoves[5] == 6)
+            {
+                if (mArrayMoves[3] == 0) index = 3;
+                else if (mArrayMoves[4] == 0) index = 4;
+                else if (mArrayMoves[5] == 0) index = 5;
+                mSum = mArrayMoves[3] + mArrayMoves[4] + mArrayMoves[5];
+                return index;
+            }
+            else if (mArrayMoves[6] + mArrayMoves[7] + mArrayMoves[8] == 6)
+            {
+                if (mArrayMoves[6] == 0) index = 6;
+                else if (mArrayMoves[7] == 0) index = 7;
+                else if (mArrayMoves[8] == 0) index = 8;
+                mSum = mArrayMoves[6] + mArrayMoves[7] + mArrayMoves[8];
+                return index;
+            }
+            //else if (mArrayMoves[0] + mArrayMoves[3] + mArrayMoves[6] == 6)
+            //{
+            //    if (mArrayMoves[0] == 0) index = 0;
+            //    else if (mArrayMoves[3] == 0) index = 3;
+            //    else if (mArrayMoves[6] == 0) index = 6;
+            //    mSum = mArrayMoves[0] + mArrayMoves[3] + mArrayMoves[6];
+            //    return index;
+            //}
+            else if (mArrayMoves[0] + mArrayMoves[3] + mArrayMoves[6] == 6)
+            {
+                if (mArrayMoves[0] == 0) index = 0;
+                else if (mArrayMoves[3] == 0) index = 3;
+                else if (mArrayMoves[6] == 0) index = 6;
+                mSum = mArrayMoves[0] + mArrayMoves[3] + mArrayMoves[6];
+                return index;
+            }
+            else if (mArrayMoves[1] + mArrayMoves[4] + mArrayMoves[7] == 6)
+            {
+                if (mArrayMoves[1] == 0) index = 1;
+                else if (mArrayMoves[4] == 0) index = 4;
+                else if (mArrayMoves[7] == 0) index = 7;
+                mSum = mArrayMoves[1] + mArrayMoves[4] + mArrayMoves[7];
+                return index;
+            }
+            else if (mArrayMoves[2] + mArrayMoves[5] + mArrayMoves[8] == 6)
+            {
+                if (mArrayMoves[2] == 0) index = 2;
+                else if (mArrayMoves[5] == 0) index = 5;
+                else if (mArrayMoves[8] == 0) index = 8;
+                mSum = mArrayMoves[2] + mArrayMoves[5] + mArrayMoves[8];
+                return index;
+            }
+            else if (mArrayMoves[0] + mArrayMoves[4] + mArrayMoves[8] == 6)
+            {
+                if (mArrayMoves[0] == 0) index = 0;
+                else if (mArrayMoves[4] == 0) index = 4;
+                else if (mArrayMoves[8] == 0) index = 8;
+                mSum = mArrayMoves[0] + mArrayMoves[4] + mArrayMoves[8];
+                return index;
+            }
+            else if (mArrayMoves[2] + mArrayMoves[4] + mArrayMoves[6] == 6)
+            {
+                if (mArrayMoves[2] == 0) index = 2;
+                else if (mArrayMoves[4] == 0) index = 4;
+                else if (mArrayMoves[6] == 0) index = 6;
+                mSum = mArrayMoves[2] + mArrayMoves[4] + mArrayMoves[6];
+                return index;
+            }
+            else if (mArrayMoves[0] + mArrayMoves[1] + mArrayMoves[2] == 2)
+            {
+                if (mArrayMoves[0] == 0) index = 0;
+                else if (mArrayMoves[1] == 0) index = 1;
+                else if (mArrayMoves[2] == 0) index = 2;
+                mSum = mArrayMoves[0] + mArrayMoves[1] + mArrayMoves[2];
+                return index;
+            }
+            else if (mArrayMoves[3] + mArrayMoves[4] + mArrayMoves[5] == 2)
+            {
+                if (mArrayMoves[3] == 0) index = 3;
+                else if (mArrayMoves[4] == 0) index = 4;
+                else if (mArrayMoves[5] == 0) index = 5;
+                mSum = mArrayMoves[3] + mArrayMoves[4] + mArrayMoves[5];
+                return index;
+            }
+            else if (mArrayMoves[6] + mArrayMoves[7] + mArrayMoves[8] == 2)
+            {
+                if (mArrayMoves[6] == 0) index = 6;
+                else if (mArrayMoves[7] == 0) index = 7;
+                else if (mArrayMoves[8] == 0) index = 8;
+                mSum = mArrayMoves[6] + mArrayMoves[7] + mArrayMoves[8];
+                return index;
+            }
+            else if (mArrayMoves[0] + mArrayMoves[3] + mArrayMoves[6] == 2)
+            {
+                if (mArrayMoves[0] == 0) index = 0;
+                else if (mArrayMoves[3] == 0) index = 3;
+                else if (mArrayMoves[6] == 0) index = 6;
+                mSum = mArrayMoves[0] + mArrayMoves[3] + mArrayMoves[6];
+                return index;
+            }
+
+            else if (mArrayMoves[1] + mArrayMoves[4] + mArrayMoves[7] == 2)
+            {
+                if (mArrayMoves[1] == 0) index = 1;
+                else if (mArrayMoves[4] == 0) index = 4;
+                else if (mArrayMoves[7] == 0) index = 7;
+                mSum = mArrayMoves[1] + mArrayMoves[4] + mArrayMoves[7];
+                return index;
+            }
+            else if (mArrayMoves[2] + mArrayMoves[5] + mArrayMoves[8] == 2)
+            {
+                if (mArrayMoves[2] == 0) index = 2;
+                else if (mArrayMoves[5] == 0) index = 5;
+                else if (mArrayMoves[8] == 0) index = 8;
+                mSum = mArrayMoves[2] + mArrayMoves[5] + mArrayMoves[8];
+                return index;
+            }
+            else if (mArrayMoves[0] + mArrayMoves[4] + mArrayMoves[8] == 2)
+            {
+                if (mArrayMoves[0] == 0) index = 0;
+                else if (mArrayMoves[4] == 0) index = 4;
+                else if (mArrayMoves[8] == 0) index = 8;
+                mSum = mArrayMoves[0] + mArrayMoves[4] + mArrayMoves[8];
+                return index;
+            }
+            else if (mArrayMoves[2] + mArrayMoves[4] + mArrayMoves[6] == 2)
+            {
+                if (mArrayMoves[2] == 0) index = 2;
+                else if (mArrayMoves[4] == 0) index = 4;
+                else if (mArrayMoves[6] == 0) index = 6;
+                mSum = mArrayMoves[2] + mArrayMoves[4] + mArrayMoves[6];
+                return index;
+            }
+            else if (mArrayMoves[0] + mArrayMoves[4] + mArrayMoves[8] == 5)
+            {
+                if (mArrayMoves[2] == 0) index = 2;
+                else if (mArrayMoves[6] == 0) index = 6;
+                else
+                    index = GenerateRandomNPCMove(ListButtons);
+                mSum = 5;
+                return index;
+            }
+            else if (mArrayMoves[2] + mArrayMoves[4] + mArrayMoves[6] == 5)
+            {
+                if (mArrayMoves[0] == 0) index = 0;
+                else if (mArrayMoves[8] == 0) index = 8;
+                else
+                    index = GenerateRandomNPCMove(ListButtons);
+                mSum = 5;
+                return index;
+            }
+            else if ((mArrayMoves[1] + mArrayMoves[5] == 2) && (mArrayMoves[2] == 0))
+            {
+                mSum = 2;
+                index = 2;
+                return index;
+            }
+            else if ((mArrayMoves[1] + mArrayMoves[3] == 2) && (mArrayMoves[0] == 0))
+            {
+                mSum = 2;
+                index = 0;
+                return index;
+            }
+            else if ((mArrayMoves[5] + mArrayMoves[7] == 2) && (mArrayMoves[8] == 0))
+            {
+                mSum = 2;
+                index = 8;
+                return index;
+            }
+            else if ((mArrayMoves[3] + mArrayMoves[7] == 2) && (mArrayMoves[6] == 0))
+            {
+                mSum = 2;
+                index = 6;
+                return index;
+            }
+            else
+            {
+                index = GenerateRandomNPCMove(ListButtons);
+                return index;
+            }
+        }
+
+        public void PlayNPC(List<Button> ListButtons, GroupBox grbTicTacToe)
+        {
+            int index;
+            Random NumeroRandomico = new Random();
+
+            if (mGameControl == 0)
+            {
+                if (mMoveNumber == 1)
+                {
+                    if (mArrayMoves[4] == 0)
+                    {
+                        index = 4;
+                        ShowNPCMove(ListButtons, index);
+                        mGameControl = CheckWinner(ListButtons, grbTicTacToe);
+                        return;
+                    }
+                    do
+                    {
+                        index = NumeroRandomico.Next(0, 9);
+                        if (mArrayMoves[index] == 0 && (index == 0 || index == 2 || index == 6 || index == 8))
+                        {
+                            ShowNPCMove(ListButtons, index);
+                            mGameControl = CheckWinner(ListButtons, grbTicTacToe);
+                            return;
+                        }
+                    } while (true);
+                }
+                else // mMoveNumber != 1
+                {
+                    //if (mArrayMoves[4] == 0)
+                    //{
+                    //    index = 4;
+                    //    ShowNPCMove(ListButtons, index);
+                    //    mGameControl = CheckWinner(ListButtons, grbTicTacToe);
+                    //    return;
+                    //}
+                    //else
+                    //{
+                        index = HeuristicNumericalMethod(ListButtons);
+
+                        if (mArrayMoves[4] == 3 && mSum == 5)
+                        {
+                            do
+                            {
+                                index = NumeroRandomico.Next(0, 9);
+                                if (mArrayMoves[index] == 0 && (index == 1 || index == 3 || index == 5 || index == 7))
+                                {
+                                    ShowNPCMove(ListButtons, index);
+                                    mGameControl = CheckWinner(ListButtons, grbTicTacToe);
+                                    return;
+                                }
+                            } while (true);
+                        }
+
+                        ShowNPCMove(ListButtons, index);
+                        mGameControl = CheckWinner(ListButtons, grbTicTacToe);
+                        return;
+                    //}
+                }
+            }
+            else
+                return;
+        }
+
+        #endregion
+
+    }
+}

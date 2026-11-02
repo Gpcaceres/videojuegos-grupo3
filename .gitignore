@@ -1,0 +1,12 @@
+# NetBeans / Java
+build/
+dist/
+nbproject/private/
+*.class
+
+# Visual Studio / C#
+bin/
+obj/
+.vs/
+*.suo
+*.user
