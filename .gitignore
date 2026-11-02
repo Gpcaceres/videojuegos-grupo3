@@ -10,3 +10,21 @@ obj/
 .vs/
 *.suo
 *.user
+
+# Angular
+node_modules/
+dist/
+.angular/
+
+# Go
+**/Backend/bin/
+*.exe
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls

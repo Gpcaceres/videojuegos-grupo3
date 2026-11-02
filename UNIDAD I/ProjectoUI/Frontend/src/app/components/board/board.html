@@ -1,0 +1,55 @@
+<div class="stage">
+  <div class="glow"></div>
+  <div class="grid" role="grid" aria-label="Tablero del Tres en Raya">
+    @for (i of cells; track i) {
+      <button
+        type="button"
+        class="cell"
+        role="gridcell"
+        [class.filled]="board()[i] !== ''"
+        [class.last]="lastMove() === i"
+        [class.win]="inLine(i)"
+        [class.dim]="line() && !inLine(i)"
+        [style.--i]="i"
+        [disabled]="!canPlay() || board()[i] !== ''"
+        [attr.aria-label]="'Casilla ' + (i + 1) + (board()[i] ? ': ' + board()[i] : ' vacía')"
+        (click)="click(i, $event)"
+        (pointerenter)="cellHover.emit(i)"
+      >
+        <span class="num">{{ i + 1 }}</span>
+        @if (board()[i] === 'X') {
+          <svg class="mark x" viewBox="0 0 100 100" aria-hidden="true">
+            <path class="s1" d="M 24 24 L 76 76" />
+            <path class="s2" d="M 76 24 L 24 76" />
+          </svg>
+        } @else if (board()[i] === '0') {
+          <svg class="mark o" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="27" />
+          </svg>
+        } @else if (canPlay()) {
+          <svg class="ghost" viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M 30 30 L 70 70 M 70 30 L 30 70" />
+          </svg>
+        }
+      </button>
+    }
+
+    @if (linePath(); as d) {
+      <svg class="winline" viewBox="0 0 300 300" aria-hidden="true">
+        <path [attr.d]="d" [style.stroke]="lineColor()" class="halo" />
+        <path [attr.d]="d" [style.stroke]="lineColor()" />
+      </svg>
+    }
+  </div>
+
+  @for (rp of ripples(); track rp.id) {
+    <span class="ripple" [style]="rippleStyle(rp)"></span>
+  }
+
+  @if (thinking()) {
+    <div class="brain" animate.enter="pop-in" animate.leave="pop-out">
+      <span></span><span></span><span></span>
+      <em>JCC pensando…</em>
+    </div>
+  }
+</div>

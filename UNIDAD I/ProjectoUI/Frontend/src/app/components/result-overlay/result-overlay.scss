@@ -1,0 +1,118 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(5, 5, 15, 0.55);
+  backdrop-filter: blur(6px);
+  animation: fade 0.35s ease both;
+}
+
+:host([data-outcome='loss']) {
+  background: radial-gradient(circle, rgba(127, 29, 29, 0.35), rgba(5, 5, 15, 0.75));
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.card {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 28px 24px 22px;
+  text-align: center;
+  border-radius: 26px;
+  background: linear-gradient(160deg, rgba(30, 27, 75, 0.92), rgba(10, 10, 31, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 40px 120px -20px rgba(0, 0, 0, 0.9);
+  animation: card-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+
+  &[data-outcome='win'] {
+    box-shadow:
+      0 0 0 1px var(--x-color),
+      0 0 80px -10px var(--x-color);
+  }
+
+  &[data-outcome='loss'] {
+    box-shadow:
+      0 0 0 1px var(--o-color),
+      0 0 80px -10px var(--o-color);
+  }
+}
+
+.emoji {
+  font-size: 3.4rem;
+  line-height: 1;
+  animation: bounce 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s infinite;
+}
+
+h2 {
+  margin: 10px 0 6px;
+  font-size: clamp(2rem, 8vw, 2.8rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  background: linear-gradient(90deg, var(--x-color), #a78bfa, var(--o-color));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  span {
+    display: inline-block;
+    animation: letter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: calc(var(--d) * 50ms + 250ms);
+  }
+}
+
+.msg {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.sub {
+  margin: 8px 0 20px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.8) rotateX(30deg);
+  }
+}
+
+@keyframes letter {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(1.6) rotate(-10deg);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-14px) scale(1.1) rotate(-6deg);
+  }
+}

@@ -1,0 +1,117 @@
+<app-background />
+
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <span class="lx">X</span><span class="lo">O</span>
+      </div>
+      <div>
+        <h1>Tres en Raya <span class="ia">IA</span></h1>
+        <p>Proyecto 3 · Grupo 3 · Go + Angular</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="status" [attr.data-online]="store.backendOnline()">
+        <i></i>
+        {{ store.backendOnline() === null ? 'Conectando…' : store.backendOnline() ? 'Backend Go en línea' : 'Backend desconectado' }}
+      </span>
+      <button type="button" class="icon" (click)="sound.toggle()" [attr.aria-label]="sound.enabled() ? 'Silenciar' : 'Activar sonido'">
+        {{ sound.enabled() ? '🔊' : '🔇' }}
+      </button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel left">
+      <app-mode-selector [modes]="store.modes()" [level]="store.level()" (pick)="onMode($event)" />
+      @if (wipMode(); as m) {
+        <div class="wip-note" animate.enter="pop-in" animate.leave="pop-out">
+          <b>{{ m.name }}</b> está en construcción. Su lógica va en
+          <code>Backend/internal/game</code> (ver <code>{{ m.original }}</code>).
+        </div>
+      }
+    </aside>
+
+    <section class="center">
+      <div class="turn" [attr.data-turn]="store.thinking() ? 'npc' : 'user'">
+        @if (store.outcome()) {
+          <span>{{ store.resultText() }}</span>
+        } @else if (store.thinking()) {
+          <span>Turno de la <b class="o">JCC (0)</b></span>
+        } @else {
+          <span>Tu turno · juegas con <b class="x">X</b></span>
+        }
+      </div>
+
+      <app-board
+        [board]="store.board()"
+        [line]="store.line()"
+        [lastMove]="store.lastMove()"
+        [thinking]="store.thinking()"
+        [canPlay]="store.canPlay()"
+        [outcome]="store.outcome()"
+        [round]="store.round()"
+        (cellClick)="play($event)"
+        (cellHover)="store.canPlay() && sound.hover()"
+      />
+
+      <div class="controls">
+        <button type="button" class="primary" (click)="again()" [disabled]="store.busy() || !store.backendOnline()">
+          ↻ Nuevo juego
+        </button>
+        <span class="hint">Teclas 1–9 o teclado numérico</span>
+      </div>
+
+      @if (store.error(); as err) {
+        <div class="error" animate.enter="pop-in" animate.leave="pop-out">
+          <span>⚠ {{ err }}</span>
+          @if (store.backendOnline() === false) {
+            <button type="button" class="ghost" (click)="store.retryConnection()">Reintentar</button>
+          }
+        </div>
+      }
+    </section>
+
+    <aside class="panel right">
+      <div class="scoreboard">
+        <h2 class="label">Marcador · {{ store.mode()?.name ?? '—' }}</h2>
+        <div class="scores">
+          <div class="score win"><b>{{ store.score().win }}</b><span>Ganadas</span></div>
+          <div class="score draw"><b>{{ store.score().draw }}</b><span>Empates</span></div>
+          <div class="score loss"><b>{{ store.score().loss }}</b><span>Perdidas</span></div>
+        </div>
+        <div class="score-foot">
+          <span>Racha sin perder: <b>{{ scores.streak() }}</b></span>
+          <button type="button" class="link" (click)="resetScore()">Reiniciar</button>
+        </div>
+      </div>
+
+      @if (store.level() === 3) {
+        <app-ai-inspector [weights]="store.weights()" [lastMove]="store.lastMove()" />
+      }
+
+      <div class="log">
+        <h2 class="label">Bitácora</h2>
+        <ol>
+          @for (e of store.log(); track e.id) {
+            <li [attr.data-who]="e.who" animate.enter="log-in">{{ e.text }}</li>
+          }
+        </ol>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    ESPE · Videojuegos · Port fiel de <code>ControlStrongIntelligentMoves</code> (C#) a Go
+  </footer>
+</div>
+
+@if (store.outcome() && showOverlay()) {
+  <app-result-overlay
+    [outcome]="store.outcome()!"
+    [text]="store.resultText()"
+    (again)="again()"
+    (dismiss)="showOverlay.set(false)"
+  />
+}
