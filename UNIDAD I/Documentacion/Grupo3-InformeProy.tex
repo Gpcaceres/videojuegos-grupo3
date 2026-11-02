@@ -33,8 +33,14 @@
 \definecolor{pend}{RGB}{180,120,0}
 \definecolor{codebg}{RGB}{245,245,250}
 
-% Marca para los apartados que completan los compañeros
-\newcommand{\pendiente}[1]{\par\noindent\fcolorbox{pend}{pend!8}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\small\textbf{\textcolor{pend}{Pendiente:}} #1}}\par\medskip}
+% Marcadores explícitos: se sustituyen automáticamente al agregar la captura real.
+\newcommand{\capturapendiente}[2]{%
+ \IfFileExists{Img/#1}{\includegraphics[width=0.88\linewidth,height=0.33\textheight,keepaspectratio]{Img/#1}}{%
+  \fcolorbox{pend}{pend!8}{\parbox[c][3.2cm][c]{0.86\linewidth}{\centering
+   \textbf{Captura pendiente:} #2\\[0.5em]
+   \texttt{\detokenize{Img/#1}}\\[0.5em]
+   \small Agregar una captura real de la aplicación o ejecución indicada.}}}%
+}
 
 \lstdefinelanguage{Go}{
   morekeywords={package,import,func,return,if,else,for,range,switch,case,default,type,struct,var,const,interface,map,go,defer,true,false,nil},
@@ -75,7 +81,7 @@
   {\color{espe}\rule{\linewidth}{1pt}}\par\vspace{0.3cm}
   {\LARGE\bfseries Tres en Raya con Inteligencia Artificial\par}
   \vspace{0.2cm}
-  {\large Proyecto 3: Tic-Tac-Toe (UnbeatableAI + MediumAI) -- Go (Web) + Angular\par}
+  {\large Proyecto 3: Tic-Tac-Toe (MediumAI, UnbeatableAI y Minimax) -- Go (Web) + Angular\par}
   \vspace{0.3cm}
   {\color{espe}\rule{\linewidth}{1pt}}\par
   \vspace{1.2cm}
@@ -94,40 +100,41 @@
 \newpage
 
 % =====================================================================
-\section{Proyectos Propuestos del Capítulo 1}
+\section{Presentación del proyecto}
 % =====================================================================
-El docente propuso implementar el juego del Tres en Raya con niveles de
-dificultad en distintas tecnologías. Al Grupo 3 le corresponden los
-proyectos web en Go y JavaScript:
+Se desarrolló el videojuego \emph{Tres en Raya con Inteligencia Artificial}
+mediante una arquitectura cliente--servidor. Se utilizó Go para el backend y
+Angular para el frontend, con comunicación HTTP/JSON a través de una API REST.
+La lógica del juego y la selección de movimientos se ejecutan en el servidor;
+la interfaz web permite seleccionar la modalidad, jugar y consultar los resultados.
 
 \begin{table}[H]
 \centering
-\caption{Proyecto 3 -- Grupo 3}
-\begin{tabular}{clll}
+\caption{Modalidades de inteligencia artificial implementadas}
+\begin{tabular}{lll}
 \toprule
-\textbf{N.º} & \textbf{Variante de IA} & \textbf{Tecnología} & \textbf{Estado} \\
+\textbf{Modalidad} & \textbf{Tecnología} & \textbf{Estado}\\
 \midrule
-1 & UnbeatableAI & Go (Web) + Angular & \textbf{Implementado} \\
-2 & MediumAI & Go (Web) + Angular & \textbf{Implementado} \\
-3 & UnbeatableAI & JavaScript (Web) & -- \\
-4 & MediumAI & JavaScript (Web) & -- \\
-5 & UnbeatableAI $\rightarrow$ MinMax & Go (Web) + Angular & Apartado preparado \\
-6 & UnbeatableAI $\rightarrow$ MinMax & JavaScript (Web) & -- \\
+MediumAI & Go (Web) + Angular & \textbf{Implementado}\\
+UnbeatableAI & Go (Web) + Angular & \textbf{Implementado}\\
+UnbeatableAI con Minimax & Go (Web) + Angular & \textbf{Implementado}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-El equipo eligió \textbf{Go} para el backend y \textbf{Angular} para el
-frontend. Por especificación, la lógica del juego es \emph{exactamente la
-misma} que la de la versión oficial del docente
-(\texttt{Tic-Tac-Toe-Game-Windows-Professor}); solo cambia la tecnología.
-Esa versión trae una aplicación de Windows Forms por variante:
+Se migraron las tres variantes del proyecto C\#
+\texttt{Tic-Tac-Toe-Game-Windows-Professor}, desarrollado originalmente con
+Windows Forms. La migración comprendió la adaptación de tipos, estructuras de
+datos y controles gráficos a la arquitectura web. En Minimax se conservaron el
+orden de evaluación, las puntuaciones y los criterios de selección de movimientos.
+La adaptación del muestreo aleatorio de UnbeatableAI se describe en la
+sección~\ref{sec:hallazgos}. Las versiones de referencia se presentan a continuación:
 
 \begin{table}[H]
 \centering
-\caption{Versiones de referencia del docente}
+\caption{Versiones C\# utilizadas como referencia}
 \small
-\begin{tabular}{lll}
+\begin{tabular}{p{2.3cm}p{6.6cm}p{4cm}}
 \toprule
 \textbf{Variante} & \textbf{Carpeta} & \textbf{Clase}\\
 \midrule
@@ -146,21 +153,25 @@ MinMax & \texttt{Tic-Tac-Toe-Version-MiniMax} & \texttt{UnbeatableAIController}\
 \subsection{Introducción}
 
 \subsubsection{Propósito}
-Este documento especifica los requerimientos del videojuego educativo
-\emph{Tres en Raya con IA} en su versión web. Va dirigido al docente de la
-asignatura y a los integrantes del grupo.
+Se especifican los requisitos funcionales y no funcionales del videojuego web
+\emph{Tres en Raya con IA}, con base en IEEE 830-1998~\cite{ieee830}. La
+especificación establece el comportamiento del sistema, sus interfaces y los
+criterios de verificación de las funcionalidades implementadas.
 
 \subsubsection{Alcance}
 El sistema permite que un usuario juegue al Tres en Raya contra un
 \emph{Jugador Controlado por la Computadora} (JCC) desde un navegador. La
-JCC decide sus jugadas con el método numérico heurístico de la referencia
-(pesos usuario = 1, JCC = 3, vacío = 0). Los niveles implementados son \textbf{UnbeatableAI} y \textbf{MediumAI};
-\textbf{UnbeatableAI $\rightarrow$ MinMax} permanece preparado.
+JCC dispone de tres modalidades implementadas: \textbf{MediumAI} (1),
+\textbf{UnbeatableAI} (2) y \textbf{UnbeatableAI con Minimax} (3). Las dos primeras
+usan pesos 0/1/3; Minimax usa caracteres en una matriz 3$\times$3. El sistema
+comprende la gestión de partidas, la alternancia de turnos, la detección del
+resultado y su presentación en Angular. La API REST proporciona el estado del
+tablero y los eventos de cada jugada.
 
 \subsubsection{Definiciones, acrónimos y abreviaturas}
 \begin{description}[leftmargin=2.6cm,style=nextline]
-  \item[JCC] Jugador Controlado por la Computadora (marca ``O'').
-  \item[Usuario] Jugador humano (marca ``X''); siempre empieza.
+  \item[JCC] Jugador Controlado por la Computadora (marca «O»).
+  \item[Usuario] Jugador humano (marca «X»); siempre empieza.
   \item[mArrayMoves] Vector $V_k$ de 9 posiciones con los pesos 0/1/3.
   \item[API REST] Interfaz HTTP/JSON entre el frontend y el backend.
   \item[SPA] \emph{Single Page Application}, aplicación web de una sola página.
@@ -172,21 +183,28 @@ JCC decide sus jugadas con el método numérico heurístico de la referencia
   \item Villacís, C. et al., \emph{Optimización del Juego del Tres en Raya con
         Niveles de Dificultad, Utilizando Técnicas Heurísticas de IA}, ESPE.
   \item Material de clase: \emph{Caso 1}, \emph{Caso 2} y \emph{Caso 3 TTT}.
-  \item Código del docente: \texttt{Tic-Tac-Toe-Game-Windows-Professor} (IA fuerte, IA débil y MiniMax).
+  \item Código C\# de referencia: \texttt{Tic-Tac-Toe-Game-Windows-Professor} (IA fuerte, IA débil y MiniMax).
 \end{itemize}
 
 \subsection{Descripción general}
 
 \subsubsection{Perspectiva del producto}
-Es una aplicación cliente--servidor. El \textbf{backend en Go} contiene
-\emph{toda} la lógica del juego (port 1:1 de las clases C\#) y la expone como
-API REST. El \textbf{frontend en Angular} solo dibuja el tablero, envía los
-clics y anima los eventos que devuelve el servidor.
+La arquitectura cliente--servidor separa la lógica de juego de la presentación.
+En el \textbf{backend Go} se implementaron las reglas y las decisiones de IA
+migradas desde C\#, accesibles mediante la API REST. En el \textbf{frontend Angular}
+se implementaron la visualización del tablero, el envío de jugadas y la
+reproducción de los eventos recibidos.
 
 \subsubsection{Funciones del producto}
-Seleccionar modo de juego, iniciar una partida nueva, marcar una casilla,
-recibir la jugada de la JCC, conocer el resultado (``¡Ganó X!'', ``¡Ganó O!'' o
-``¡Empate!''), ver el marcador y ver cómo razona la IA (pesos y sumas por línea).
+Se permite seleccionar la modalidad de IA, iniciar o reiniciar una partida,
+marcar una casilla libre, recibir la respuesta de la JCC y consultar el resultado,
+el marcador y el inspector de las modalidades numéricas.
+MediumAI y UnbeatableAI emiten «¡Ganó X!», «¡Ganó O!» y «¡Empate!» con título
+«Resultado»; Minimax emite «You Win!», «AI Wins!» e «It's a Draw!» con título
+«Tic Tac Toe». La API conserva pesos de presentación para Minimax, pero Angular
+oculta el inspector numérico en ese modo mediante una condición en
+\texttt{app.html}. La visualización de Minimax comprende el tablero y la bitácora
+de movimientos.
 
 \subsubsection{Características de los usuarios}
 Niños de 7 a 11 años (público objetivo del juego original) y estudiantes.
@@ -195,7 +213,7 @@ No se requiere conocimiento técnico: basta con hacer clic o usar las teclas
 
 \subsubsection{Restricciones}
 \begin{itemize}
-  \item La lógica del juego no puede modificarse respecto al original.
+  \item La migración debe conservar el comportamiento funcional de las variantes C\#.
   \item Backend en Go~1.23 o superior, solo con la librería estándar.
   \item Frontend en Angular~22 con navegadores modernos (Chrome, Edge, Firefox).
 \end{itemize}
@@ -215,18 +233,21 @@ redirige \texttt{/api} mediante \texttt{proxy.conf.json}.
 \toprule
 \textbf{ID} & \textbf{Descripción} & \textbf{Prioridad}\\
 \midrule\endhead
-RF01 & El sistema mostrará un tablero de 3$\times$3 casillas numeradas 0--8 (TabIndex). & Alta\\
-RF02 & El usuario podrá seleccionar el modo de juego; los modos no implementados se mostrarán como ``en construcción''. & Alta\\
-RF03 & El usuario siempre inicia con la marca ``X''. & Alta\\
-RF04 & Al marcar una casilla libre, el sistema registrará peso 1 en \texttt{mArrayMoves}; una casilla ocupada se ignora. & Alta\\
-RF05 & En su primera jugada la JCC tomará el centro (4) si está libre; si no, una esquina aleatoria (0, 2, 6, 8). En las jugadas siguientes, si el centro está libre, lo toma. & Alta\\
-RF06 & La JCC aplicará el método numérico: suma 6 $\Rightarrow$ gana; suma 2 $\Rightarrow$ bloquea; suma 5 en diagonal $\Rightarrow$ caso trivial; dos lados adyacentes del usuario $\Rightarrow$ esquina intermedia (orden 1+3$\to$0, 1+5$\to$2, 3+7$\to$6, 5+7$\to$8); en otro caso, casilla aleatoria. & Alta\\
-RF07 & Si la JCC está en el centro y la regla de suma 5 aplica, jugará un lado aleatorio entre 1, 5 y 7 (comportamiento del código del docente, ver sección~\ref{sec:hallazgos}). & Alta\\
-RF08 & El sistema verificará ganador recorriendo las 8 líneas (filas, columnas, diagonales); con 9 jugadas sin ganador declara empate. Mensajes: ``¡Ganó X!'', ``¡Ganó O!'', ``¡Empate!''. & Alta\\
+RF01 & El sistema mostrará un tablero 3$\times$3. La API usa índices 0--8; el teclado de la interfaz admite 1--9. & Alta\\
+RF02 & El usuario podrá seleccionar MediumAI (1), UnbeatableAI (2) o Minimax (3), habilitados por el catálogo de la API. & Alta\\
+RF03 & El usuario siempre inicia con la marca «X». & Alta\\
+RF04 & Una casilla libre recibe X; una ocupada se ignora sin provocar otra jugada de IA. La respuesta expone peso 1 para X. Los índices fuera de 0--8 se rechazan. & Alta\\
+RF05 & En UnbeatableAI, en su primera jugada la JCC tomará el centro (4) si está libre; si no, una esquina aleatoria (0, 2, 6, 8). En las jugadas siguientes, si el centro está libre, lo toma. & Alta\\
+RF06 & UnbeatableAI aplicará el método numérico: suma 6 $\Rightarrow$ gana; suma 2 $\Rightarrow$ bloquea; suma 5 en diagonal $\Rightarrow$ caso trivial; dos lados adyacentes del usuario $\Rightarrow$ esquina intermedia (orden 1+3$\to$0, 1+5$\to$2, 3+7$\to$6, 5+7$\to$8); en otro caso, casilla aleatoria. & Alta\\
+RF07 & En UnbeatableAI, si la JCC está en el centro y la regla de suma 5 aplica, jugará un lado aleatorio entre 1, 5 y 7 (comportamiento de la versión C\# descrito en la sección~\ref{sec:hallazgos}). & Alta\\
+RF08 & Después de cada jugada se comprobarán filas, columnas y diagonales; el tablero lleno sin ganador produce empate. Se conservarán los mensajes de cada variante descritos en Funciones del producto. & Alta\\
 RF09 & Al terminar la partida el tablero se deshabilitará (equivalente a \texttt{grbTicTacToe.Enabled = false}). & Alta\\
 RF10 & El usuario podrá iniciar un juego nuevo en cualquier momento. & Media\\
 RF11 & El sistema mostrará un marcador de partidas ganadas, empatadas y perdidas por modo. & Media\\
-RF12 & El sistema mostrará los pesos de \texttt{mArrayMoves} y la suma de cada línea (inspector de IA). & Baja\\
+RF12 & El inspector mostrará pesos 0/1/3 y sumas en las IA numéricas. Minimax expondrá la conversión en arrayMoves solo como dato de presentación; Angular oculta ese panel para el nivel 3. & Baja\\
+RF13 & MediumAI tomará primero el centro libre; en otro caso buscará suma 6, luego suma 2 y finalmente una casilla libre aleatoria. & Alta\\
+RF14 & Minimax explorará con O maximizador y X minimizador; puntuará $10-d$, $-10+d$ o 0, restaurará las casillas y conservará el primer máximo estricto en orden 0--8. & Alta\\
+RF15 & Tras un final no habrá más movimientos; un juego nuevo o cambio de nivel reiniciará tablero y turno humano. & Alta\\
 \bottomrule
 \end{longtable}
 
@@ -239,22 +260,22 @@ RF12 & El sistema mostrará los pesos de \texttt{mArrayMoves} y la suma de cada 
 \toprule
 \textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
 \midrule\endhead
-RNF01 & Fidelidad & La lógica de la IA será idéntica a \texttt{UnbeatableAIController.cs} (versión IA Fuerte del docente).\\
-RNF02 & Rendimiento & El servidor responderá a cada jugada en menos de 50 ms.\\
+RNF01 & Fidelidad & Cada modo conservará las reglas de su variante C\#. Minimax mantendrá puntuaciones, orden y desempates, sin poda alfa-beta ni nuevas heurísticas. La adaptación del muestreo aleatorio de la IA fuerte se describe en la sección~\ref{sec:hallazgos}.\\
+RNF02 & Rendimiento & Objetivo local: responder a cada jugada en menos de 50 ms, sin animaciones. El muestreo HTTP descrito en Métricas verifica solo la primera jugada; la aceptación es parcial y no se extrapola a toda carga o despliegue.\\
 RNF03 & Usabilidad & Interfaz animada, con sonido opcional y soporte de teclado (1--9 y teclado numérico).\\
 RNF04 & Accesibilidad & Respeta \texttt{prefers-reduced-motion} y usa etiquetas ARIA en el tablero.\\
 RNF05 & Portabilidad & Funciona en navegadores modernos y es adaptable a celular, tablet y escritorio.\\
 RNF06 & Mantenibilidad & Cada modo vive en su propio archivo y cumple una interfaz común (\texttt{Controller}).\\
-RNF07 & Fiabilidad & Ninguna petición puede bloquear el servidor (protección ante bucles infinitos del original).\\
+RNF07 & Fiabilidad & UnbeatableAI comprobará disponibilidad antes del muestreo aleatorio restringido. Minimax finalizará su búsqueda finita.\\
 RNF08 & Concurrencia & Varias partidas simultáneas, aisladas por sesión, con exclusión mutua.\\
-RNF09 & Calidad & Pruebas automatizadas con \texttt{go test} para los Casos 1, 2 y 3.\\
+RNF09 & Calidad & Las pruebas de UnbeatableAI y Minimax deberán aprobar con \texttt{go test ./...}; \texttt{go vet ./...} no emitirá diagnósticos.\\
 \bottomrule
 \end{longtable}
 
 % =====================================================================
 \section{Modelo de Inteligencia Artificial}
 % =====================================================================
-El tablero se representa como el vector $V_k$, con $k = 0,\dots,8$, en el
+En las dos IA numéricas, el tablero se representa como el vector $V_k$, con $k = 0,\dots,8$, en el
 arreglo \texttt{mArrayMoves}. Cada casilla vale 0 (vacía), 1 (usuario) o
 3 (JCC). Para cada una de las 8 líneas se calcula la suma de sus tres
 casillas:
@@ -290,8 +311,8 @@ func (c *UnbeatableAIController) pick(a, b, d int) int {
 % =====================================================================
 
 \subsection{Variante MediumAI}
-\texttt{MediumAIController} porta la versi\'on de IA d\'ebil del docente y
-conserva sus pesos: 0 para una casilla vac\'ia, 1 para X y 3 para O. El turno
+Se implementó \texttt{MediumAIController} mediante la migración de la variante
+C\# de IA débil, con los pesos originales: 0 para una casilla vac\'ia, 1 para X y 3 para O. El turno
 humano siempre inicia con X. Despu\'es de cada jugada v\'alida, el controlador
 comprueba las ocho l\'ineas ganadoras y el empate; al terminar, registra el
 mensaje del resultado y deshabilita el tablero.
@@ -314,112 +335,177 @@ no incluye las reglas de suma 5 ni la estrategia de esquinas y lados de
 \texttt{Weights()} y comunica jugadas y resultados como eventos del tablero;
 la interfaz Angular los presenta sin decidir movimientos.
 
+\subsection{Variante UnbeatableAI con Minimax}
+Mediante Minimax se selecciona la jugada con el mejor resultado posible frente
+a un adversario que también busca su mejor resultado. Se migraron los métodos de
+\texttt{UnbeatableAIController.cs} y el flujo de \texttt{frmTicTacToe.cs} de la
+variante \texttt{Tic-Tac-Toe-Version-MiniMax}, tomando como referencia su código
+y la explicación del algoritmo~\cite{minimax-docente}. La implementación se
+integró como nivel 3 y se habilitó en \texttt{controller.go}.
+
+\texttt{getBestMove} recorre 0--8 y calcula fila $i/3$ y columna $i\bmod3$.
+Simula O en cada espacio libre, llama a \texttt{minimax(board, 0, false)} y
+restaura el espacio. Actualiza la mejor jugada solo cuando
+\texttt{score > bestScore}: conserva la primera de igual puntuación.
+Sin casillas libres devuelve $-1$.
+
+\texttt{minimax} evalúa primero: victoria de O devuelve $10-d$; victoria de X,
+$-10+d$; tablero lleno sin ganador, 0. En otro caso recorre filas y columnas
+0--2: O maximiza y X minimiza, incrementando profundidad y deshaciendo cada
+movimiento. \texttt{evaluateBoard} comprueba filas, columnas y diagonales en ese
+orden, con valores $+10$, $-10$ y 0. \texttt{isMovesLeft} busca el primer espacio
+vacío. No se añadieron poda alfa-beta, cachés ni nuevas heurísticas.
+
+\begin{table}[H]
+\centering\small
+\caption{Correspondencia de la variante Minimax C\# con Go}
+\begin{tabular}{p{6.3cm}p{6.3cm}}
+\toprule Método o estructura C\# & Adaptación Go\\\midrule
+\texttt{char[3,3] board} & \texttt{board [3][3]byte}: X, O y espacio\\
+\texttt{GetBestMove / Minimax} & \texttt{getBestMove / minimax}\\
+\texttt{EvaluateBoard / IsMovesLeft} & \texttt{evaluateBoard / isMovesLeft}\\
+\texttt{ResetBoard} & \texttt{InitializeData / InitializeControls}\\
+\texttt{OnButtonClick / AIMove} & \texttt{PlayUser / PlayNPC}, coordinados por \texttt{Form.Click}\\
+\texttt{MakeMove / CheckGameEnd} & \texttt{makeMove / checkGameEnd}\\
+\texttt{CheckWin / IsBoardFull} & \texttt{checkWin / isBoardFull}\\
+\texttt{MessageBox.Show} & \texttt{Board.ShowMessage}: evento con texto y título originales\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Go representa los caracteres ASCII con byte y pasa un puntero a la matriz para
+mantener la simulación y restauración compartidas. Los límites iniciales son los
+de \texttt{int.MinValue} y \texttt{int.MaxValue} de C\#. \texttt{PlayUser} coloca X,
+comprueba el final y cede el turno; \texttt{Form.Click} despacha \texttt{PlayNPC},
+que no actúa si la partida terminó. Tras O, se comprueba otra vez el final y se
+restituye el turno humano. Las validaciones de turno e índice adaptan la API;
+comprobar ocupación sustituye deshabilitar botones individuales y
+\texttt{Board.Enabled=false} representa el final global.
+
+\texttt{Flag} expone el turno; \texttt{Weights} convierte vacío a 0, X a 1 y O a 3
+para mantener el contrato de presentación. Angular recibe estos datos, aunque
+oculta el inspector cuando la clave es \texttt{unbeatable-minmax}; las sumas no
+intervienen en Minimax.
+MediumAI aplica centro, victoria, bloqueo y azar; UnbeatableAI agrega reglas de
+diagonales, esquinas y lados. Minimax examina las continuaciones legales en lugar
+de aplicar esas reglas numéricas. La validación se presenta en Pruebas y Métricas.
+
 \section{Diagramas}
 % =====================================================================
+Las figuras~\ref{fig:uml-casos}, \ref{fig:uml-secuencia} y \ref{fig:uml-clases}
+representan casos de uso, comunicación y estructura del sistema implementado.
 
 \subsection{Diagrama de casos de uso}
 \begin{figure}[H]
-\centering
+\centering\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
-  uc/.style={ellipse,draw,fill=xcol!8,minimum width=4.4cm,minimum height=0.9cm,font=\small,align=center},
-  actor/.style={font=\small,align=center},
-  >=Stealth]
-  \node[draw,rounded corners,minimum width=6.2cm,minimum height=10.4cm] (sys) at (0,0) {};
-  \node[font=\bfseries\small,anchor=south] at (sys.north) {Tres en Raya IA (Web)};
-  \node[uc] (u1) at (0,4.3)  {Seleccionar modo de juego};
-  \node[uc] (u2) at (0,3.0)  {Iniciar juego nuevo};
-  \node[uc] (u3) at (0,1.7)  {Marcar casilla};
-  \node[uc] (u4) at (0,0.0)  {Calcular jugada de la JCC};
-  \node[uc] (u5) at (0,-1.7) {Verificar ganador};
-  \node[uc] (u6) at (0,-3.1) {Consultar marcador};
-  \node[uc] (u7) at (0,-4.4) {Ver inspector de IA};
-  \node[actor] (usr) at (-5.5,0.5) {\Huge\textcolor{xcol}{$\bigcirc$}\\[-4pt]\rule{1pt}{1cm}\\Usuario};
-  \node[actor] (jcc) at (5.5,-0.8) {\Huge\textcolor{ocol}{$\bigcirc$}\\[-4pt]\rule{1pt}{1cm}\\JCC\\(Backend Go)};
-  \foreach \u in {u1,u2,u3,u6,u7} \draw (usr.east) -- (\u.west);
-  \draw (jcc.west) -- (u4.east);
-  \draw (jcc.west) -- (u5.east);
-  \draw[dashed,->] (u3) -- node[right,font=\scriptsize]{$\ll$include$\gg$} (u4);
-  \draw[dashed,->] (u4) -- node[right,font=\scriptsize]{$\ll$include$\gg$} (u5);
-\end{tikzpicture}
-\caption{Diagrama de casos de uso}
+ uc/.style={ellipse,draw,fill=xcol!8,minimum width=3.8cm,minimum height=0.95cm,font=\small,align=center},>=Stealth]
+ \node[draw,rounded corners,minimum width=10.3cm,minimum height=9.2cm] (sys) at (1.5,0) {};
+ \node[font=\bfseries,anchor=south] at (sys.north) {Tres en Raya IA (Web)};
+ \node[uc] (mode) at (-0.8,3.4) {Seleccionar modo\\Medium / Unbeatable / Minimax};
+ \node[uc] (new) at (-0.8,1.8) {Iniciar o reiniciar partida};
+ \node[uc] (move) at (-0.8,0) {Jugar turno humano};
+ \node[uc] (score) at (-0.8,-1.8) {Consultar marcador};
+ \node[uc] (inspect) at (-0.8,-3.4) {Ver inspector de IA};
+ \node[uc] (check) at (4.2,2.2) {Comprobar final};
+ \node[uc] (ai) at (4.2,0) {Responder con IA};
+ \node[uc] (result) at (4.2,-2.8) {Presentar resultado};
+ \node[align=center] (usr) at (-5.5,0) {\Huge\textcolor{xcol}{$\bigcirc$}\\[-4pt]\rule{1pt}{1cm}\\Usuario};
+ \foreach \n in {mode,new,move,score,inspect} \draw (usr.east) -- (\n.west);
+ \draw[dashed,->] (move.north east) -- node[above,sloped,font=\scriptsize]{$\ll$include$\gg$} (check.south west);
+ \draw[dashed,->] (ai.west) -- node[above,font=\scriptsize]{$\ll$extend$\gg$} (move.east);
+ \draw[dashed,->] (result.north west) -- node[below,sloped,font=\scriptsize]{$\ll$extend$\gg$} (move.south east);
+\end{tikzpicture}}
+\caption{Casos de uso de las tres modalidades. La respuesta IA extiende el turno
+si la jugada fue aceptada y la partida continúa; el resultado aparece al terminar.
+El backend es parte del sistema, no un actor externo.}
+\label{fig:uml-casos}
 \end{figure}
 
-\subsection{Diagrama de secuencia: marcar casilla}
+\subsection{Diagrama de secuencia: marcar casilla con Minimax}
 \begin{figure}[H]
-\centering
-\resizebox{\textwidth}{!}{%
+\centering\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[font=\small,>=Stealth,
-  obj/.style={draw,fill=xcol!10,minimum width=2.4cm,minimum height=0.9cm,align=center}]
-  \node[obj] (a) at (0,0)    {:Usuario};
-  \node[obj] (b) at (3.3,0)  {:Angular\\Board};
-  \node[obj] (c) at (6.8,0)  {:GameStore};
-  \node[obj] (d) at (10.3,0) {:API Go};
-  \node[obj] (e) at (13.8,0) {:Form /\\UnbeatableAI};
-  \foreach \n in {a,b,c,d,e} \draw[dashed,gray] (\n.south) -- ++(0,-10.2);
-  \draw[->] (0,-1.2) -- node[above]{clic casilla $i$} (3.3,-1.2);
-  \draw[->] (3.3,-1.9) -- node[above]{play($i$)} (6.8,-1.9);
-  \draw[->] (6.8,-2.6) -- node[above]{POST /moves \{index\}} (10.3,-2.6);
-  \draw[->] (10.3,-3.3) -- node[above]{Click($i$)} (13.8,-3.3);
-  \draw[->] (13.8,-3.8) -- ++(0.8,0) -- node[right]{PlayUser + CheckWinner} ++(0,-0.6) -- (13.8,-4.4);
-  \draw[->] (13.8,-5.1) -- ++(0.8,0) -- node[right]{PlayNPC (heurística)} ++(0,-0.6) -- (13.8,-5.7);
-  \draw[->] (13.8,-6.4) -- ++(0.8,0) -- node[right]{CheckWinner} ++(0,-0.6) -- (13.8,-7.0);
-  \draw[->,dashed] (13.8,-7.9) -- node[above]{eventos} (10.3,-7.9);
-  \draw[->,dashed] (10.3,-8.5) -- node[above]{GameState JSON} (6.8,-8.5);
-  \draw[->] (6.8,-9.1) -- node[above]{animar X, ``pensando'', O} (3.3,-9.1);
-  \draw[->,dashed] (3.3,-9.8) -- node[above]{tablero + resultado} (0,-9.8);
+ obj/.style={draw,fill=xcol!10,minimum width=2.8cm,minimum height=0.9cm,align=center}]
+ \node[obj] (a) at (0,0) {:Usuario};
+ \node[obj] (b) at (4,0) {:Angular\\GameStore / GameApiService};
+ \node[obj] (c) at (8,0) {:API REST Go};
+ \node[obj] (d) at (12,0) {:Form};
+ \node[obj] (e) at (16,0) {:MinimaxAIController};
+ \foreach \n in {a,b,c,d,e} \draw[dashed,gray] (\n.south) -- ++(0,-11.7);
+ \draw[->] (0,-1.2) -- node[above]{clic / play($i$)} (4,-1.2);
+ \draw[->] (4,-2) -- node[above,font=\scriptsize]{POST /api/games/\{id\}/moves} node[below,font=\scriptsize]{JSON: index=$i$} (8,-2);
+ \draw[->] (8,-3) -- node[above]{Click($i$)} (12,-3);
+ \draw[->] (12,-3.8) -- node[above]{PlayUser(b,$i$)} (16,-3.8);
+ \draw[->] (16,-4.3) -- ++(1,0) -- node[right]{makeMove(X), checkGameEnd} ++(0,-0.5) -- (16,-4.8);
+ \draw[dashed,->] (16,-5.3) -- node[above]{bool: jugada aceptada} (12,-5.3);
+ \draw[draw=gray] (11,-5.7) rectangle (20.8,-8.6);
+ \node[anchor=north west,font=\scriptsize,fill=white] at (11,-5.7) {opt [aceptada; PlayNPC no actúa si terminó]};
+ \draw[->] (12,-6.3) -- node[above]{PlayNPC(b)} (16,-6.3);
+ \draw[->] (16,-6.8) -- ++(1,0) -- node[right]{getBestMove, minimax} ++(0,-0.5) -- (16,-7.3);
+ \draw[->] (16,-7.7) -- ++(1,0) -- node[right]{makeMove(O), checkGameEnd} ++(0,-0.5) -- (16,-8.2);
+ \draw[dashed,->] (16,-9) -- node[above]{retorno; Board actualizado} (12,-9);
+ \draw[dashed,->] (12,-9.7) -- node[above]{retorno de Click: nil / error} (8,-9.7);
+ \draw[dashed,->] (8,-10.4) -- node[above]{stateOf: GameState JSON + eventos} (4,-10.4);
+ \draw[dashed,->] (4,-11.2) -- node[above]{animar X/O y mostrar resultado} (0,-11.2);
 \end{tikzpicture}}
-\caption{Diagrama de secuencia del caso de uso ``Marcar casilla''. Si hay
-ganador o empate, \texttt{Board.Enabled} pasa a \texttt{false} y el frontend
-muestra el resultado con animación.}
+\caption{Jugada del nivel 3. La API serializa Board y datos del controlador;
+Angular reproduce eventos. En niveles 1 y 2 se conserva el despacho por Controller
+y cambia la estrategia. Una jugada humana terminal no genera O.}
+\label{fig:uml-secuencia}
 \end{figure}
 
 \subsection{Diagrama de clases (backend Go)}
 \begin{figure}[H]
-\centering
-\resizebox{\textwidth}{!}{%
+\centering\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[font=\scriptsize,>=Stealth,
-  cls/.style={draw,rectangle split,rectangle split parts=3,fill=white,
-              text width=4.8cm,align=left,inner sep=3pt},
-  pend/.style={cls,draw=pend}]
-  \node[draw,fill=gray!10,text width=3.4cm,align=center] (api) at (-5.4,0) {\textbf{api.Server}\\sesiones (map + mutex)\\rutas REST, CORS};
-  \node[cls] (form) at (0,0) {\centering\textbf{Form} (frmTicTacToe)
-    \nodepart{second}+GameLevel: int\\+ControlPlayer: bool\\+Board: *Board\\+Medium, Unbeatable, Minimax
-    \nodepart{third}+NewForm(level)\\+Controller() Controller\\+SetLevel(level) error\\+InitializeGame()\\+Click(index) error};
-  \node[cls] (board) at (6.4,0) {\centering\textbf{Board}
-    \nodepart{second}+Buttons: [9]string\\+Enabled: bool\\+Events: []Event
-    \nodepart{third}+SetText(i, mark, who)\\+ClearTexts()\\+ShowMessage(text, caption)\\+TakeEvents() []Event};
-  \node[cls] (ctrl) at (0,-4.6) {\centering$\ll$interface$\gg$ \textbf{Controller}
-    \nodepart{second}---
-    \nodepart{third}+InitializeData()\\+InitializeControls(b)\\+PlayUser(b, i) bool\\+PlayNPC(b)\\+Flag() string\\+Weights() [9]int};
-  \node[cls] (strong) at (6.4,-5.2) {\centering\textbf{UnbeatableAIController}
-    \nodepart{second}-currentPlayerFlag: Player\\+MoveCount: int\\+CurrentGameState: GameState\\+BoardState: [9]Player\\+ArrayMoves: [9]int\\-heuristicSum: int
-    \nodepart{third}+InitializeGameData()\\+PlayUser(b, i) bool\\+PlayNPC(b)\\+CheckWinner(b) GameState\\-heuristicNumericalMethod() int\\-pick(a, b, d) int\\-randomFreeAmong(...) (int, bool)};
-  \node[cls] (weak) at (-3.0,-9.8) {\centering\textbf{MediumAIController}\\(Paul Moreno -- implementado)
-    \nodepart{second}MoveCount, BoardState, ArrayMoves
-    \nodepart{third}InitializeData / CheckWinner / PlayUser / PlayNPC\\HeuristicNumericalMethod};
-  \node[pend] (minmax) at (3.0,-9.8) {\centering\textbf{MinimaxAIController}\\(Diana Guerra -- pendiente)
-    \nodepart{second}board: [3][3]byte \nodepart{third}GetBestMove / Minimax / EvaluateBoard};
-  \draw[->] (api) -- node[above]{usa} (form);
-  \draw[{Diamond[open]}-] (form) -- node[above]{1} (board);
-  \draw[{Diamond[open]}-] (form) -- node[right]{1..*} (ctrl);
-  \draw[dashed,-{Triangle[open]}] (strong) -- (ctrl);
-  \draw[dashed,-{Triangle[open]}] (weak.north) -- (ctrl.south);
-  \draw[dashed,-{Triangle[open]}] (minmax.north) -- (ctrl.south);
-  \draw[->] (strong) -- node[right]{modifica} (board);
+ cls/.style={draw,rectangle split,rectangle split parts=3,fill=white,text width=4.8cm,align=left,inner sep=3pt}]
+ \node[draw,fill=gray!10,text width=4.1cm,align=center] (api) at (-6,4.5) {\textbf{api.Server}\\sessions: map[string]*session\\mu: sync.Mutex\\Routes() http.Handler};
+ \node[cls] (form) at (0,4.5) {\centering\textbf{Form}
+  \nodepart{second}+GameLevel: int\\+ControlPlayer: bool\\+Board: *Board\\+Medium: *MediumAIController\\+Unbeatable: *UnbeatableAIController\\+Minimax: *MinimaxAIController
+  \nodepart{third}+Controller() Controller\\+SetLevel(level) error\\+InitializeGame()\\+Click(index) error};
+ \node[cls] (board) at (6,4.5) {\centering\textbf{Board}
+  \nodepart{second}+Buttons: [9]string\\+Enabled: bool\\+Events: []Event
+  \nodepart{third}+SetText(index, mark, who)\\+ClearTexts()\\+ShowMessage(text, caption)\\+TakeEvents() []Event};
+ \node[cls] (ctrl) at (0,0) {\centering$\ll$interface$\gg$ \textbf{Controller}
+  \nodepart{second}Sin atributos
+  \nodepart{third}+InitializeData()\\+InitializeControls(b *Board)\\+PlayUser(b *Board, index int) bool\\+PlayNPC(b *Board)\\+Flag() string\\+Weights() [9]int};
+ \node[cls] (strong) at (-6,-6) {\centering\textbf{UnbeatableAIController}
+  \nodepart{second}-currentPlayerFlag: Player\\+MoveCount: int\\+CurrentGameState: GameState\\+BoardState: [9]Player\\+ArrayMoves: [9]int\\-heuristicSum: int
+  \nodepart{third}+InitializeGameData()\\+PlayUser(b, index) bool\\+PlayNPC(b)\\+CheckWinner(b) GameState\\-heuristicNumericalMethod() int\\-pick(a, b, d) int\\-randomFreeAmong(allowed ...int) (int, bool)};
+ \node[cls] (weak) at (0,-6) {\centering\textbf{MediumAIController}
+  \nodepart{second}-currentPlayerFlag: Player\\+MoveCount: int\\+CurrentGameState: GameState\\+BoardState: [9]Player\\+ArrayMoves: [9]int
+  \nodepart{third}+InitializeData()\\+PlayUser(b, index) bool\\+PlayNPC(b)\\+CheckWinner(b) GameState\\+HeuristicNumericalMethod() int\\+GenerateRandomNPCMove() int};
+ \node[cls] (minmax) at (6,-6) {\centering\textbf{MinimaxAIController}\\(implementado)
+  \nodepart{second}-board: [3][3]byte\\-isHumanTurn: bool\\-isGameOver: bool
+  \nodepart{third}+InitializeData()\\+InitializeControls(b)\\+PlayUser(b, index) bool\\+PlayNPC(b)\\+Flag() string\\+Weights() [9]int\\-getBestMove(board *[3][3]byte) int\\-minimax(board, depth, isMaximizing) int\\-evaluateBoard(board) int\\-isMovesLeft(board) bool\\-makeMove(b, index, player)\\-checkGameEnd(b) bool\\-checkWin(player byte) bool\\-isBoardFull() bool};
+ \draw[dashed,->] (api) -- node[above]{usa por sesión} (form);
+ \draw[{Diamond[fill=black]}-] (form) -- node[above]{1} (board);
+ \draw[dashed,->] (form) -- node[right]{Controller()} (ctrl);
+ \draw[dashed,-{Triangle[open]}] (strong.north) -- (ctrl.west);
+ \draw[dashed,-{Triangle[open]}] (weak.north) -- (ctrl.south);
+ \draw[dashed,-{Triangle[open]}] (minmax.north) -- (ctrl.east);
 \end{tikzpicture}}
-\caption{Diagrama de clases del backend}
+\caption{Estructuras e interfaz Go en UML. Los controladores realizan Controller
+implícitamente; Form conserva una referencia a cada uno y selecciona el activo.
+El contrato común se abrevia en las IA numéricas. NewForm y NewMinimaxAIController
+son funciones del paquete, no métodos. No hay herencia de clases en Go.}
+\label{fig:uml-clases}
 \end{figure}
 
 % =====================================================================
 \section{Metodología SCRUM + XP}
 % =====================================================================
-Se combinó \textbf{SCRUM} para organizar el trabajo en \emph{sprints} y
-\textbf{XP} para las prácticas de ingeniería.
+El desarrollo se organizó en tres sprints, con Scrum como marco de planificación
+y prácticas XP para el diseño, la implementación y las pruebas. Se distribuyeron
+las responsabilidades por modalidad de IA y se estructuró el trabajo mediante
+historias de usuario. La integración se realizó sobre una arquitectura común,
+con validación automatizada de UnbeatableAI y Minimax.
 
 \subsection{Roles}
 \begin{table}[H]
 \centering
-\caption{Roles del equipo}
+\caption{Distribución de roles y responsabilidades}
 \begin{tabular}{ll}
 \toprule
 \textbf{Rol} & \textbf{Responsable}\\
@@ -442,42 +528,47 @@ Desarrollo -- UnbeatableAI $\rightarrow$ MinMax & Diana Guerra\\
 \toprule
 \textbf{HU} & \textbf{Historia} & \textbf{Pts} & \textbf{Sprint}\\
 \midrule\endhead
-HU01 & Como usuario quiero ver un tablero 3$\times$3 para poder jugar. & 3 & 1\\
-HU02 & Como usuario quiero marcar una casilla y que la JCC responda. & 5 & 1\\
-HU03 & Como usuario quiero enfrentar a una IA que gane y bloquee (UnbeatableAI). & 8 & 1\\
-HU04 & Como usuario quiero saber quién ganó o si hubo empate. & 3 & 1\\
-HU05 & Como usuario quiero elegir el modo de juego. & 3 & 2\\
-HU06 & Como usuario quiero animaciones y sonidos para que el juego sea atractivo. & 5 & 2\\
-HU07 & Como estudiante quiero ver los pesos y sumas que usa la IA. & 3 & 2\\
-HU08 & Como usuario quiero un marcador de partidas. & 2 & 2\\
-HU09 & Como usuario quiero jugar contra MediumAI. & 5 & 3\\
-HU10 & Como usuario quiero jugar contra UnbeatableAI con MinMax. & 8 & 3\\
+HU01 & Como usuario, quiero ver un tablero 3$\times$3, para jugar una partida de Tres en Raya. & 3 & 1\\
+HU02 & Como usuario, quiero marcar una casilla y recibir la respuesta de la JCC, para alternar los turnos de la partida. & 5 & 1\\
+HU03 & Como usuario, quiero enfrentar a UnbeatableAI con reglas de victoria y bloqueo, para jugar contra una estrategia que aproveche oportunidades y responda a mis amenazas. & 8 & 1\\
+HU04 & Como usuario, quiero conocer el ganador o el empate, para identificar el resultado de la partida. & 3 & 1\\
+HU05 & Como usuario, quiero elegir la modalidad de IA, para jugar contra la estrategia seleccionada. & 3 & 2\\
+HU06 & Como usuario, quiero animaciones y sonidos durante la partida, para recibir retroalimentación visual y auditiva de las acciones del juego. & 5 & 2\\
+HU07 & Como estudiante, quiero ver los pesos y sumas de las IA numéricas, para comprender sus decisiones. & 3 & 2\\
+HU08 & Como usuario, quiero consultar un marcador de resultados por modalidad, para conocer mis partidas ganadas, empatadas y perdidas. & 2 & 2\\
+HU09 & Como usuario, quiero jugar contra MediumAI, para enfrentar su estrategia de centro, victoria, bloqueo y selección aleatoria. & 5 & 3\\
+HU10 & Como usuario, quiero jugar contra Minimax con las decisiones de la variante C\#, para enfrentar una búsqueda completa sin derrotas en la exploración legal. & 8 & 3\\
 \bottomrule
 \end{longtable}
 
 \subsection{Sprints}
 \begin{description}
-  \item[Sprint 1 -- Núcleo del juego.] Port del método numérico a Go
+  \item[Sprint 1 -- Núcleo del juego.] Migración del método numérico a Go
         (\texttt{unbeatable\_ai.go}), tablero (\texttt{board.go}), despacho de clics
         (\texttt{form.go}), API REST y pruebas de los Casos 1--3.
   \item[Sprint 2 -- Experiencia web.] Frontend Angular 22: tablero 3D con
         trazos animados, fondo de partículas, sonidos sintetizados, inspector
         de IA, marcador y pantalla de resultado con confeti.
-  \item[Sprint 3 -- MediumAI.] Port del controlador de IA d\'ebil e
-        integraci\'on del modo en la interfaz \texttt{Controller}.
+  \item[Sprint 3 -- MediumAI y Minimax.] Migración de MediumAI e integración con
+        Controller; finalización de HU10: lectura de originales, traducción de
+        Minimax y del flujo de formulario, eventos de Board, integración,
+        pruebas automatizadas, comparación C\#/Go y habilitación del nivel 3.
 \end{description}
-\pendiente{Completar y documentar el modo MinMax.}
+Se completó HU10 con 2\,097 decisiones coincidentes y 569 finales sin derrotas.
+La validación visual de la interfaz y la incorporación de capturas se mantienen
+como actividades pendientes de presentación de resultados.
 
 \subsection{Prácticas XP aplicadas}
 \begin{itemize}
-  \item \textbf{Diseño simple:} un archivo por modo y una interfaz común.
-  \item \textbf{Pruebas primero:} los ejemplos de los PDF se escribieron como
-        pruebas (\texttt{unbeatable\_ai\_test.go}) antes de conectar la interfaz.
-  \item \textbf{Estándar de código:} \texttt{gofmt}/\texttt{go vet} en Go y Prettier en Angular.
-  \item \textbf{Integración continua y entregas pequeñas:} cada incremento se
-        sube al repositorio \texttt{github.com/Gpcaceres/videojuegos-grupo3}.
-  \item \textbf{Propiedad colectiva:} el \texttt{README} explica cómo
-        completar cada modo.
+ \item \textbf{Diseño simple:} se utilizó un controlador por modalidad y una
+       interfaz común, con reutilización del backend y de las rutas REST.
+ \item \textbf{Pruebas automatizadas:} se implementaron pruebas de UnbeatableAI
+       y Minimax para verificar reglas, estados terminales y selección de movimientos.
+ \item \textbf{Integración incremental:} se incorporó el nivel 3 sobre Form y Board,
+       manteniendo la separación entre la estrategia de IA y la comunicación web.
+ \item \textbf{Estándares de código:} se utilizó gofmt en Minimax y se ejecutó
+       go vet para el análisis estático de Go. Se incluyó Prettier entre las
+       herramientas de desarrollo de Angular.
 \end{itemize}
 
 \subsection{Diseño}
@@ -487,8 +578,7 @@ La arquitectura separa responsabilidades en dos capas:
         (sin dependencias web) e \texttt{internal/api} expone las rutas.
         \texttt{Board} reemplaza a los controles de Windows Forms
         (\texttt{ListButtons}, \texttt{GroupBox} y \texttt{MessageBox}), de modo
-        que el código de los controladores queda casi línea por línea igual al
-        original.
+        que se conservan las reglas originales adaptando estructuras y controles.
   \item \textbf{Frontend (Angular):} componentes \emph{standalone} con
         \emph{signals}, sin \texttt{zone.js}. \texttt{GameStore} reproduce los
         eventos del backend con pausas para animarlos y no decide ninguna jugada.
@@ -497,7 +587,7 @@ La arquitectura separa responsabilidades en dos capas:
 \begin{table}[H]
 \centering
 \caption{API REST}
-\begin{tabular}{lll}
+\begin{tabular}{p{1.4cm}p{5.9cm}p{6.1cm}}
 \toprule
 \textbf{Método} & \textbf{Ruta} & \textbf{Equivale a (original)}\\
 \midrule
@@ -511,7 +601,7 @@ PUT & /api/games/\{id\}/level & Cambiar de variante\\
 \end{table}
 
 \subsection{Desarrollo}
-La correspondencia entre el original y el port es directa:
+La migración de C\# a Go estableció las siguientes correspondencias:
 
 \begin{table}[H]
 \centering
@@ -535,152 +625,380 @@ La correspondencia entre el original y el port es directa:
 \end{tabular}
 \end{table}
 
-La única diferencia deliberada es la protección de los \texttt{do/while}
+En la IA fuerte se incorporó una comprobación de disponibilidad en los \texttt{do/while}
 aleatorios: si no queda ninguna casilla del grupo pedido, el original entra
 en un bucle infinito. En el servidor esto bloquearía la petición, así que se
 continúa con la jugada heurística (RNF07).
 
 \subsection{Pruebas}
-\begin{table}[H]
-\centering
-\caption{Resultados de \texttt{go test ./...}}
-\small
-\begin{tabular}{p{6.2cm}p{6.2cm}c}
-\toprule
-\textbf{Prueba} & \textbf{Verifica} & \textbf{Resultado}\\
-\midrule
-TestFirstMoveTakesCenter & La JCC toma el centro en su primera jugada & PASS\\
-TestFirstMoveCornerWhenCenterTaken & Si el centro está ocupado, toma una esquina (50 repeticiones) & PASS\\
-TestCase1Blocks & Caso 1: bloquea al usuario (suma 2) & PASS\\
-TestCase2Wins & Caso 2: completa la línea y gana (suma 6) & PASS\\
-TestTakesImmediateWin & Prioriza ganar en la diagonal & PASS\\
-TestAdjacentSidesCornerOrder & Orden oficial de las esquinas (1+3$\to$0 antes que 1+5$\to$2) & PASS\\
-TestSideRuleNeverPicksThree & Con suma 5 y JCC en el centro, elige lado 1, 5 o 7, nunca 3 (200 repeticiones) & PASS\\
-TestOriginalLogicExhaustive & Recorre todas las partidas posibles & PASS\\
+Se realizaron pruebas funcionales y de integración el 2 de noviembre de 2026
+sobre la versión \texttt{5009f27}. Desde el módulo
+\texttt{UNIDAD I/ProjectoUI/Backend} se ejecutaron:
+\begin{lstlisting}
+go test -count=1 -v ./...
+go test -count=1 -coverprofile=<temporal>/game.out ./internal/game
+go tool cover -func=<temporal>/game.out
+go vet ./...
+\end{lstlisting}
+Se aprobaron 16 funciones Test de primer nivel: 8 de UnbeatableAI y 8 de Minimax.
+Los subcasos de tablas no se cuentan como funciones adicionales. Go vet terminó
+con código 0 y sin diagnósticos. La cobertura funcional de MediumAI se limitó
+a las verificaciones HTTP descritas en Integración, sin pruebas automatizadas
+específicas de sus reglas.
+
+\subsubsection{Pruebas automatizadas de UnbeatableAI}
+Las filas siguientes corresponden exclusivamente a \texttt{unbeatable\_ai\_test.go}.
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.2cm}}
+\caption{Objetivos, escenarios y resultados de UnbeatableAI}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+U01 & Primera respuesta a X en 0. & O ocupa el centro. & O en 4. & PASS\\
+U02 & Humano ocupa centro; 50 repeticiones. & O elige una esquina. & Las 50 respuestas son esquinas. & PASS\\
+U03 & Caso 1: X4, O0; humano marca 2. & Bloqueo en 6. & O en 6. & PASS\\
+U04 & Caso 2: O en 2 y 8; humano marca 6. & O gana en 5 y deshabilita tablero. & Jugada, mensaje y final correctos. & PASS\\
+U05 & Amenaza y victoria simultáneas; X marca 5. & Priorizar victoria diagonal. & O en 8. & PASS\\
+U06 & X en lados 1 y 3; luego 5. & Primera regla de esquina: 0. & O en 0. & PASS\\
+U07 & X0, O4; X8; repetir 200 veces. & O en 1, 5 o 7; nunca 3. & Restricción original conservada. & PASS\\
+U08 & Recorrer opciones humanas en 30 árboles con IA aleatoria. & Partidas terminan; derrotas de IA no mayores al 3\%. & 15\,134 finales, 162 derrotas (1,07\%); 0 grupos agotados. & PASS\\
 \bottomrule
-\end{tabular}
-\end{table}
+\end{longtable}
+U01--U08 corresponden, en orden, a \texttt{TestFirstMoveTakesCenter},
+\texttt{TestFirstMoveCornerWhenCenterTaken}, \texttt{TestCase1Blocks},
+\texttt{TestCase2Wins}, \texttt{TestTakesImmediateWin},
+\texttt{TestAdjacentSidesCornerOrder}, \texttt{TestSideRuleNeverPicksThree} y
+\texttt{TestOriginalLogicExhaustive}. Este último nombre no implica enumerar todas
+las decisiones aleatorias: por cada rama humana obtiene una respuesta aleatoria
+y repite el recorrido 30 veces. Los conteos varían. El resultado citado es de la
+ejecución general con salida detallada, no de la ejecución posterior instrumentada para cobertura.
 
-Además se verificó la aplicación completa en el navegador (front + back):
-la JCC responde en el centro, el resultado se muestra al terminar y los modos
-pendientes aparecen bloqueados.
+\subsubsection{Pruebas automatizadas de Minimax}
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.2cm}}
+\caption{Objetivos, escenarios y resultados de Minimax}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+M01 & Reiniciar tras victoria de IA; comparar con constructor. & Matriz vacía, turno X y controles habilitados. & Datos y controles reiniciados. & PASS\\
+M02 & X0; índices inválidos, doble turno y casillas ocupadas. & Rechazo de ilegales; O4 y pesos 1/3. & Turnos, pesos y eventos correctos. & PASS\\
+M03 & Tablero vacío, aperturas, victoria, bloqueo y tablero lleno. & Índices 0, 4, 0, 2, 2, $-1$; restauración íntegra. & Índices y matriz correctos. & PASS\\
+M04 & Ocho líneas con X y O; profundidades 0, 1 y 4. & $+10/-10$ y ajuste original por profundidad. & Líneas, puntuaciones y orden correctos. & PASS\\
+M05 & Completar finales e intentar más movimientos. & Mensajes originales y ninguna jugada posterior. & Cuatro escenarios terminales correctos. & PASS\\
+M06 & Ramificar todos los movimientos humanos contra IA determinista. & Ninguna victoria humana. & 569 finales: 386 victorias IA, 183 empates, 0 derrotas. & PASS\\
+M07 & Enumerar estados legales; comparar decisiones con C\#. & Mismos conteos y SHA-256. & 5\,478 estados; 2\,097 decisiones coincidentes. & PASS\\
+M08 & NewForm(3), Click, InitializeGame y SetLevel. & Despacho, rechazo y reinicio correctos. & Sin O extra tras final humano; reinicio completo. & PASS\\
+\bottomrule
+\end{longtable}
+M01--M08 corresponden a \texttt{TestMinimaxInitializationAndReset},
+\texttt{TestMinimaxUserAndNPCTurns}, \texttt{TestMinimaxBestMoveAndRestoration},
+\texttt{TestMinimaxWinningLinesAndDepth}, \texttt{TestMinimaxGameEndAndNoFurtherMoves},
+\texttt{TestMinimaxNeverLosesExhaustive}, \texttt{TestMinimaxMatchesOriginalCSharpExhaustive}
+y \texttt{TestMinimaxFormIntegration}, respectivamente.
 
-\pendiente{agregar capturas de pantalla de la aplicación en \texttt{Img/} (por ejemplo \texttt{captura-juego.png}).}
+M06 parte del tablero vacío con X; ramifica por cada casilla humana libre,
+ejecuta la respuesta determinista de Minimax y se detiene al ganar o llenar el
+tablero. Cuenta caminos terminales, no posiciones distintas. La tasa de derrotas
+de IA es $0/569\times100=0\%$ \emph{en este conjunto explorado}; no es una medición
+de partidas de usuarios reales.
+
+M07 enumera estados legales empezando con X y corta cada rama al finalizar.
+Deduplica 5\,478 tableros y compara las 2\,097 posiciones no terminales con turno O.
+Ordena tableros lexicográficamente y concatena nueve caracteres, barra vertical,
+índice devuelto y salto LF; calcula SHA-256 en UTF-8. La referencia se obtuvo mediante la compilación y ejecución del C\# original
+con un programa auxiliar. La repetición de la ejecución produjo el mismo resultado.
+Se incorporó la referencia a la prueba Go para permitir la verificación posterior
+sin depender de un compilador C\#.
+\begin{lstlisting}
+fb6a9200c81c724a24f04ddad024e88659df8a3837e3c2c4c5fb9d6c84d7b31f
+\end{lstlisting}
+Esta coincidencia valida decisiones y desempates en ese dominio legal. No mide
+rendimiento C\# frente a Go ni prueba automáticamente el formulario Windows completo.
+
+\subsubsection{Integración HTTP, frontend y MediumAI}
+Para verificar la integración se compiló el servidor Go y se ejecutó en
+\texttt{http://localhost:18084}. Se enviaron peticiones HTTP mediante un script
+PowerShell para comprobar la creación de partidas, los movimientos, el reinicio
+y el cambio de modalidad.
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.2cm}}
+\caption{Integración ejecutada y evidencia visual pendiente}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+I01 & GET /api/modes; crear partidas de cada nivel. & Tres modos habilitados y tableros vacíos. & Niveles 1, 2 y 3 disponibles. & PASS\\
+I02 & En cada nivel enviar X0 y repetir casilla ocupada. & O4; eventos usuario/IA; ocupada sin nuevos eventos. & Correcto en los tres modos, incluido MediumAI. & PASS\\
+I03 & POST /new y PUT /level en cada nivel. & Reinicio y nivel correcto. & Datos reiniciados y nivel seleccionado. & PASS\\
+I04 & Minimax: X en 0, 1 y 3; intentar 8 después del final. & Victoria IA y siguiente petición HTTP 409. & AI Wins!, tablero deshabilitado, HTTP 409. & PASS\\
+I05 & Compilar Angular en producción con dependencias existentes. & TS, plantillas y estilos compilan. & Build correcto con salida temporal. & PASS\\
+I06 & Inspeccionar GameApiService, GameState y GameStore. & Rutas, campos y mensajes compatibles con Go. & Compatibilidad por examen estático. & Revisión\\
+I07 & Jugar visualmente en Angular los tres modos. & Selector, animaciones, marcador y resultados visibles. & Validación visual y capturas pendientes. & Pend.\\
+\bottomrule
+\end{longtable}
+MediumAI no tiene pruebas específicas ni tasa de derrotas medida. I02 cubre su
+apertura y el rechazo de ocupadas, no todas sus reglas ni equivalencia C\# completa.
+Compilar Angular y probar HTTP no equivale a una prueba de navegador de extremo a extremo.
+
+\subsubsection{Espacios para evidencias visuales}
+Se reservaron las figuras~\ref{fig:captura-modos}--\ref{fig:captura-resultado-minimax}
+para presentar el selector, las partidas y el resultado, y las
+figuras~\ref{fig:captura-pruebas-go} y \ref{fig:captura-cobertura} para los registros
+de consola. Los marcadores identifican las capturas pendientes y se sustituyen
+automáticamente al incorporar cada archivo en su ruta.
+
+\begin{figure}[H]
+\centering\capturapendiente{captura-modos.png}{Selector con los tres modos habilitados}
+\caption{Pantalla principal con MediumAI, UnbeatableAI y Minimax disponibles.}
+\label{fig:captura-modos}
+\end{figure}
+\begin{figure}[H]
+\centering\capturapendiente{captura-medium.png}{Partida activa en MediumAI}
+\caption{Partida en MediumAI con jugadas humanas y respuesta del backend.}
+\label{fig:captura-medium}
+\end{figure}
+\begin{figure}[H]
+\centering\capturapendiente{captura-unbeatable.png}{Partida activa en UnbeatableAI}
+\caption{Partida en UnbeatableAI con una regla numérica observable en el inspector.}
+\label{fig:captura-unbeatable}
+\end{figure}
+\begin{figure}[H]
+\centering\capturapendiente{captura-minimax.png}{Partida activa en Minimax, nivel 3}
+\caption{Partida activa en Minimax con tablero y bitácora de movimientos del nivel 3.}
+\label{fig:captura-minimax}
+\end{figure}
+\begin{figure}[H]
+\centering\capturapendiente{captura-resultado-minimax.png}{Resultado terminal de Minimax}
+\caption{Victoria IA o empate en Minimax, mensaje original y tablero bloqueado.}
+\label{fig:captura-resultado-minimax}
+\end{figure}
+\begin{figure}[H]
+\centering\capturapendiente{captura-pruebas-go.png}{Consola con pruebas y exploraciones Go}
+\caption{Pruebas Go con conteos de exploración Minimax y comparación con C\#.}
+\label{fig:captura-pruebas-go}
+\end{figure}
+\begin{figure}[H]
+\centering\capturapendiente{captura-cobertura.png}{Consola con cobertura del paquete y funciones}
+\caption{Cobertura del paquete game y de las funciones de minimax\_ai.go.}
+\label{fig:captura-cobertura}
+\end{figure}
 
 % =====================================================================
 \section{Análisis de Resultados: Métricas de Software}
 % =====================================================================
 
 \subsection{Líneas de código}
-Se contaron las líneas efectivas de código (sin comentarios ni líneas en blanco):
+Se contabilizaron las líneas de código el 2 de noviembre de 2026 mediante un
+script Node.js, con un criterio uniforme de clasificación de líneas físicas
+para C\#, Go, TypeScript, HTML y SCSS. Una línea sin caracteres no blancos
+es vacía; si, al retirar comentarios respetando cadenas, queda código, es LOC;
+si solo queda comentario, es comentario. Una línea con código y comentario cuenta
+una vez como LOC. Se incluyen llaves, declaraciones e importaciones. Se reconocen
+comentarios de línea, de bloque y HTML. La última terminación de línea no crea una
+línea vacía adicional.
+
+Se excluyen dependencias, generados, JSON, binarios, PDF y auxiliares. Backend:
+archivos Go del módulo, separando \texttt{\_test.go}. Frontend: TS, HTML y SCSS
+bajo \texttt{Frontend/src}. Se cuentan declaraciones de funciones y métodos;
+se incluyen constructores explícitos y se excluyen firmas de interfaz, accesores
+de propiedades C\# y funciones anónimas. No se mide complejidad ciclomática.
 
 \begin{table}[H]
-\centering
-\caption{Líneas de código por proyecto}
-\small
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Proyecto} & \textbf{Archivos} & \textbf{LOC} & \textbf{Coment.} & \textbf{Blanco}\\
-\midrule
-Referencia del docente, IA Fuerte (C\#) & 3 & 559 & 87 & 56\\
-\textbf{Backend Go (este proyecto)} & 9 & 854 & 156 & 116\\
-\textbf{Frontend Angular (TS + HTML + SCSS)} & 24 & 2\,179 & 36 & 292\\
+\centering\small
+\caption{Tamaño actualizado por alcance de código fuente}
+\begin{tabular}{lrrrrr}
+\toprule Alcance & Archivos & LOC & Coment. & Blanco & Total\\\midrule
+Backend Go: producción & 8 & 1\,105 & 111 & 119 & 1\,335\\
+Backend Go: pruebas & 2 & 519 & 29 & 25 & 573\\
+\textbf{Backend Go completo} & \textbf{10} & \textbf{1\,624} & \textbf{140} & \textbf{144} & \textbf{1\,908}\\
+Frontend Angular: src & 24 & 2\,179 & 38 & 292 & 2\,509\\
 \bottomrule
 \end{tabular}
 \end{table}
+El backend contiene 78 funciones/métodos de producción y 23 declaraciones en
+pruebas (16 funciones Test y 7 auxiliares), total 101.
 
 \begin{table}[H]
-\centering
-\caption{Clase de la IA: original frente al port}
-\begin{tabular}{lrr}
-\toprule
-\textbf{Archivo} & \textbf{LOC} & \textbf{Funciones/métodos}\\
-\midrule
-UnbeatableAIController.cs (docente) & 417 & 15\\
-\textbf{unbeatable\_ai.go} & \textbf{223} & \textbf{17}\\
+\centering\small
+\caption{Controladores por modalidad con criterio uniforme}
+\begin{tabular}{lrrrrr}
+\toprule Archivo & LOC & Coment. & Blanco & Total & Func.\\\midrule
+C\# MediumAIController & 315 & 83 & 39 & 437 & 13\\
+Go medium\_ai.go & 240 & 4 & 14 & 258 & 14\\
+C\# UnbeatableAIController (fuerte) & 417 & 83 & 39 & 539 & 13\\
+Go unbeatable\_ai.go & 223 & 39 & 26 & 288 & 17\\
+C\# UnbeatableAIController (Minimax) & 120 & 3 & 15 & 138 & 4\\
+Go minimax\_ai.go & 228 & 17 & 17 & 262 & 15\\
 \bottomrule
 \end{tabular}
 \end{table}
+Se compararon archivos completos con responsabilidades distintas. El controlador
+Minimax C\# contiene 4 métodos de búsqueda, mientras que el archivo Go reúne
+15 funciones que incluyen el constructor, la adaptación a Controller y el flujo
+migrado de frmTicTacToe. Esta diferencia de alcance explica el aumento de LOC.
+En UnbeatableAI, los valores de 417 y 223 LOC reflejan diferencias de estructura
+y distribución de responsabilidades. En ambos casos, el tamaño del código se
+interpreta como una métrica descriptiva, no como una medida de rendimiento.
 
-El port en Go reduce un 47\,\% las líneas de la clase de IA frente al C\#.
-Las mismas reglas se expresan con un \texttt{switch} sin repetir bloques, y
-una función auxiliar \texttt{pick} reemplaza los 16 bloques
-\texttt{if/else if} iguales (uno por línea y por suma). Las constantes y
-enumeraciones compartidas (\texttt{Player}, \texttt{GameState},
-\texttt{WinningLines}) quedan en \texttt{controller.go} para que MediumAI las
-reutilice.
+\begin{table}[H]
+\centering\small
+\caption{Validación de la pareja Minimax C\#/Go}
+\begin{tabular}{p{5.8cm}p{7.2cm}}
+\toprule Evidencia & Resultado y alcance\\\midrule
+C\# original ejecutado por arnés & 2\,097 decisiones en posiciones legales de turno O; referencia SHA-256.\\
+Go: equivalencia & Mismas 2\,097 decisiones y SHA-256.\\
+Go: pruebas específicas & 8 funciones Test aprobadas; no son pruebas C\# independientes.\\
+C\#: cobertura & No medida; no se atribuye 100\% al original.\\
+Go: cobertura de minimax\_ai.go & 100\% de sentencias en sus 15 funciones con la suite instrumentada.\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Otras métricas}
-\begin{itemize}
-  \item \textbf{Pruebas automatizadas:} 8 de 8 aprobadas; la exploración
-        exhaustiva cubre alrededor de 15\,000 partidas en 0,02 s.
-  \item \textbf{Tamaño del frontend:} 216 kB sin comprimir (62 kB
-        transferidos) en el \emph{build} de producción.
-  \item \textbf{Dependencias del backend:} cero (solo librería estándar de Go).
-  \item \textbf{Tiempo de respuesta:} menos de 1 ms por jugada en el servidor local.
-\end{itemize}
+\begin{table}[H]
+\centering\small
+\caption{Métricas funcionales por modalidad}
+\begin{tabular}{p{4.4cm}rrr}
+\toprule Métrica & MediumAI & UnbeatableAI & Minimax\\\midrule
+Archivos de controlador / prueba & 1 / 0 & 1 / 1 & 1 / 1\\
+Funciones del controlador & 14 & 17 & 15\\
+Funciones Test aprobadas & No existen & 8 / 8 & 8 / 8\\
+Finales explorados por sus pruebas & No medido & 15\,134 & 569\\
+Derrotas de IA & No medido & 162 & 0\\
+Porcentaje de derrotas de IA & No medido & 1,07\% & 0\%\\
+Tiempo de suite filtrada (s) & No aplica & 0,820 & 0,648\\
+Dependencias externas Go & 0 & 0 & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+En UnbeatableAI se recorrieron las opciones humanas con respuestas aleatorias
+de la IA; en Minimax se exploraron todos los caminos humanos legales frente a una
+respuesta determinista. Las tasas corresponden a procedimientos de exploración
+distintos y se interpretan dentro del alcance de cada uno.
 
-\subsection{Hallazgos sobre la lógica del docente}\label{sec:hallazgos}
-Al portar y probar \texttt{UnbeatableAIController.cs} se encontró lo siguiente.
-Como la especificación exige conservar la lógica, todo se mantiene igual y se
-documenta aquí.
+Se obtuvo una cobertura de \textbf{61,3\% de sentencias de internal/game} con la
+suite completa y de \textbf{100\% de minimax\_ai.go} en sus 15 funciones. La
+cobertura de sentencias expresa el código ejecutado durante las pruebas y no
+implica la evaluación de todos los caminos posibles.
+
+\subsubsection{Entorno y tiempos de pruebas}
+Se ejecutaron las pruebas en Windows NT 10.0.26200, arquitectura amd64,
+con un procesador AMD Ryzen 5 7520U, Go 1.27.3, Node.js 24.19.0 y las dependencias
+Angular 22.2.x del proyecto. Los tiempos corresponden a una ejecución local.
+Se utilizó \texttt{-count=1} para evitar reutilizar resultados y se ubicó la
+caché de compilación Go en una carpeta temporal.
+\texttt{go test -count=1 -v ./...} reportó 0,913 s para game; la ejecución con
+cobertura reportó 0,821 s.
+
+Se ejecutó también \texttt{go test -json -count=1 -run} con el patrón
+\texttt{\^{}TestMinimax} o el conjunto de nombres U01--U08. El campo Elapsed del
+registro final del paquete fue 0,648 s y 0,820 s, respectivamente; no es tiempo
+puro del algoritmo. M06 tardó 0,02 s, M07 0,03 s y U08 0,02 s con la resolución
+informada por Go. Los conteos aleatorios de U08 pueden diferir de la ejecución general.
+
+\subsubsection{Tiempo de respuesta HTTP}
+Se compiló \texttt{./cmd/server} con \texttt{go build -o <temporal>/api.exe} y se
+inició con \texttt{PORT=18084}. Para cada nivel se creó una partida vacía y se
+midió \texttt{POST /api/games/\{id\}/moves} con \texttt{index=0}, verificando O en 4.
+Se descartó una petición de calentamiento por nivel y se tomaron 30 muestras con
+\texttt{System.Diagnostics.Stopwatch} alrededor de \texttt{Invoke-RestMethod}.
+La creación quedó fuera del intervalo. Se ordenaron las 30 muestras: mediana =
+promedio de posiciones 15 y 16; P95 = posición 29 ($\lceil0{,}95\times30\rceil$).
+\begin{table}[H]
+\centering\small
+\caption{Latencia HTTP local de la primera jugada, en milisegundos}
+\begin{tabular}{lrrrrr}
+\toprule Modo & Muestras & Mínimo & Mediana & P95 & Máximo\\\midrule
+MediumAI & 30 & 1,416 & 1,683 & 2,692 & 8,185\\
+UnbeatableAI & 30 & 1,252 & 1,449 & 2,159 & 2,163\\
+Minimax & 30 & 3,232 & 3,464 & 5,587 & 5,819\\
+\bottomrule
+\end{tabular}
+\end{table}
+Los tiempos incluyen cliente PowerShell, HTTP y deserialización JSON; no son
+exclusivos del algoritmo ni incluyen las pausas de animación Angular. Todas las
+muestras estuvieron bajo 50 ms, con cobertura parcial de RNF02. El ensayo se
+limitó a la primera jugada en un entorno local y sin carga concurrente; por tanto,
+los valores describen ese escenario de uso.
+
+\subsubsection{Dependencias y compilación frontend}
+\texttt{go list -m all} devolvió solo el módulo del proyecto: cero dependencias
+externas del backend. Con las dependencias Angular ya presentes,
+\texttt{ng build --configuration production --output-path <temporal> --progress=false}
+terminó correctamente: paquete inicial 216,30 kB, transferencia estimada 61,95 kB
+y 5,505 s informados por el compilador. La transferencia es una estimación del
+build. La validación de Angular comprendió la compilación y la comprobación del
+contrato HTTP; las pruebas de componentes quedan pendientes.
+
+\subsection{Comportamiento de la variante UnbeatableAI}\label{sec:hallazgos}
+Se identificaron los siguientes comportamientos de la estrategia numérica de
+UnbeatableAI y de su migración a Go.
 
 \begin{enumerate}
-  \item \textbf{No es 100\,\% imbatible.} La prueba exhaustiva muestra que la
-        JCC \textbf{pierde en cerca del 1,1\,\% de los caminos posibles}. Cuando
+  \item \textbf{Derrotas observadas.} Se registraron \textbf{162 derrotas de la JCC
+        en 15\,134 finales (1,07\%)} durante el recorrido con muestreo. La tasa
+        corresponde a esa ejecución y depende de las respuestas aleatorias. Cuando
         ninguna regla aplica, la lógica cae en \texttt{GenerateRandomNPCMove}
         y a veces deja al usuario un \emph{tenedor} (dos amenazas a la vez).
         Ejemplo: X en 0, O en 4, X en 7, O en 2 (al azar), X en 6. La JCC solo
         puede tapar una de las amenazas (0--3--6 y 6--7--8), y el usuario gana.
-  \item \textbf{El lado 3 nunca se elige.} En \texttt{PlayNPC}, la condición del
+  \item \textbf{La regla de suma 5 excluye el lado 3.} En \texttt{PlayNPC}, la condición original del
         lado aleatorio compara \texttt{SIDE\_INDICES[0]} dos veces
         (\texttt{index == SIDE\_INDICES[0] || index == SIDE\_INDICES[0] || ...}),
-        así que el lado 3 queda fuera. Se reprodujo tal cual y la prueba
-        \texttt{TestSideRuleNeverPicksThree} lo verifica.
+        así que el lado 3 queda fuera de esa selección restringida. Go pasa la misma
+        lista a \texttt{randomFreeAmong}; la prueba
+        \texttt{TestSideRuleNeverPicksThree} verifica esa regla. El lado 3 permanece
+        disponible para los movimientos aleatorios que no aplican esta restricción.
   \item \textbf{Posible bloqueo.} Los \texttt{do/while} aleatorios no tienen
-        salida si no queda ninguna casilla válida del grupo. En las cerca de
-        15\,000 partidas exploradas eso \textbf{no ocurrió nunca}, pero el
-        servidor tiene una protección (RNF07) por si acaso.
+        salida si no queda casilla válida del grupo. En los 15\,134 finales citados
+        se registraron \textbf{0 casos}. Para evitar el bloqueo de una petición,
+        se incorporó la comprobación de disponibilidad descrita en RNF07.
   \item \textbf{Regla del centro sin efecto.} A partir de la segunda jugada,
         \texttt{PlayNPC} revisa si el centro está libre; nunca lo está a esa
         altura, porque la primera jugada de alguno de los dos ya lo ocupó.
 \end{enumerate}
 
-El primer punto es justamente la motivación de la variante
-\textbf{UnbeatableAI $\rightarrow$ MinMax}, que explora el árbol completo de
-jugadas y no puede caer en un tenedor.
-
-\pendiente{Agregar m\'etricas de MinMax (LOC, pruebas y porcentaje de derrotas) cuando est\'e implementado.}
+Con \textbf{Minimax} se obtuvieron cero derrotas en los 569 finales explorados
+frente a todos los movimientos humanos legales. Este resultado corresponde a
+una estrategia determinista y se distingue del muestreo de UnbeatableAI.
 
 % =====================================================================
 \section{Conclusiones y Recomendaciones}
 % =====================================================================
 \subsection{Conclusiones}
 \begin{itemize}
-  \item Se migró \texttt{UnbeatableAIController} (versión IA Fuerte del
-        docente) de C\# a Go sin alterar su lógica. Las pruebas reproducen los
-        Casos 1, 2 y 3 del material de clase.
-  \item Se integr\'o MediumAI con prioridad al centro, reglas de suma 6 y 2,
-        y selecci\'on aleatoria como respaldo, conservando la l\'ogica del docente.
-  \item Separar la l\'ogica (backend) de la presentaci\'on (frontend) permiti\'o
-        sustituir Windows Forms por una interfaz web animada sin tocar el
-        algoritmo.
-  \item El método numérico basado en pesos 1/3/0 es simple y eficiente, pero
-        no es estrictamente imbatible: su caída al azar deja un 1,1\,\% de
-        caminos perdedores.
+ \item Se integraron las tres modalidades de IA en una arquitectura Go + Angular.
+       La separación entre lógica y presentación permitió sustituir Windows Forms
+       por una interfaz web y mantener las decisiones de juego en el servidor.
+ \item Se implementaron estrategias con distintos criterios de selección.
+       MediumAI utiliza centro, victoria, bloqueo y azar; UnbeatableAI incorpora
+       reglas de diagonales, esquinas y lados. En esta última se registraron
+       162 derrotas de IA en 15\,134 finales (1,07\%), con variación asociada
+       a las respuestas aleatorias.
+ \item La migración de Minimax de C\# a Go permitió conservar su comportamiento
+       funcional, incluidas las puntuaciones, el orden de evaluación, la
+       restauración del tablero y los desempates. Coincidieron las 2\,097 decisiones
+       comparadas; en 569 finales se obtuvieron 386 victorias de IA, 183 empates
+       y ninguna derrota.
+ \item Se aprobaron 16 funciones Test y se ejecutó go vet sin diagnósticos.
+       La cobertura alcanzó 61,3\% en game y 100\% de sentencias en Minimax.
+       Estos resultados complementan la comparación funcional y la exploración
+       de partidas, con el alcance propio de cada técnica de validación.
+ \item Se verificaron la compilación Angular y la comunicación HTTP con Go.
+       La validación de MediumAI comprendió escenarios básicos de integración;
+       quedan pendientes sus pruebas específicas y la comprobación visual de
+       los tres modos en navegador.
 \end{itemize}
 
 \subsection{Recomendaciones}
 \begin{itemize}
-  \item Implementar la variante MinMax para garantizar una IA realmente imbatible.
-  \item Agregar las reglas de ``bloquear tenedor'' si en el futuro se permite
-        modificar la heurística.
-  \item Desplegar el backend en un servicio en la nube (por ejemplo Cloud Run)
-        y el frontend como sitio estático.
+ \item Completar la validación visual I07 e incorporar las siete capturas
+       preparadas para documentar la interfaz y los resultados.
+ \item Ampliar las pruebas automatizadas de MediumAI y las pruebas de navegador,
+       manteniendo resultados y métricas diferenciados por modalidad.
+ \item Mantener la referencia SHA-256 y las pruebas de Minimax para detectar
+       cambios de comportamiento durante futuras modificaciones de infraestructura.
+ \item Repetir los ensayos de latencia en el entorno de despliegue y con carga
+       concurrente para evaluar el objetivo local de 50 ms en otros escenarios.
 \end{itemize}
 
 % =====================================================================
 \begin{thebibliography}{9}
+\bibitem{guia-lab} C. Villacís Silva, \emph{Informe de laboratorio Desarrollo de Videojuegos}, Unidad 1, indicaciones del Proyecto 3. Archivo local: \texttt{Informe-Lab-Desarrollo-Videojuegos.docx}.
+\bibitem{minimax-docente} Material del docente, \emph{Tic-Tac-Toe-Version-MiniMax}: \texttt{UnbeatableAIController.cs}, \texttt{frmTicTacToe.cs} y \texttt{minmax-ia-explicacion.docx}, código y explicación originales incluidos en \texttt{UNIDAD I/Material}.
 \bibitem{ieee830} IEEE, \emph{IEEE Recommended Practice for Software Requirements Specifications}, IEEE Std 830-1998.
 \bibitem{villacis} C. Villacís, W. Fuertes, A. Bustamante et al., \emph{Optimización del Juego del Tres en Raya con Niveles de Dificultad, Utilizando Técnicas Heurísticas de Inteligencia Artificial}, Universidad de las Fuerzas Armadas -- ESPE.
 \bibitem{go} The Go Authors, \emph{The Go Programming Language Documentation}, \url{https://go.dev/doc/}.
