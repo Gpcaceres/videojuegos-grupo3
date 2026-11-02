@@ -7,7 +7,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[spanish,es-tabla]{babel}
+\usepackage[spanish,es-tabla,es-noshorthands]{babel}
 \usepackage{lmodern}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{graphicx}
@@ -54,6 +54,7 @@
 \setlength{\headheight}{15pt}
 
 \begin{document}
+\sloppy
 
 % =====================================================================
 %  CARÁTULA
@@ -317,9 +318,9 @@ func (c *ControlStrongIntelligentMoves) pick(a, b, d int) int {
   \draw[->] (3.3,-1.9) -- node[above]{play($i$)} (6.8,-1.9);
   \draw[->] (6.8,-2.6) -- node[above]{POST /moves \{index\}} (10.3,-2.6);
   \draw[->] (10.3,-3.3) -- node[above]{Click($i$)} (13.8,-3.3);
-  \draw[->] (13.8,-3.8) -- ++(0.8,0) -- ++(0,-0.6) -- node[below]{PlayUser + CheckWinner} (13.8,-4.4);
-  \draw[->] (13.8,-5.1) -- ++(0.8,0) -- ++(0,-0.6) -- node[below]{PlayNPC (heurística)} (13.8,-5.7);
-  \draw[->] (13.8,-6.4) -- ++(0.8,0) -- ++(0,-0.6) -- node[below]{CheckWinner} (13.8,-7.0);
+  \draw[->] (13.8,-3.8) -- ++(0.8,0) -- node[right]{PlayUser + CheckWinner} ++(0,-0.6) -- (13.8,-4.4);
+  \draw[->] (13.8,-5.1) -- ++(0.8,0) -- node[right]{PlayNPC (heurística)} ++(0,-0.6) -- (13.8,-5.7);
+  \draw[->] (13.8,-6.4) -- ++(0.8,0) -- node[right]{CheckWinner} ++(0,-0.6) -- (13.8,-7.0);
   \draw[->,dashed] (13.8,-7.9) -- node[above]{eventos} (10.3,-7.9);
   \draw[->,dashed] (10.3,-8.5) -- node[above]{GameState JSON} (6.8,-8.5);
   \draw[->] (6.8,-9.1) -- node[above]{animar X, ``pensando'', 0} (3.3,-9.1);
@@ -496,7 +497,8 @@ continúa con la jugada heurística (RNF07).
 \begin{table}[H]
 \centering
 \caption{Resultados de \texttt{go test ./...}}
-\begin{tabular}{p{5.8cm}p{6.6cm}c}
+\small
+\begin{tabular}{p{6.2cm}p{6.2cm}c}
 \toprule
 \textbf{Prueba} & \textbf{Verifica} & \textbf{Resultado}\\
 \midrule
@@ -526,9 +528,10 @@ Se contaron las líneas efectivas de código (sin comentarios ni líneas en blan
 \begin{table}[H]
 \centering
 \caption{Líneas de código por proyecto}
+\small
 \begin{tabular}{lrrrr}
 \toprule
-\textbf{Proyecto} & \textbf{Archivos} & \textbf{LOC} & \textbf{Comentarios} & \textbf{En blanco}\\
+\textbf{Proyecto} & \textbf{Archivos} & \textbf{LOC} & \textbf{Coment.} & \textbf{Blanco}\\
 \midrule
 Referencia Java (NetBeans) & 8 & 2\,347 & 291 & 210\\
 Referencia C\# (Windows Forms) & 7 & 1\,708 & 455 & 195\\
