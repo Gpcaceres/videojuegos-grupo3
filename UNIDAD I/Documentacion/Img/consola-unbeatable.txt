@@ -1,0 +1,12 @@
+$ go test ./internal/game -count=1 -v -run '^(TestFirstMove|TestCase|TestTakesImmediateWin|TestAdjacentSides|TestSideRule|TestOriginalLogic)' | grep -E '^(--- |PASS|ok)|_test.go:'
+--- PASS: TestFirstMoveTakesCenter (0.00s)
+--- PASS: TestFirstMoveCornerWhenCenterTaken (0.00s)
+--- PASS: TestCase1Blocks (0.00s)
+--- PASS: TestCase2Wins (0.00s)
+--- PASS: TestTakesImmediateWin (0.00s)
+--- PASS: TestAdjacentSidesCornerOrder (0.00s)
+--- PASS: TestSideRuleNeverPicksThree (0.00s)
+unbeatable_ai_test.go:163: partidas exploradas: 15198, derrotas de la JCC: 149 (0.98%), casos en que el original se congelaría: 0
+--- PASS: TestOriginalLogicExhaustive (0.02s)
+PASS
+ok  	github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game	0.557s

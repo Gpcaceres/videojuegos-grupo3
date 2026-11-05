@@ -1,0 +1,12 @@
+$ go test ./internal/game -count=1 -v -run '^TestMediumAI' | grep -E '^(--- |PASS|ok)|_test.go:'
+--- PASS: TestMediumAIInitializationAndReset (0.00s)
+--- PASS: TestMediumAICenterPriority (0.00s)
+--- PASS: TestMediumAIUserTurnAndOccupiedCell (0.00s)
+--- PASS: TestMediumAIHeuristicExplicitWinningAndBlockingLines (0.00s)
+--- PASS: TestMediumAIHeuristicPrioritizesWinningOverBlocking (0.00s)
+--- PASS: TestMediumAIHeuristicRandomFallback (0.00s)
+--- PASS: TestMediumAIGameEndAndDraw (0.00s)
+medium_ai_test.go:163: random-response trees: 15862 terminal games, 590 AI losses (3.72%)
+--- PASS: TestMediumAIExploresRandomGames (0.02s)
+PASS
+ok  	github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game	0.606s
