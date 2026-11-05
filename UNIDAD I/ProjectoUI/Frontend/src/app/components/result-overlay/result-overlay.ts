@@ -16,7 +16,7 @@ interface Piece {
 
 const COPY: Record<Outcome, { title: string; sub: string; emoji: string }> = {
   win: { title: '¡GANASTE!', sub: 'Le ganaste a la máquina. Eso no debería pasar…', emoji: '🏆' },
-  loss: { title: 'PERDISTE', sub: 'La JCC aplicó el método numérico sin piedad.', emoji: '🤖' },
+  loss: { title: 'PERDISTE', sub: 'La JCC no dejó escapar la jugada ganadora.', emoji: '🤖' },
   draw: { title: 'EMPATE', sub: 'Nadie cede. Así juega una IA imbatible.', emoji: '🤝' },
 };
 

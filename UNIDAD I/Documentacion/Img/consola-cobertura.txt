@@ -1,0 +1,35 @@
+$ go test ./internal/game -count=1 -coverprofile=game.out
+ok  	github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game	0.728s	coverage: 96.0% of statements
+$ go tool cover -func=game.out | grep -E 'medium_ai|unbeatable_ai|total' | sed 's#.*/internal/game/##'
+medium_ai.go:14: NewMediumAIController 100.0%
+medium_ai.go:21: InitializeData 100.0%
+medium_ai.go:30: InitializeControls 100.0%
+medium_ai.go:35: DisableControls 100.0%
+medium_ai.go:36: EnableControls 100.0%
+medium_ai.go:39: CheckWinner 100.0%
+medium_ai.go:59: Flag 100.0%
+medium_ai.go:60: Weights 0.0%
+medium_ai.go:62: ShowUserMove 100.0%
+medium_ai.go:70: PlayUser 100.0%
+medium_ai.go:81: GenerateRandomNPCMove 100.0%
+medium_ai.go:90: ShowNPCMove 100.0%
+medium_ai.go:98: HeuristicNumericalMethod 100.0%
+medium_ai.go:249: PlayNPC 100.0%
+unbeatable_ai.go:25: NewUnbeatableAIController 100.0%
+unbeatable_ai.go:32: Flag 0.0%
+unbeatable_ai.go:35: Weights 0.0%
+unbeatable_ai.go:38: InitializeGameData 100.0%
+unbeatable_ai.go:48: InitializeData 100.0%
+unbeatable_ai.go:51: InitializeControls 100.0%
+unbeatable_ai.go:56: DisableControls 100.0%
+unbeatable_ai.go:57: EnableControls 100.0%
+unbeatable_ai.go:60: CheckWinner 100.0%
+unbeatable_ai.go:79: showUserMove 100.0%
+unbeatable_ai.go:88: PlayUser 83.3%
+unbeatable_ai.go:99: generateRandomNPCMove 100.0%
+unbeatable_ai.go:108: showNPCMove 100.0%
+unbeatable_ai.go:118: pick 100.0%
+unbeatable_ai.go:131: heuristicNumericalMethod 90.7%
+unbeatable_ai.go:223: randomFreeAmong 86.7%
+unbeatable_ai.go:249: PlayNPC 87.0%
+total: (statements) 96.0%

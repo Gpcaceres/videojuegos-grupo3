@@ -19,6 +19,7 @@
 \usepackage{listings}
 \usepackage{float}
 \usepackage{caption}
+\usepackage{subcaption}
 \usepackage{fancyhdr}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric,shapes.multipart,arrows.meta,positioning,calc,babel}
@@ -30,17 +31,23 @@
 \definecolor{espe}{RGB}{0,102,51}
 \definecolor{xcol}{RGB}{8,145,178}
 \definecolor{ocol}{RGB}{219,39,119}
-\definecolor{pend}{RGB}{180,120,0}
 \definecolor{codebg}{RGB}{245,245,250}
 
-% Marcadores explícitos: se sustituyen automáticamente al agregar la captura real.
-\newcommand{\capturapendiente}[2]{%
- \IfFileExists{Img/#1}{\includegraphics[width=0.88\linewidth,height=0.33\textheight,keepaspectratio]{Img/#1}}{%
-  \fcolorbox{pend}{pend!8}{\parbox[c][3.2cm][c]{0.86\linewidth}{\centering
-   \textbf{Captura pendiente:} #2\\[0.5em]
-   \texttt{\detokenize{Img/#1}}\\[0.5em]
-   \small Agregar una captura real de la aplicación o ejecución indicada.}}}%
-}
+% Captura con borde fino; el argumento opcional recibe las opciones de la imagen.
+\newcommand{\captura}[2][width=0.99\linewidth]{%
+ \begingroup\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}%
+ \fcolorbox{gray!50}{white}{\includegraphics[#1]{#2}}\endgroup}
+
+\captionsetup{font=small,labelfont=bf,labelsep=period}
+\captionsetup[sub]{font=footnotesize,labelfont=bf}
+
+% Salida real de consola, guardada en Img/consola-*.txt.
+\definecolor{consolabg}{RGB}{24,26,38}
+\definecolor{consolafg}{RGB}{226,232,240}
+\lstdefinestyle{consola}{basicstyle=\ttfamily\scriptsize\color{consolafg},
+  backgroundcolor=\color{consolabg}, frame=single, rulecolor=\color{consolabg},
+  framesep=4pt, xleftmargin=4pt, xrightmargin=4pt, aboveskip=0pt, belowskip=0pt,
+  breaklines=true, breakindent=1.2em, columns=fullflexible, keepspaces=true}
 
 \lstdefinelanguage{Go}{
   morekeywords={package,import,func,return,if,else,for,range,switch,case,default,type,struct,var,const,interface,map,go,defer,true,false,nil},
@@ -134,7 +141,7 @@ sección~\ref{sec:hallazgos}. Las versiones de referencia se presentan a continu
 \centering
 \caption{Versiones C\# utilizadas como referencia}
 \small
-\begin{tabular}{p{2.3cm}p{6.6cm}p{4cm}}
+\begin{tabular}{p{2.3cm}p{6.6cm}p{5cm}}
 \toprule
 \textbf{Variante} & \textbf{Carpeta} & \textbf{Clase}\\
 \midrule
@@ -252,7 +259,7 @@ RF15 & Tras un final no habrá más movimientos; un juego nuevo o cambio de nive
 \end{longtable}
 
 \subsubsection{Requerimientos no funcionales}
-\begin{longtable}{p{1.3cm}p{2.6cm}p{9.2cm}}
+\begin{longtable}{p{1.3cm}p{2.9cm}p{9.2cm}}
 \caption{Requerimientos no funcionales}\\
 \toprule
 \textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
@@ -397,25 +404,33 @@ representan casos de uso, comunicación y estructura del sistema implementado.
 
 \subsection{Diagrama de casos de uso}
 \begin{figure}[H]
-\centering\resizebox{\textwidth}{!}{%
+\centering
 \begin{tikzpicture}[
- uc/.style={ellipse,draw,fill=xcol!8,minimum width=3.8cm,minimum height=0.95cm,font=\small,align=center},>=Stealth]
- \node[draw,rounded corners,minimum width=10.3cm,minimum height=9.2cm] (sys) at (1.5,0) {};
- \node[font=\bfseries,anchor=south] at (sys.north) {Tres en Raya IA (Web)};
- \node[uc] (mode) at (-0.8,3.4) {Seleccionar modo\\Medium / Unbeatable / Minimax};
- \node[uc] (new) at (-0.8,1.8) {Iniciar o reiniciar partida};
- \node[uc] (move) at (-0.8,0) {Jugar turno humano};
- \node[uc] (score) at (-0.8,-1.8) {Consultar marcador};
- \node[uc] (inspect) at (-0.8,-3.4) {Ver inspector de IA};
- \node[uc] (check) at (4.2,2.2) {Comprobar final};
- \node[uc] (ai) at (4.2,0) {Responder con IA};
- \node[uc] (result) at (4.2,-2.8) {Presentar resultado};
- \node[align=center] (usr) at (-5.5,0) {\Huge\textcolor{xcol}{$\bigcirc$}\\[-4pt]\rule{1pt}{1cm}\\Usuario};
- \foreach \n in {mode,new,move,score,inspect} \draw (usr.east) -- (\n.west);
- \draw[dashed,->] (move.north east) -- node[above,sloped,font=\scriptsize]{$\ll$include$\gg$} (check.south west);
- \draw[dashed,->] (ai.west) -- node[above,font=\scriptsize]{$\ll$extend$\gg$} (move.east);
- \draw[dashed,->] (result.north west) -- node[below,sloped,font=\scriptsize]{$\ll$extend$\gg$} (move.south east);
-\end{tikzpicture}}
+ uc/.style={ellipse,draw,fill=xcol!8,minimum width=4.4cm,minimum height=0.9cm,font=\small,align=center},
+ sysuc/.style={uc,fill=ocol!8,minimum width=3.8cm},
+ rel/.style={dashed,->},
+ lbl/.style={font=\scriptsize,fill=white,inner sep=1pt},>=Stealth]
+ \node[draw,rounded corners,minimum width=11.5cm,minimum height=10cm] (sys) at (1.15,0) {};
+ \node[font=\bfseries\small,anchor=south] at (sys.north) {Tres en Raya IA (Web)};
+ \node[uc] (mode) at (-2,3.7) {Seleccionar modo:\\Medium / Unbeatable /\\Minimax};
+ \node[uc] (new) at (-2,1.9) {Iniciar o reiniciar partida};
+ \node[uc] (move) at (-2,0) {Jugar turno humano};
+ \node[uc] (score) at (-2,-1.9) {Consultar marcador};
+ \node[uc] (inspect) at (-2,-3.7) {Ver inspector de IA};
+ \node[sysuc] (check) at (4.7,2.6) {Comprobar final};
+ \node[sysuc] (ai) at (4.7,0) {Responder con IA};
+ \node[sysuc] (result) at (4.7,-2.6) {Presentar resultado};
+ \begin{scope}[shift={(-6.7,0)},line width=0.9pt,xcol!70!black]
+  \draw[fill=xcol!8] (0,0.8) circle (0.27);
+  \draw (0,0.53) -- (0,-0.3) (-0.42,0.2) -- (0.42,0.2) (0,-0.3) -- (-0.33,-0.9) (0,-0.3) -- (0.33,-0.9);
+ \end{scope}
+ \node[font=\small] at (-6.7,-1.2) {Usuario};
+ \coordinate (usr) at (-6.1,0);
+ \foreach \n in {mode,new,move,score,inspect} \draw (usr) -- (\n.west);
+ \draw[rel] (move.north east) -- node[lbl]{$\ll$include$\gg$} (check.south west);
+ \draw[rel] (ai.west) -- node[lbl]{$\ll$extend$\gg$} (move.east);
+ \draw[rel] (result.north west) -- node[lbl]{$\ll$extend$\gg$} (move.south east);
+\end{tikzpicture}
 \caption{Casos de uso de las tres modalidades. La respuesta IA extiende el turno
 si la jugada fue aceptada y la partida continúa; el resultado aparece al terminar.
 El backend es parte del sistema, no un actor externo.}
@@ -426,28 +441,32 @@ El backend es parte del sistema, no un actor externo.}
 \begin{figure}[H]
 \centering\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[font=\small,>=Stealth,
- obj/.style={draw,fill=xcol!10,minimum width=2.8cm,minimum height=0.9cm,align=center}]
+ obj/.style={draw,fill=xcol!10,minimum width=2.6cm,minimum height=1.2cm,align=center},
+ msg/.style={align=center,fill=white,inner sep=1pt},
+ self/.style={right,align=left}]
  \node[obj] (a) at (0,0) {:Usuario};
- \node[obj] (b) at (4,0) {:Angular\\GameStore / GameApiService};
- \node[obj] (c) at (8,0) {:API REST Go};
- \node[obj] (d) at (12,0) {:Form};
- \node[obj] (e) at (16,0) {:MinimaxAIController};
- \foreach \n in {a,b,c,d,e} \draw[dashed,gray] (\n.south) -- ++(0,-11.7);
- \draw[->] (0,-1.2) -- node[above]{clic / play($i$)} (4,-1.2);
- \draw[->] (4,-2) -- node[above,font=\scriptsize]{POST /api/games/\{id\}/moves} node[below,font=\scriptsize]{JSON: index=$i$} (8,-2);
- \draw[->] (8,-3) -- node[above]{Click($i$)} (12,-3);
- \draw[->] (12,-3.8) -- node[above]{PlayUser(b,$i$)} (16,-3.8);
- \draw[->] (16,-4.3) -- ++(1,0) -- node[right]{makeMove(X), checkGameEnd} ++(0,-0.5) -- (16,-4.8);
- \draw[dashed,->] (16,-5.3) -- node[above]{bool: jugada aceptada} (12,-5.3);
- \draw[draw=gray] (11,-5.7) rectangle (20.8,-8.6);
- \node[anchor=north west,font=\scriptsize,fill=white] at (11,-5.7) {opt [aceptada; PlayNPC no actúa si terminó]};
- \draw[->] (12,-6.3) -- node[above]{PlayNPC(b)} (16,-6.3);
- \draw[->] (16,-6.8) -- ++(1,0) -- node[right]{getBestMove, minimax} ++(0,-0.5) -- (16,-7.3);
- \draw[->] (16,-7.7) -- ++(1,0) -- node[right]{makeMove(O), checkGameEnd} ++(0,-0.5) -- (16,-8.2);
- \draw[dashed,->] (16,-9) -- node[above]{retorno; Board actualizado} (12,-9);
- \draw[dashed,->] (12,-9.7) -- node[above]{retorno de Click: nil / error} (8,-9.7);
- \draw[dashed,->] (8,-10.4) -- node[above]{stateOf: GameState JSON + eventos} (4,-10.4);
- \draw[dashed,->] (4,-11.2) -- node[above]{animar X/O y mostrar resultado} (0,-11.2);
+ \node[obj] (b) at (3.8,0) {:Angular\\GameStore /\\GameApiService};
+ \node[obj] (c) at (7.6,0) {:API REST Go};
+ \node[obj] (d) at (11.4,0) {:Form};
+ \node[obj] (e) at (15.2,0) {:Minimax-\\AIController};
+ \foreach \n in {a,b,c,d,e} \draw[dashed,gray] (\n.south) -- ++(0,-13.1);
+ \foreach \x/\ini/\fin in {3.8/-1.5/-12.9,7.6/-2.4/-12.5,11.4/-3.3/-11.7,15.2/-4.1/-5.9,15.2/-7.4/-11}
+  \draw[fill=xcol!12,draw=xcol!60!black] (\x-0.09,\ini) rectangle (\x+0.09,\fin);
+ \draw[->] (0,-1.5) -- node[msg,above=1pt]{clic / play($i$)} (3.8,-1.5);
+ \draw[->] (3.8,-2.4) -- node[msg,above=1pt,font=\scriptsize]{POST /api/games/\\\{id\}/moves} node[msg,below=1pt,font=\scriptsize]{JSON: index=$i$} (7.6,-2.4);
+ \draw[->] (7.6,-3.3) -- node[msg,above=1pt]{Click($i$)} (11.4,-3.3);
+ \draw[->] (11.4,-4.1) -- node[msg,above=1pt]{PlayUser(b,$i$)} (15.2,-4.1);
+ \draw[->] (15.2,-4.5) -- ++(0.8,0) -- node[self]{makeMove(X),\\checkGameEnd} ++(0,-0.8) -- (15.2,-5.3);
+ \draw[dashed,->] (15.2,-5.9) -- node[msg,above=1pt]{bool: jugada aceptada} (11.4,-5.9);
+ \draw[gray,rounded corners=1pt] (10.7,-6.3) rectangle (18.9,-10.3);
+ \node[anchor=north west,draw=gray,fill=white,font=\scriptsize,inner sep=2.5pt] at (10.7,-6.3) {\textbf{opt} [aceptada; PlayNPC no actúa si terminó]};
+ \draw[->] (11.4,-7.4) -- node[msg,above=1pt]{PlayNPC(b)} (15.2,-7.4);
+ \draw[->] (15.2,-7.8) -- ++(0.8,0) -- node[self]{getBestMove,\\minimax} ++(0,-0.8) -- (15.2,-8.6);
+ \draw[->] (15.2,-8.9) -- ++(0.8,0) -- node[self]{makeMove(O),\\checkGameEnd} ++(0,-0.8) -- (15.2,-9.7);
+ \draw[dashed,->] (15.2,-11) -- node[msg,above=1pt]{retorno; Board actualizado} (11.4,-11);
+ \draw[dashed,->] (11.4,-11.7) -- node[msg,above=1pt]{Click: nil / error} (7.6,-11.7);
+ \draw[dashed,->] (7.6,-12.5) -- node[msg,above=1pt]{stateOf: GameState\\JSON + eventos} (3.8,-12.5);
+ \draw[dashed,->] (3.8,-12.9) -- node[msg,above=1pt]{animar X/O y\\mostrar resultado} (0,-12.9);
 \end{tikzpicture}}
 \caption{Jugada del nivel 3. La API serializa Board y datos del controlador;
 Angular reproduce eventos. En niveles 1 y 2 se conserva el despacho por Controller
@@ -459,32 +478,33 @@ y cambia la estrategia. Una jugada humana terminal no genera O.}
 \begin{figure}[H]
 \centering\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[font=\scriptsize,>=Stealth,
- cls/.style={draw,rectangle split,rectangle split parts=3,fill=white,text width=4.8cm,align=left,inner sep=3pt}]
- \node[draw,fill=gray!10,text width=4.1cm,align=center] (api) at (-6,4.5) {\textbf{api.Server}\\sessions: map[string]*session\\mu: sync.Mutex\\Routes() http.Handler};
- \node[cls] (form) at (0,4.5) {\centering\textbf{Form}
+ cls/.style={draw,rectangle split,rectangle split parts=3,rectangle split part fill={xcol!14,white,white},text width=5.6cm,align=left,inner sep=3pt,anchor=north},
+ real/.style={dashed,-{Triangle[open,length=2.6mm,width=2.2mm]}}]
+ \node[cls] (form) at (0,8) {\makebox[\linewidth]{\textbf{Form}}
   \nodepart{second}+GameLevel: int\\+ControlPlayer: bool\\+Board: *Board\\+Medium: *MediumAIController\\+Unbeatable: *UnbeatableAIController\\+Minimax: *MinimaxAIController
   \nodepart{third}+Controller() Controller\\+SetLevel(level) error\\+InitializeGame()\\+Click(index) error};
- \node[cls] (board) at (6,4.5) {\centering\textbf{Board}
+ \node[draw,fill=gray!10,text width=4.1cm,align=center] (api) at ([xshift=-7.4cm]form.center) {\textbf{api.Server}\\sessions: map[string]*session\\mu: sync.Mutex\\Routes() http.Handler};
+ \node[cls,text width=4.4cm] (board) at (7.3,8) {\makebox[\linewidth]{\textbf{Board}}
   \nodepart{second}+Buttons: [9]string\\+Enabled: bool\\+Events: []Event
   \nodepart{third}+SetText(index, mark, who)\\+ClearTexts()\\+ShowMessage(text, caption)\\+TakeEvents() []Event};
- \node[cls] (ctrl) at (0,0) {\centering$\ll$interface$\gg$ \textbf{Controller}
+ \node[cls,rectangle split part fill={ocol!12,white,white}] (ctrl) at (0,3.2) {\makebox[\linewidth]{$\ll$interface$\gg$ \textbf{Controller}}
   \nodepart{second}Sin atributos
   \nodepart{third}+InitializeData()\\+InitializeControls(b *Board)\\+PlayUser(b *Board, index int) bool\\+PlayNPC(b *Board)\\+Flag() string\\+Weights() [9]int};
- \node[cls] (strong) at (-6,-6) {\centering\textbf{UnbeatableAIController}
+ \node[cls] (strong) at (-7.1,-1.3) {\makebox[\linewidth]{\textbf{UnbeatableAIController}}
   \nodepart{second}-currentPlayerFlag: Player\\+MoveCount: int\\+CurrentGameState: GameState\\+BoardState: [9]Player\\+ArrayMoves: [9]int\\-heuristicSum: int
   \nodepart{third}+InitializeGameData()\\+PlayUser(b, index) bool\\+PlayNPC(b)\\+CheckWinner(b) GameState\\-heuristicNumericalMethod() int\\-pick(a, b, d) int\\-randomFreeAmong(allowed ...int) (int, bool)};
- \node[cls] (weak) at (0,-6) {\centering\textbf{MediumAIController}
+ \node[cls] (weak) at (0,-1.3) {\makebox[\linewidth]{\textbf{MediumAIController}}
   \nodepart{second}-currentPlayerFlag: Player\\+MoveCount: int\\+CurrentGameState: GameState\\+BoardState: [9]Player\\+ArrayMoves: [9]int
   \nodepart{third}+InitializeData()\\+PlayUser(b, index) bool\\+PlayNPC(b)\\+CheckWinner(b) GameState\\+HeuristicNumericalMethod() int\\+GenerateRandomNPCMove() int};
- \node[cls] (minmax) at (6,-6) {\centering\textbf{MinimaxAIController}\\(implementado)
+ \node[cls] (minmax) at (7.1,-1.3) {\makebox[\linewidth]{\textbf{MinimaxAIController}}
   \nodepart{second}-board: [3][3]byte\\-isHumanTurn: bool\\-isGameOver: bool
   \nodepart{third}+InitializeData()\\+InitializeControls(b)\\+PlayUser(b, index) bool\\+PlayNPC(b)\\+Flag() string\\+Weights() [9]int\\-getBestMove(board *[3][3]byte) int\\-minimax(board, depth, isMaximizing) int\\-evaluateBoard(board) int\\-isMovesLeft(board) bool\\-makeMove(b, index, player)\\-checkGameEnd(b) bool\\-checkWin(player byte) bool\\-isBoardFull() bool};
- \draw[dashed,->] (api) -- node[above]{usa por sesión} (form);
- \draw[{Diamond[fill=black]}-] (form) -- node[above]{1} (board);
- \draw[dashed,->] (form) -- node[right]{Controller()} (ctrl);
- \draw[dashed,-{Triangle[open]}] (strong.north) -- (ctrl.west);
- \draw[dashed,-{Triangle[open]}] (weak.north) -- (ctrl.south);
- \draw[dashed,-{Triangle[open]}] (minmax.north) -- (ctrl.east);
+ \draw[dashed,->] (api.east) -- node[above,align=center]{usa por\\sesión} (api.east -| form.west);
+ \draw[{Diamond[fill=black]}-] (board.west -| form.east) -- node[above]{1} (board.west);
+ \draw[dashed,->] (form.south) -- node[right]{Controller()} (ctrl.north);
+ \draw[real] (strong.north) -- (ctrl.west);
+ \draw[real] (weak.north) -- (ctrl.south);
+ \draw[real] (minmax.north) -- (ctrl.east);
 \end{tikzpicture}}
 \caption{Estructuras e interfaz Go en UML. Los controladores realizan Controller
 implícitamente; Form conserva una referencia a cada uno y selecciona el activo.
@@ -500,7 +520,7 @@ El desarrollo se organizó en tres sprints, con Scrum como marco de planificaci�
 y prácticas XP para el diseño, la implementación y las pruebas. Se distribuyeron
 las responsabilidades por modalidad de IA y se estructuró el trabajo mediante
 historias de usuario. La integración se realizó sobre una arquitectura común,
-con validación automatizada de UnbeatableAI y Minimax.
+con validación automatizada de las tres modalidades.
 
 \subsection{Roles}
 \begin{table}[H]
@@ -555,8 +575,8 @@ HU10 & Como usuario, quiero jugar contra Minimax con las decisiones de la varian
         pruebas automatizadas, comparación C\#/Go y habilitación del nivel 3.
 \end{description}
 Se completó HU10 con 2\,097 decisiones coincidentes y 569 finales sin derrotas.
-La validación visual de la interfaz y la incorporación de capturas se mantienen
-como actividades pendientes de presentación de resultados.
+La validación visual de la interfaz se realizó en el navegador y se documenta en
+las figuras~\ref{fig:captura-modos}--\ref{fig:captura-resultados}.
 
 \subsection{Prácticas XP aplicadas}
 \begin{itemize}
@@ -586,7 +606,7 @@ La arquitectura separa responsabilidades en dos capas:
 \begin{table}[H]
 \centering
 \caption{API REST}
-\begin{tabular}{p{1.4cm}p{5.9cm}p{6.1cm}}
+\begin{tabular}{p{1.7cm}p{5.9cm}p{6.1cm}}
 \toprule
 \textbf{Método} & \textbf{Ruta} & \textbf{Equivale a (original)}\\
 \midrule
@@ -631,7 +651,7 @@ continúa con la jugada heurística (RNF07).
 
 \subsection{Pruebas}
 Se realizaron pruebas funcionales y de integración el 2 de noviembre de 2026
-sobre la versión \texttt{5009f27}. Desde el módulo
+sobre la versión \texttt{c2eb966}. Desde el módulo
 \texttt{UNIDAD I/ProjectoUI/Backend} se ejecutaron:
 \begin{lstlisting}
 go test -count=1 -v ./...
@@ -644,7 +664,7 @@ Se aprobaron 24 funciones Test de primer nivel: 8 de MediumAI, 8 de UnbeatableAI
 \subsubsection{Pruebas automatizadas de MediumAI}
 Las pruebas de \texttt{medium\_ai\_test.go} cubren inicializaci\'on, turnos,
 prioridad del centro, las reglas num\'ericas y los estados terminales.
-\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.2cm}}
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.6cm}}
 \caption{Objetivos, escenarios y resultados de MediumAI}\\
 \toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
 \toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
@@ -658,10 +678,18 @@ D07 & Comprobar victoria de X y empate. & Mensaje y tablero deshabilitado. & Amb
 D08 & Explorar 30 recorridos con respuestas aleatorias. & Registrar finales, derrotas y tasa de la IA. & 15\,982 finales; 590 derrotas (3,69\%). & PASS\\
 \bottomrule
 \end{longtable}
+La figura~\ref{fig:consola-medium} presenta la salida de consola de estas pruebas. Sus conteos
+corresponden a otra ejecución y varían respecto de la tabla porque D08 usa respuestas aleatorias.
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-medium.txt}
+\caption{Salida de consola de las pruebas de MediumAI.}
+\label{fig:consola-medium}
+\end{figure}
 
 \subsubsection{Pruebas automatizadas de UnbeatableAI}
 Las filas siguientes corresponden exclusivamente a \texttt{unbeatable\_ai\_test.go}.
-\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.2cm}}
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.6cm}}
 \caption{Objetivos, escenarios y resultados de UnbeatableAI}\\
 \toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
 \toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
@@ -683,9 +711,16 @@ U01--U08 corresponden, en orden, a \texttt{TestFirstMoveTakesCenter},
 las decisiones aleatorias: por cada rama humana obtiene una respuesta aleatoria
 y repite el recorrido 30 veces. Los conteos varían. El resultado citado es de la
 ejecución general con salida detallada, no de la ejecución posterior instrumentada para cobertura.
+La figura~\ref{fig:consola-unbeatable} presenta otra ejecución de estas pruebas, con sus propios conteos.
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-unbeatable.txt}
+\caption{Salida de consola de las pruebas de UnbeatableAI.}
+\label{fig:consola-unbeatable}
+\end{figure}
 
 \subsubsection{Pruebas automatizadas de Minimax}
-\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.2cm}}
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.6cm}}
 \caption{Objetivos, escenarios y resultados de Minimax}\\
 \toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
 \toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
@@ -723,14 +758,21 @@ fb6a9200c81c724a24f04ddad024e88659df8a3837e3c2c4c5fb9d6c84d7b31f
 \end{lstlisting}
 Esta coincidencia valida decisiones y desempates en ese dominio legal. No mide
 rendimiento C\# frente a Go ni prueba automáticamente el formulario Windows completo.
+La figura~\ref{fig:captura-pruebas-go} presenta la salida de consola de estas pruebas.
+
+\begin{figure}[H]
+\centering\captura[width=0.8\linewidth]{captura-pruebas-go.png}
+\caption{Pruebas Go con conteos de exploración Minimax y comparación con C\#.}
+\label{fig:captura-pruebas-go}
+\end{figure}
 
 \subsubsection{Integración HTTP, frontend y MediumAI}
 Para verificar la integración se compiló el servidor Go y se ejecutó en
 \texttt{http://localhost:18084}. Se enviaron peticiones HTTP mediante un script
 PowerShell para comprobar la creación de partidas, los movimientos, el reinicio
 y el cambio de modalidad.
-\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.2cm}}
-\caption{Integración ejecutada y evidencia visual pendiente}\\
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.6cm}}
+\caption{Integración HTTP y validación visual}\\
 \toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
 \toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
 I01 & GET /api/modes; crear partidas de cada nivel. & Tres modos habilitados y tableros vacíos. & Niveles 1, 2 y 3 disponibles. & PASS\\
@@ -739,52 +781,86 @@ I03 & POST /new y PUT /level en cada nivel. & Reinicio y nivel correcto. & Datos
 I04 & Minimax: X en 0, 1 y 3; intentar 8 después del final. & Victoria IA y siguiente petición HTTP 409. & AI Wins!, tablero deshabilitado, HTTP 409. & PASS\\
 I05 & Compilar Angular en producción con dependencias existentes. & TS, plantillas y estilos compilan. & Build correcto con salida temporal. & PASS\\
 I06 & Inspeccionar GameApiService, GameState y GameStore. & Rutas, campos y mensajes compatibles con Go. & Compatibilidad por examen estático. & Revisión\\
-I07 & Jugar visualmente en Angular los tres modos. & Selector, animaciones, marcador y resultados visibles. & Validación visual y capturas pendientes. & Pend.\\
+I07 & Jugar visualmente en Angular los tres modos. & Selector, animaciones, marcador y resultados visibles. & Selector, partidas, marcador y resultados de los tres modos (figuras~\ref{fig:captura-modos}--\ref{fig:captura-resultados}). & PASS\\
 \bottomrule
 \end{longtable}
-Compilar Angular y probar HTTP no equivale a una prueba de navegador de extremo a extremo.
+I07 no constituye una suite de navegador de extremo a extremo: compilar Angular y probar
+HTTP no la sustituye, y las capturas documentan partidas concretas.
 
-\subsubsection{Espacios para evidencias visuales}
-Se reservaron las figuras~\ref{fig:captura-modos}--\ref{fig:captura-resultado-minimax}
-para presentar el selector, las partidas y el resultado, y las
-figuras~\ref{fig:captura-pruebas-go} y \ref{fig:captura-cobertura} para los registros
-de consola. Los marcadores identifican las capturas pendientes y se sustituyen
-automáticamente al incorporar cada archivo en su ruta.
+\subsubsection{Validación visual en el navegador}
+Las figuras~\ref{fig:captura-modos}--\ref{fig:captura-resultados} presentan el selector
+de modos, una partida de cada modalidad, su tablero final y su tarjeta de resultado, como
+evidencia de la prueba I07. Los tableros finales y las tarjetas de resultado se obtuvieron
+el 4 de noviembre de 2026 con partidas reales en Chrome, mediante un script que pulsa las
+casillas de la interfaz con el backend Go en ejecución; en los tres tableros finales se
+comprobó que ninguna casilla quedaba habilitada y la página no registró errores.
+Durante esta validación se detectó que el título de la tarjeta de resultado no se mostraba,
+porque el degradado del texto no alcanzaba a las letras animadas, y se corrigió en el frontend.
 
 \begin{figure}[H]
-\centering\capturapendiente{captura-modos.png}{Selector con los tres modos habilitados}
+\centering\captura[width=0.92\linewidth]{captura-modos.png}
 \caption{Pantalla principal con MediumAI, UnbeatableAI y Minimax disponibles.}
 \label{fig:captura-modos}
 \end{figure}
 \begin{figure}[H]
-\centering\capturapendiente{captura-medium.png}{Partida activa en MediumAI}
-\caption{Partida en MediumAI con jugadas humanas y respuesta del backend.}
+\centering
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[height=3.3cm]{captura-medium.png}
+\caption{Partida en curso.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[height=3.3cm,trim=290 40 290 0,clip]{captura-final-medium.png}
+\caption{Victoria de X: línea ganadora y tablero bloqueado.}
+\end{subfigure}
+\caption{Partida de MediumAI, con jugadas humanas y respuesta del backend.}
 \label{fig:captura-medium}
 \end{figure}
 \begin{figure}[H]
-\centering\capturapendiente{captura-unbeatable.png}{Partida activa en UnbeatableAI}
-\caption{Partida en UnbeatableAI con una regla numérica observable en el inspector.}
+\centering
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[height=3.3cm]{captura-unbeatable.png}
+\caption{Partida en curso, con suma 5 en la diagonal.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[height=3.3cm,trim=290 40 290 0,clip]{captura-final-unbeatable.png}
+\caption{Victoria de O: línea ganadora y tablero bloqueado.}
+\end{subfigure}
+\caption{Partida de UnbeatableAI, con la regla numérica observable en el inspector.}
 \label{fig:captura-unbeatable}
 \end{figure}
 \begin{figure}[H]
-\centering\capturapendiente{captura-minimax.png}{Partida activa en Minimax, nivel 3}
-\caption{Partida activa en Minimax con tablero y bitácora de movimientos del nivel 3.}
+\centering
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[height=3.3cm]{captura-minimax.png}
+\caption{Partida en curso.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[height=3.3cm,trim=290 40 290 0,clip]{captura-final-minimax.png}
+\caption{Victoria de la IA: línea ganadora y tablero bloqueado.}
+\end{subfigure}
+\caption{Partida de Minimax, con tablero y bitácora y sin inspector numérico.}
 \label{fig:captura-minimax}
 \end{figure}
 \begin{figure}[H]
-\centering\capturapendiente{captura-resultado-minimax.png}{Resultado terminal de Minimax}
-\caption{Victoria IA o empate en Minimax, mensaje original y tablero bloqueado.}
-\label{fig:captura-resultado-minimax}
-\end{figure}
-\begin{figure}[H]
-\centering\capturapendiente{captura-pruebas-go.png}{Consola con pruebas y exploraciones Go}
-\caption{Pruebas Go con conteos de exploración Minimax y comparación con C\#.}
-\label{fig:captura-pruebas-go}
-\end{figure}
-\begin{figure}[H]
-\centering\capturapendiente{captura-cobertura.png}{Consola con cobertura del paquete y funciones}
-\caption{Cobertura del paquete game y de las funciones de minimax\_ai.go.}
-\label{fig:captura-cobertura}
+\centering
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=690 255 690 255,clip]{captura-resultado-medium.png}
+\caption{MediumAI: «¡Ganó X!».}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=690 255 690 255,clip]{captura-resultado-unbeatable.png}
+\caption{UnbeatableAI: «¡Ganó O!».}
+\end{subfigure}\\[6pt]
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=690 255 690 255,clip]{captura-resultado-minimax-victoria.png}
+\caption{Minimax: «AI Wins!».}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=690 255 690 255,clip]{captura-resultado-minimax.png}
+\caption{Minimax: «It's a Draw!».}
+\end{subfigure}
+\caption{Tarjeta de resultado de cada modalidad, con el mensaje original de su variante C\#.}
+\label{fig:captura-resultados}
 \end{figure}
 
 % =====================================================================
@@ -819,7 +895,7 @@ Frontend Angular: src & 24 & 2\,179 & 38 & 292 & 2\,509\\
 \bottomrule
 \end{tabular}
 \end{table}
-El backend contiene 78 funciones/métodos de producción y 23 declaraciones en
+El backend contiene 78 funciones/métodos de producción y 31 declaraciones en
 pruebas (24 funciones Test y 7 auxiliares), total 109.
 
 \begin{table}[H]
@@ -882,7 +958,28 @@ distintos y se interpretan dentro del alcance de cada uno.
 
 Se obtuvo una cobertura de \textbf{96,0\% de sentencias de internal/game} con la suite instrumentada y de \textbf{100\% de minimax\_ai.go} en sus 15 funciones. HeuristicNumericalMethod de MediumAI alcanz\'o 100\% de cobertura de sentencias. La
 cobertura de sentencias expresa el código ejecutado durante las pruebas y no
-implica la evaluación de todos los caminos posibles.
+implica la evaluación de todos los caminos posibles. La
+figura~\ref{fig:captura-cobertura} presenta el detalle por función de minimax\_ai.go, y la
+figura~\ref{fig:consola-cobertura}, el total del paquete y las funciones de MediumAI y UnbeatableAI.
+
+\begin{figure}[H]
+\centering\captura[width=0.95\linewidth]{captura-cobertura.png}
+\caption{Cobertura de sentencias de las 15 funciones de minimax\_ai.go.}
+\label{fig:captura-cobertura}
+\end{figure}
+
+\begin{figure}[H]
+\lstinputlisting[style=consola,firstline=1,lastline=3]{Img/consola-cobertura.txt}
+\vspace{3pt}
+\begin{minipage}[t]{0.49\linewidth}
+\lstinputlisting[style=consola,firstline=4,lastline=17]{Img/consola-cobertura.txt}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\lstinputlisting[style=consola,firstline=18,lastline=35]{Img/consola-cobertura.txt}
+\end{minipage}
+\caption{Cobertura del paquete game y de las funciones de MediumAI y UnbeatableAI.}
+\label{fig:consola-cobertura}
+\end{figure}
 
 \subsubsection{Entorno y tiempos de pruebas}
 Se ejecutaron las pruebas en Windows NT 10.0.26200, arquitectura amd64,
@@ -983,21 +1080,19 @@ una estrategia determinista y se distingue del muestreo de UnbeatableAI.
        restauración del tablero y los desempates. Coincidieron las 2\,097 decisiones
        comparadas; en 569 finales se obtuvieron 386 victorias de IA, 183 empates
        y ninguna derrota.
- \item Se aprobaron 23 funciones Test y se ejecutó go vet sin diagnósticos.
+ \item Se aprobaron 24 funciones Test y se ejecutó go vet sin diagnósticos.
        La cobertura alcanzó 96,0\% en game y 100\% de sentencias en Minimax.
        Estos resultados complementan la comparación funcional y la exploración
        de partidas, con el alcance propio de cada técnica de validación.
  \item Se verificaron la compilación Angular y la comunicación HTTP con Go.
        Las pruebas espec\'ificas de MediumAI verificaron inicializaci\'on, turnos, centro,
-       reglas heur\'isticas, azar y estados terminales. Queda pendiente la comprobaci\'on
-       visual de los tres modos en navegador.
+       reglas heur\'isticas, azar y estados terminales. Los tres modos se
+       comprobaron en el navegador, con capturas como evidencia.
 \end{itemize}
 
 \subsection{Recomendaciones}
 \begin{itemize}
- \item Completar la validación visual I07 e incorporar las siete capturas
-       preparadas para documentar la interfaz y los resultados.
- \item Ampliar las pruebas de navegador,
+ \item Incorporar a una suite de navegador la validación visual I07,
        manteniendo resultados y métricas diferenciados por modalidad.
  \item Mantener la referencia SHA-256 y las pruebas de Minimax para detectar
        cambios de comportamiento durante futuras modificaciones de infraestructura.
