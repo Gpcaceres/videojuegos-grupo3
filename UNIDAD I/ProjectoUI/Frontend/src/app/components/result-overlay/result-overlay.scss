@@ -57,13 +57,12 @@ h2 {
   font-size: clamp(2rem, 8vw, 2.8rem);
   font-weight: 900;
   letter-spacing: 0.06em;
-  background: linear-gradient(90deg, var(--x-color), #a78bfa, var(--o-color));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 
+  // Cada letra se anima en su propia capa, así que background-clip del h2 no le llega:
+  // el degradado se calcula letra por letra.
   span {
     display: inline-block;
+    color: color-mix(in srgb, var(--x-color), var(--o-color) calc(var(--d) * 12%));
     animation: letter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     animation-delay: calc(var(--d) * 50ms + 250ms);
   }
