@@ -562,8 +562,7 @@ como actividades pendientes de presentación de resultados.
 \begin{itemize}
  \item \textbf{Diseño simple:} se utilizó un controlador por modalidad y una
        interfaz común, con reutilización del backend y de las rutas REST.
- \item \textbf{Pruebas automatizadas:} se implementaron pruebas de UnbeatableAI
-       y Minimax para verificar reglas, estados terminales y selección de movimientos.
+ \item \textbf{Pruebas automatizadas:} se implementaron pruebas de MediumAI, UnbeatableAI y Minimax para verificar reglas, estados terminales y selección de movimientos.
  \item \textbf{Integración incremental:} se incorporó el nivel 3 sobre Form y Board,
        manteniendo la separación entre la estrategia de IA y la comunicación web.
  \item \textbf{Estándares de código:} se utilizó gofmt en Minimax y se ejecutó
@@ -640,11 +639,25 @@ go test -count=1 -coverprofile=<temporal>/game.out ./internal/game
 go tool cover -func=<temporal>/game.out
 go vet ./...
 \end{lstlisting}
-Se aprobaron 16 funciones Test de primer nivel: 8 de UnbeatableAI y 8 de Minimax.
-Los subcasos de tablas no se cuentan como funciones adicionales. Go vet terminó
-con código 0 y sin diagnósticos. La cobertura funcional de MediumAI se limitó
-a las verificaciones HTTP descritas en Integración, sin pruebas automatizadas
-específicas de sus reglas.
+Se aprobaron 24 funciones Test de primer nivel: 8 de MediumAI, 8 de UnbeatableAI y 8 de Minimax. Los subcasos de tablas no se cuentan como funciones adicionales. Go vet finaliz\'o con c\'odigo 0 y sin diagn\'osticos. La cobertura de sentencias del paquete internal/game fue de 96,0\% en la ejecuci\'on instrumentada.
+
+\subsubsection{Pruebas automatizadas de MediumAI}
+Las pruebas de \texttt{medium\_ai\_test.go} cubren inicializaci\'on, turnos,
+prioridad del centro, las reglas num\'ericas y los estados terminales.
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.2cm}}
+\caption{Objetivos, escenarios y resultados de MediumAI}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+D01 & Inicializar y reiniciar controlador y tablero. & Pesos vac\'ios, turno X y controles habilitados. & Estado y tablero restablecidos. & PASS\\
+D02 & X marca 0 con el centro libre. & O toma el centro (4). & O en 4; turno X. & PASS\\
+D03 & Intentar jugar en el centro ocupado. & Sin cambios en tablero, pesos ni eventos. & Jugada ocupada ignorada. & PASS\\
+D04 & Probar las ocho l\'ineas, suma 6/2 y cada casilla vac\'ia. & Ganar o bloquear en el espacio correcto. & 48 subcasos aprobados. & PASS\\
+D05 & Presentar una victoria y un bloqueo posibles. & Priorizar suma 6. & Selecciona la victoria en 8. & PASS\\
+D06 & Sin suma 6/2 y una casilla libre. & Elegir al azar entre libres. & Elige la casilla libre 4. & PASS\\
+D07 & Comprobar victoria de X y empate. & Mensaje y tablero deshabilitado. & Ambos finales correctos. & PASS\\
+D08 & Explorar 30 recorridos con respuestas aleatorias. & Registrar finales, derrotas y tasa de la IA. & 15\,982 finales; 590 derrotas (3,69\%). & PASS\\
+\bottomrule
+\end{longtable}
 
 \subsubsection{Pruebas automatizadas de UnbeatableAI}
 Las filas siguientes corresponden exclusivamente a \texttt{unbeatable\_ai\_test.go}.
@@ -729,8 +742,6 @@ I06 & Inspeccionar GameApiService, GameState y GameStore. & Rutas, campos y mens
 I07 & Jugar visualmente en Angular los tres modos. & Selector, animaciones, marcador y resultados visibles. & Validación visual y capturas pendientes. & Pend.\\
 \bottomrule
 \end{longtable}
-MediumAI no tiene pruebas específicas ni tasa de derrotas medida. I02 cubre su
-apertura y el rechazo de ocupadas, no todas sus reglas ni equivalencia C\# completa.
 Compilar Angular y probar HTTP no equivale a una prueba de navegador de extremo a extremo.
 
 \subsubsection{Espacios para evidencias visuales}
@@ -802,14 +813,14 @@ de propiedades C\# y funciones anónimas. No se mide complejidad ciclomática.
 \begin{tabular}{lrrrrr}
 \toprule Alcance & Archivos & LOC & Coment. & Blanco & Total\\\midrule
 Backend Go: producción & 8 & 1\,105 & 111 & 119 & 1\,335\\
-Backend Go: pruebas & 2 & 519 & 29 & 25 & 573\\
-\textbf{Backend Go completo} & \textbf{10} & \textbf{1\,624} & \textbf{140} & \textbf{144} & \textbf{1\,908}\\
+Backend Go: pruebas & 3 & 676 & 30 & 34 & 740\\
+\textbf{Backend Go completo} & \textbf{11} & \textbf{1\,781} & \textbf{141} & \textbf{153} & \textbf{2\,075}\\
 Frontend Angular: src & 24 & 2\,179 & 38 & 292 & 2\,509\\
 \bottomrule
 \end{tabular}
 \end{table}
 El backend contiene 78 funciones/métodos de producción y 23 declaraciones en
-pruebas (16 funciones Test y 7 auxiliares), total 101.
+pruebas (24 funciones Test y 7 auxiliares), total 109.
 
 \begin{table}[H]
 \centering\small
@@ -853,13 +864,13 @@ Go: cobertura de minimax\_ai.go & 100\% de sentencias en sus 15 funciones con la
 \caption{Métricas funcionales por modalidad}
 \begin{tabular}{p{4.4cm}rrr}
 \toprule Métrica & MediumAI & UnbeatableAI & Minimax\\\midrule
-Archivos de controlador / prueba & 1 / 0 & 1 / 1 & 1 / 1\\
+Archivos de controlador / prueba & 1 / 1 & 1 / 1 & 1 / 1\\
 Funciones del controlador & 14 & 17 & 15\\
-Funciones Test aprobadas & No existen & 8 / 8 & 8 / 8\\
-Finales explorados por sus pruebas & No medido & 15\,134 & 569\\
-Derrotas de IA & No medido & 162 & 0\\
-Porcentaje de derrotas de IA & No medido & 1,07\% & 0\%\\
-Tiempo de suite filtrada (s) & No aplica & 0,820 & 0,648\\
+Funciones Test aprobadas & 8 / 8 & 8 / 8 & 8 / 8\\
+Finales explorados por sus pruebas & 15\,982 & 15\,134 & 569\\
+Derrotas de IA & 590 & 162 & 0\\
+Porcentaje de derrotas de IA & 3,69\% & 1,07\% & 0\%\\
+Tiempo de suite filtrada (s) & 0,819 & 0,820 & 0,648\\
 Dependencias externas Go & 0 & 0 & 0\\
 \bottomrule
 \end{tabular}
@@ -869,8 +880,7 @@ de la IA; en Minimax se exploraron todos los caminos humanos legales frente a un
 respuesta determinista. Las tasas corresponden a procedimientos de exploración
 distintos y se interpretan dentro del alcance de cada uno.
 
-Se obtuvo una cobertura de \textbf{61,3\% de sentencias de internal/game} con la
-suite completa y de \textbf{100\% de minimax\_ai.go} en sus 15 funciones. La
+Se obtuvo una cobertura de \textbf{96,0\% de sentencias de internal/game} con la suite instrumentada y de \textbf{100\% de minimax\_ai.go} en sus 15 funciones. HeuristicNumericalMethod de MediumAI alcanz\'o 100\% de cobertura de sentencias. La
 cobertura de sentencias expresa el código ejecutado durante las pruebas y no
 implica la evaluación de todos los caminos posibles.
 
@@ -973,21 +983,21 @@ una estrategia determinista y se distingue del muestreo de UnbeatableAI.
        restauración del tablero y los desempates. Coincidieron las 2\,097 decisiones
        comparadas; en 569 finales se obtuvieron 386 victorias de IA, 183 empates
        y ninguna derrota.
- \item Se aprobaron 16 funciones Test y se ejecutó go vet sin diagnósticos.
-       La cobertura alcanzó 61,3\% en game y 100\% de sentencias en Minimax.
+ \item Se aprobaron 23 funciones Test y se ejecutó go vet sin diagnósticos.
+       La cobertura alcanzó 96,0\% en game y 100\% de sentencias en Minimax.
        Estos resultados complementan la comparación funcional y la exploración
        de partidas, con el alcance propio de cada técnica de validación.
  \item Se verificaron la compilación Angular y la comunicación HTTP con Go.
-       La validación de MediumAI comprendió escenarios básicos de integración;
-       quedan pendientes sus pruebas específicas y la comprobación visual de
-       los tres modos en navegador.
+       Las pruebas espec\'ificas de MediumAI verificaron inicializaci\'on, turnos, centro,
+       reglas heur\'isticas, azar y estados terminales. Queda pendiente la comprobaci\'on
+       visual de los tres modos en navegador.
 \end{itemize}
 
 \subsection{Recomendaciones}
 \begin{itemize}
  \item Completar la validación visual I07 e incorporar las siete capturas
        preparadas para documentar la interfaz y los resultados.
- \item Ampliar las pruebas automatizadas de MediumAI y las pruebas de navegador,
+ \item Ampliar las pruebas de navegador,
        manteniendo resultados y métricas diferenciados por modalidad.
  \item Mantener la referencia SHA-256 y las pruebas de Minimax para detectar
        cambios de comportamiento durante futuras modificaciones de infraestructura.
