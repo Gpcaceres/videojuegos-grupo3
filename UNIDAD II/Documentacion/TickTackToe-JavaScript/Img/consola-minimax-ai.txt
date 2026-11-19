@@ -1,0 +1,22 @@
+$ node --test --test-reporter=spec test/minimax-ai.test.js | grep -v '^  '
+✔ M01 reinicia tras una victoria de la IA y coincide con el constructor (2.4943ms)
+✔ M02 turnos: rechaza índices inválidos, doble turno y casillas ocupadas (6.77ms)
+▶ M03 getBestMove elige la jugada esperada y restaura el tablero
+✔ M03 getBestMove elige la jugada esperada y restaura el tablero (33.8788ms)
+▶ M04 ocho líneas por jugador con puntuación y ajuste por profundidad
+✔ M04 ocho líneas por jugador con puntuación y ajuste por profundidad (3.0752ms)
+▶ M05 finales con el mensaje original y sin jugadas posteriores
+✔ M05 finales con el mensaje original y sin jugadas posteriores (0.9842ms)
+✔ M06 ningún camino humano legal le gana a Minimax (41.655ms)
+ℹ todas las secuencias humanas legales: 569 finales, 386 victorias de la IA, 183 empates, ninguna derrota
+✔ M07 coincide con las 2097 decisiones del C# original (SHA-256) (68.522ms)
+ℹ coincide con el C# original: 2097 decisiones en 5478 tableros; SHA256=fb6a9200c81c724a24f04ddad024e88659df8a3837e3c2c4c5fb9d6c84d7b31f
+✔ M08 Form: despacho, rechazo, final humano y reinicio (6.9536ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 270.9663

@@ -1,0 +1,18 @@
+$ node --test --test-reporter=spec test/unbeatable-ai.test.js | grep -v '^  '
+✔ U01 primera jugada: la JCC toma el centro (1.3044ms)
+✔ U02 primera jugada: si el usuario toma el centro, la JCC va a una esquina (0.935ms)
+✔ U03 Caso 1: X en 4, O en 0; el usuario juega 2 y la JCC bloquea en 6 (1.2011ms)
+✔ U04 Caso 2: la JCC tiene 2 y 8, completa 5 y gana (1.1571ms)
+✔ U05 prioriza ganar (suma 6) antes que bloquear (suma 2) (0.2382ms)
+✔ U06 esquinas por lados adyacentes en el orden oficial: 1+3 antes que 1+5 (0.1425ms)
+✔ U07 Caso 3 con la JCC en el centro: el lado aleatorio nunca es 3 (3.5219ms)
+✔ U08 recorre todas las respuestas humanas en 30 árboles con IA aleatoria (143.2932ms)
+ℹ partidas exploradas: 15006, derrotas de la JCC: 151 (1.01%), casos en que el original se congelaría: 0
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 247.0092

@@ -1,0 +1,20 @@
+$ node --test --test-reporter=spec test/medium-ai.test.js | grep -v '^  '
+✔ D01 inicializa y reinicia el controlador y el tablero (1.8038ms)
+✔ D02 X marca 0 con el centro libre: O toma el centro (0.4805ms)
+✔ D03 una casilla ocupada se ignora sin otra jugada de la IA (0.1654ms)
+▶ D04 ocho líneas con suma 6 y suma 2, con cada casilla vacía
+✔ D04 ocho líneas con suma 6 y suma 2, con cada casilla vacía (8.2376ms)
+✔ D05 con victoria y bloqueo posibles, prioriza la suma 6 (0.1155ms)
+✔ D06 sin suma 6 ni 2, elige al azar entre las libres (0.1094ms)
+▶ D07 victoria de X y empate: mensaje original y tablero deshabilitado
+✔ D07 victoria de X y empate: mensaje original y tablero deshabilitado (0.5713ms)
+✔ D08 explora 30 árboles de respuestas aleatorias (152.8699ms)
+ℹ árboles de respuestas aleatorias: 15934 finales, 606 derrotas de la IA (3.80%)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 292.0935

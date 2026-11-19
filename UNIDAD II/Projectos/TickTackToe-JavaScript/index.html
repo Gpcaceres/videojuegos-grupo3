@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tres en Raya IA · JavaScript</title>
+  <meta name="description" content="Tres en Raya con IA (MediumAI, UnbeatableAI y Minimax) en JavaScript. Proyecto 3, Grupo 3, ESPE.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%AD%95%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="src/ui/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"><b class="x">X</b><b class="o">O</b></span>
+      <div>
+        <h1>Tres en Raya <span class="accent">IA</span></h1>
+        <p>Proyecto 3 · Grupo 3 · JavaScript</p>
+      </div>
+    </div>
+    <button type="button" id="sound" class="icon-btn" aria-pressed="true" title="Sonido (S)">🔊</button>
+  </header>
+
+  <main class="layout">
+    <section class="panel modes" aria-labelledby="modes-title">
+      <h2 id="modes-title" class="label">Modo de juego</h2>
+      <div id="mode-list" class="mode-list"></div>
+    </section>
+
+    <section class="play" aria-label="Partida">
+      <p id="status" class="status" role="status" aria-live="polite">Tu turno · juegas con <b class="x">X</b></p>
+      <div class="stage">
+        <div id="grid" class="grid" role="grid" aria-label="Tablero del Tres en Raya"></div>
+        <svg id="winline" class="winline" viewBox="0 0 300 300" aria-hidden="true"></svg>
+        <div id="thinking" class="thinking" hidden><span></span><span></span><span></span><em>JCC pensando…</em></div>
+      </div>
+      <div class="actions">
+        <button type="button" id="new-game" class="primary">↻ Nuevo juego</button>
+        <span class="hint">Teclas 1–9 · N: nuevo juego</span>
+      </div>
+    </section>
+
+    <aside class="panel side">
+      <h2 class="label">Marcador · <span id="score-mode"></span></h2>
+      <div class="score">
+        <div><b id="score-win">0</b><small>Ganadas</small></div>
+        <div><b id="score-draw">0</b><small>Empates</small></div>
+        <div><b id="score-loss">0</b><small>Perdidas</small></div>
+      </div>
+      <button type="button" id="score-reset" class="link">Reiniciar marcador</button>
+
+      <div id="inspector" class="inspector">
+        <h2 class="label">Cerebro de la JCC · mArrayMoves</h2>
+        <div id="weights" class="weights"></div>
+        <div id="sums" class="sums"></div>
+        <p class="legend"><b class="k6">6</b> JCC gana · <b class="k2">2</b> JCC bloquea · <b class="k5">5</b> diagonal (caso trivial)</p>
+      </div>
+
+      <h2 class="label">Bitácora</h2>
+      <ol id="log" class="log"></ol>
+    </aside>
+  </main>
+
+  <footer class="foot">ESPE · Desarrollo de Videojuegos · Port del Tic-Tac-Toe del docente (C#) a JavaScript</footer>
+
+  <div id="result" class="result" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div id="result-emoji" class="emoji" aria-hidden="true"></div>
+      <h2 id="result-title"></h2>
+      <p class="msg">MessageBox: <b id="result-text"></b> <span id="result-caption"></span></p>
+      <p id="result-sub" class="sub"></p>
+      <div class="card-actions">
+        <button type="button" id="again" class="primary">Jugar otra vez</button>
+        <button type="button" id="dismiss" class="ghost">Ver tablero</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

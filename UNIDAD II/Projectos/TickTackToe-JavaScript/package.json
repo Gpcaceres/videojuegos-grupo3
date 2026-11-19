@@ -1,0 +1,15 @@
+{
+  "name": "tres-en-raya-js",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tres en Raya con IA (MediumAI, UnbeatableAI y Minimax) en JavaScript para la web. Proyecto 3, Grupo 3, ESPE.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=src/**/*.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

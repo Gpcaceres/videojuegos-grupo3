@@ -1,0 +1,994 @@
+% =====================================================================
+%  Informe del Proyecto 3 - Grupo 3 - Desarrollo de Videojuegos (ESPE)
+%  Unidad 2: Tres en Raya con IA en JavaScript (Web)
+%  Compilar:  pdflatex InformeTickTackToe.tex  (dos veces, para el índice)
+% =====================================================================
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-noshorthands]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyhdr}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,shapes.multipart,arrows.meta,positioning,calc,babel}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{Img/}}
+
+% ---------- colores y utilidades ----------
+\definecolor{espe}{RGB}{0,102,51}
+\definecolor{xcol}{RGB}{8,145,178}
+\definecolor{ocol}{RGB}{219,39,119}
+\definecolor{codebg}{RGB}{245,245,250}
+
+% Captura con borde fino; el argumento opcional recibe las opciones de la imagen.
+\newcommand{\captura}[2][width=0.99\linewidth]{%
+ \begingroup\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}%
+ \fcolorbox{gray!50}{white}{\includegraphics[#1]{#2}}\endgroup}
+
+\captionsetup{font=small,labelfont=bf,labelsep=period}
+\captionsetup[sub]{font=footnotesize,labelfont=bf}
+
+% Salida real de consola, guardada en Img/consola-*.txt.
+\definecolor{consolabg}{RGB}{24,26,38}
+\definecolor{consolafg}{RGB}{226,232,240}
+\lstdefinestyle{consola}{basicstyle=\ttfamily\scriptsize\color{consolafg},
+  backgroundcolor=\color{consolabg}, frame=single, rulecolor=\color{consolabg},
+  framesep=4pt, xleftmargin=4pt, xrightmargin=4pt, aboveskip=0pt, belowskip=0pt,
+  breaklines=true, breakindent=1.2em, columns=fullflexible, keepspaces=true}
+
+\lstdefinelanguage{JavaScript}{
+  morekeywords={const,let,var,function,return,if,else,for,of,in,while,class,constructor,this,new,import,export,from,static,get,true,false,null,undefined,throw,async,await},
+  sensitive=true, morecomment=[l]{//}, morecomment=[s]{/*}{*/}, morestring=[b]', morestring=[b]"}
+\lstset{basicstyle=\ttfamily\footnotesize, backgroundcolor=\color{codebg},
+  keywordstyle=\color{xcol}\bfseries, commentstyle=\color{gray}\itshape,
+  stringstyle=\color{ocol}, frame=single, rulecolor=\color{gray!40},
+  breaklines=true, columns=fullflexible, showstringspaces=false,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+    {¡}{{!`}}1 {✔}{{$\checkmark$}}1 {▶}{{$\blacktriangleright$}}1 {ℹ}{{\textit{i}}}1}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Desarrollo de Videojuegos -- Unidad 2}
+\fancyhead[R]{\small Grupo N.º 3}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\sloppy
+
+% =====================================================================
+%  CARÁTULA
+% =====================================================================
+\begin{titlepage}
+  \centering
+  \includegraphics[width=0.55\textwidth]{logoINFESPE.png}\par\vspace{1cm}
+  {\Large\bfseries UNIVERSIDAD DE LAS FUERZAS ARMADAS -- ESPE\par}
+  \vspace{0.3cm}
+  {\large DEPARTAMENTO DE CIENCIAS DE LA COMPUTACIÓN\par}
+  \vspace{0.2cm}
+  {\large CARRERA DE INGENIERÍA EN SOFTWARE\par}
+  \vspace{1.2cm}
+  {\large\bfseries ASIGNATURA: DESARROLLO DE VIDEOJUEGOS\par}
+  \vspace{0.3cm}
+  {\large UNIDAD 2\par}
+  \vspace{1.2cm}
+  {\color{espe}\rule{\linewidth}{1pt}}\par\vspace{0.3cm}
+  {\LARGE\bfseries Tres en Raya con Inteligencia Artificial\par}
+  \vspace{0.2cm}
+  {\large Proyecto 3: Tic-Tac-Toe (MediumAI, UnbeatableAI y Minimax) -- JavaScript (Web)\par}
+  \vspace{0.3cm}
+  {\color{espe}\rule{\linewidth}{1pt}}\par
+  \vspace{1.2cm}
+  {\large DOCENTE: ING. CÉSAR VILLACÍS SILVA, MSC.\par}
+  \vspace{0.8cm}
+  {\large\bfseries ESTUDIANTES:\par}
+  \vspace{0.2cm}
+  {\large Diana Guerra\par Paul Moreno\par Germán Cáceres\par}
+  \vspace{0.8cm}
+  {\large\bfseries GRUPO N.º 3\par}
+  \vfill
+  {\large FECHA: NOVIEMBRE 2026\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Presentación del proyecto}
+% =====================================================================
+Se desarrolló el videojuego \emph{Tres en Raya con Inteligencia Artificial} como
+aplicación web en JavaScript. A diferencia de la versión de la Unidad~1, que
+separaba un backend en Go de un frontend en Angular, en esta versión toda la
+lógica del juego se ejecuta en el navegador como módulos ES, sin frameworks ni
+dependencias externas. Un servidor estático mínimo en Node.js entrega los
+archivos, porque los navegadores no cargan módulos ES desde \texttt{file://}.
+
+\begin{table}[H]
+\centering
+\caption{Modalidades de inteligencia artificial implementadas}
+\begin{tabular}{lll}
+\toprule
+\textbf{Modalidad} & \textbf{Tecnología} & \textbf{Estado}\\
+\midrule
+MediumAI & JavaScript (Web) & \textbf{Implementado}\\
+UnbeatableAI & JavaScript (Web) & \textbf{Implementado}\\
+UnbeatableAI con Minimax & JavaScript (Web) & \textbf{Implementado}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Se migraron las tres variantes del proyecto C\#
+\texttt{Tic-Tac-Toe-Game-Windows-Professor}, desarrollado originalmente con
+Windows Forms. Se conservaron los pesos, el orden de evaluación de las reglas,
+los mensajes de cada variante y, en Minimax, las puntuaciones y los criterios de
+desempate. La única adaptación del muestreo aleatorio de UnbeatableAI se
+describe en la sección~\ref{sec:hallazgos}. Las versiones de referencia son:
+
+\begin{table}[H]
+\centering
+\caption{Versiones C\# utilizadas como referencia}
+\small
+\begin{tabular}{p{2.3cm}p{6.6cm}p{5cm}}
+\toprule
+\textbf{Variante} & \textbf{Carpeta} & \textbf{Clase}\\
+\midrule
+UnbeatableAI & \texttt{Tic-Tac-Toe-Versión-IA-Fuerte} & \texttt{UnbeatableAIController}\\
+MediumAI & \texttt{Tic-Tac-Toe-Versión-IA-Debil} & \texttt{MediumAIController}\\
+MinMax & \texttt{Tic-Tac-Toe-Version-MiniMax} & \texttt{UnbeatableAIController}\textsuperscript{*}\\
+\bottomrule
+\end{tabular}\\[2pt]
+{\footnotesize \textsuperscript{*}Misma clase, pero implementada con el algoritmo Minimax en lugar del método numérico.}
+\end{table}
+
+% =====================================================================
+\section{Especificación de Requerimientos (IEEE 830)}
+% =====================================================================
+
+\subsection{Introducción}
+
+\subsubsection{Propósito}
+Se especifican los requisitos funcionales y no funcionales del videojuego web
+\emph{Tres en Raya con IA} en JavaScript, con base en IEEE 830-1998~\cite{ieee830}.
+La especificación establece el comportamiento del sistema, sus interfaces y los
+criterios de verificación de las funcionalidades implementadas.
+
+\subsubsection{Alcance}
+El sistema permite que un usuario juegue al Tres en Raya contra un
+\emph{Jugador Controlado por la Computadora} (JCC) desde un navegador. La JCC
+dispone de tres modalidades: \textbf{MediumAI} (1), \textbf{UnbeatableAI} (2) y
+\textbf{UnbeatableAI con Minimax} (3). Las dos primeras usan pesos 0/1/3; Minimax
+usa caracteres en una matriz 3$\times$3. El sistema comprende la gestión de la
+partida, la alternancia de turnos, la detección del resultado y su presentación
+animada en la misma página.
+
+\subsubsection{Definiciones, acrónimos y abreviaturas}
+\begin{description}[leftmargin=2.6cm,style=nextline]
+  \item[JCC] Jugador Controlado por la Computadora (marca «O»).
+  \item[Usuario] Jugador humano (marca «X»); siempre empieza.
+  \item[mArrayMoves] Vector $V_k$ de 9 posiciones con los pesos 0/1/3.
+  \item[Módulo ES] Archivo JavaScript que exporta e importa con \texttt{export} e \texttt{import}.
+  \item[Evento] Registro de lo que el usuario ve: jugada de X, jugada de O o mensaje de resultado.
+\end{description}
+
+\subsubsection{Referencias}
+\begin{itemize}
+  \item IEEE Std 830-1998, \emph{Recommended Practice for Software Requirements Specifications}.
+  \item Villacís, C. et al., \emph{Optimización del Juego del Tres en Raya con
+        Niveles de Dificultad, Utilizando Técnicas Heurísticas de IA}, ESPE.
+  \item Material de clase: \emph{Caso 1}, \emph{Caso 2} y \emph{Caso 3 TTT}.
+  \item Código C\# de referencia: \texttt{Tic-Tac-Toe-Game-Windows-Professor} (IA fuerte, IA débil y MiniMax).
+  \item Informe del Proyecto 3 de la Unidad~1 (versión Go y Angular).
+\end{itemize}
+
+\subsection{Descripción general}
+
+\subsubsection{Perspectiva del producto}
+La aplicación separa la lógica de la presentación dentro del mismo navegador.
+La carpeta \texttt{src/game} contiene las reglas y las decisiones de IA migradas
+desde C\#, sin acceso al DOM, de modo que también se ejecutan en Node.js para
+las pruebas. La carpeta \texttt{src/ui} dibuja el tablero, recibe los clics y
+reproduce los eventos que deja cada jugada.
+
+\subsubsection{Funciones del producto}
+Se permite seleccionar la modalidad de IA, iniciar o reiniciar una partida,
+marcar una casilla libre, observar la respuesta de la JCC y consultar el
+resultado, el marcador por modalidad, la bitácora de jugadas y el inspector de
+pesos de las modalidades numéricas. MediumAI y UnbeatableAI emiten «¡Ganó X!»,
+«¡Ganó O!» y «¡Empate!» con título «Resultado»; Minimax emite «You Win!»,
+«AI Wins!» e «It's a Draw!» con título «Tic Tac Toe». El inspector numérico se
+oculta en Minimax, porque ese algoritmo no usa pesos.
+
+\subsubsection{Características de los usuarios}
+Niños de 7 a 11 años (público objetivo del juego original) y estudiantes.
+No se requiere conocimiento técnico: basta con hacer clic o usar las teclas 1--9.
+
+\subsubsection{Restricciones}
+\begin{itemize}
+  \item La migración debe conservar el comportamiento funcional de las variantes C\#.
+  \item JavaScript estándar (ECMAScript 2022) con módulos ES, sin frameworks ni dependencias de terceros.
+  \item Node.js~20 o superior, solo para el servidor estático y las pruebas.
+  \item Navegadores modernos (Chrome, Edge, Firefox) en computadora y celular.
+\end{itemize}
+
+\subsubsection{Suposiciones y dependencias}
+La aplicación se sirve por HTTP; con \texttt{npm start} queda disponible en
+\texttt{http://localhost:5173}. El marcador se guarda en \texttt{localStorage}
+del navegador; si no está disponible, dura lo que dure la pestaña.
+
+\subsection{Requerimientos específicos}
+
+\subsubsection{Requerimientos funcionales}
+\begin{longtable}{p{1.3cm}p{9.2cm}p{2.6cm}}
+\caption{Requerimientos funcionales}\\
+\toprule
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad}\\
+\midrule\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad}\\
+\midrule\endhead
+RF01 & El sistema mostrará un tablero 3$\times$3. La lógica usa índices 0--8; el teclado de la interfaz admite 1--9. & Alta\\
+RF02 & El usuario podrá seleccionar MediumAI (1), UnbeatableAI (2) o Minimax (3). & Alta\\
+RF03 & El usuario siempre inicia con la marca «X». & Alta\\
+RF04 & Una casilla libre recibe X; una ocupada se ignora sin provocar otra jugada de la IA. Los índices fuera de 0--8 se rechazan. & Alta\\
+RF05 & En UnbeatableAI, en su primera jugada la JCC tomará el centro (4) si está libre; si no, una esquina aleatoria (0, 2, 6, 8). & Alta\\
+RF06 & UnbeatableAI aplicará el método numérico: suma 6 $\Rightarrow$ gana; suma 2 $\Rightarrow$ bloquea; suma 5 en diagonal $\Rightarrow$ caso trivial; dos lados adyacentes del usuario $\Rightarrow$ esquina intermedia (1+3$\to$0, 1+5$\to$2, 3+7$\to$6, 5+7$\to$8); en otro caso, casilla aleatoria. & Alta\\
+RF07 & En UnbeatableAI, si la JCC está en el centro y la regla de suma 5 aplica, jugará un lado aleatorio entre 1, 5 y 7 (comportamiento de la versión C\# descrito en la sección~\ref{sec:hallazgos}). & Alta\\
+RF08 & Después de cada jugada se comprobarán filas, columnas y diagonales; el tablero lleno sin ganador produce empate, con los mensajes de cada variante. & Alta\\
+RF09 & Al terminar la partida el tablero se deshabilitará (equivalente a \texttt{grbTicTacToe.Enabled = false}). & Alta\\
+RF10 & El usuario podrá iniciar un juego nuevo en cualquier momento. & Media\\
+RF11 & El sistema mostrará un marcador de partidas ganadas, empatadas y perdidas por modo. & Media\\
+RF12 & El inspector mostrará pesos 0/1/3 y sumas por línea en las IA numéricas, y se ocultará en Minimax. & Baja\\
+RF13 & MediumAI tomará primero el centro libre; en otro caso buscará suma 6, luego suma 2 y finalmente una casilla libre aleatoria. & Alta\\
+RF14 & Minimax explorará con O maximizador y X minimizador; puntuará $10-d$, $-10+d$ o 0, restaurará las casillas y conservará el primer máximo estricto en orden 0--8. & Alta\\
+RF15 & Tras un final no habrá más movimientos; un juego nuevo o un cambio de nivel reiniciará el tablero y el turno humano. & Alta\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{Requerimientos no funcionales}
+\begin{longtable}{p{1.3cm}p{2.9cm}p{9.2cm}}
+\caption{Requerimientos no funcionales}\\
+\toprule
+\textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
+\midrule\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
+\midrule\endhead
+RNF01 & Fidelidad & Cada modo conservará las reglas de su variante C\#. Minimax mantendrá puntuaciones, orden y desempates, sin poda alfa-beta ni nuevas heurísticas.\\
+RNF02 & Rendimiento & La decisión de la IA tardará menos de 50 ms por jugada, sin contar las pausas de animación.\\
+RNF03 & Usabilidad & Interfaz animada, con sonido opcional, bitácora y soporte de teclado (1--9, N y S).\\
+RNF04 & Accesibilidad & Respeta \texttt{prefers-reduced-motion} y usa etiquetas ARIA en el tablero y el resultado.\\
+RNF05 & Portabilidad & Funciona en navegadores modernos y se adapta a celular, tableta y escritorio sin desplazamiento horizontal.\\
+RNF06 & Mantenibilidad & Cada modo vive en su propio módulo y expone los mismos métodos (\texttt{playUser}, \texttt{playNPC}, \texttt{weights}, \ldots).\\
+RNF07 & Fiabilidad & UnbeatableAI comprobará la disponibilidad antes del muestreo aleatorio restringido, para no congelar la pestaña.\\
+RNF08 & Simplicidad & Cero dependencias de terceros en la aplicación, el servidor y las pruebas.\\
+RNF09 & Calidad & Las pruebas de las tres modalidades deberán aprobar con \texttt{npm test}.\\
+\bottomrule
+\end{longtable}
+
+% =====================================================================
+\section{Modelo de Inteligencia Artificial}
+% =====================================================================
+En las dos IA numéricas, el tablero se representa como el vector $V_k$, con
+$k = 0,\dots,8$, en el arreglo \texttt{arrayMoves} (\texttt{mArrayMoves} en C\#).
+Cada casilla vale 0 (vacía), 1 (usuario) o 3 (JCC). Para cada una de las 8 líneas
+se calcula la suma de sus tres casillas:
+
+\begin{table}[H]
+\centering
+\caption{Interpretación de la suma por línea}
+\begin{tabular}{cll}
+\toprule
+\textbf{Suma} & \textbf{Composición} & \textbf{Acción de la JCC}\\
+\midrule
+6 & 3 + 3 + 0 & Completar la línea y \textbf{ganar} (Caso 2)\\
+2 & 1 + 1 + 0 & \textbf{Bloquear} al usuario (Caso 1)\\
+5 (diagonal) & 1 + 3 + 1 & Caso trivial: esquina libre o lado aleatorio (Caso 3)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Los pesos 1 y 3 hacen que cada suma relevante tenga una sola composición: con
+1 y 2, por ejemplo, la suma 2 podría ser «X + X + vacía» u «O + vacía + vacía».
+El C\# escribe 16 ramas \texttt{if/else if} para las sumas 6 y 2; en JavaScript
+se expresan como dos recorridos de \texttt{WINNING\_LINES}, que tienen el mismo
+orden (filas, columnas y diagonales) y devuelven la misma casilla:
+
+\begin{lstlisting}[language=JavaScript]
+// Suma 6 (3 + 3 + 0): la JCC completa la línea y gana (Caso 2).
+for (const [a, b, d] of WINNING_LINES) {
+  if (m[a] + m[b] + m[d] === 6) return this.pick(a, b, d);
+}
+// Suma 2 (1 + 1 + 0): la JCC bloquea al usuario (Caso 1).
+for (const [a, b, d] of WINNING_LINES) {
+  if (m[a] + m[b] + m[d] === 2) return this.pick(a, b, d);
+}
+\end{lstlisting}
+
+\texttt{pick(a, b, d)} devuelve la primera casilla vacía de la línea y guarda su
+suma en \texttt{heuristicSum}, como \texttt{mHeuristicSum} del original. Después
+siguen, en el mismo orden que el C\#, la regla de suma 5 en cada diagonal, las
+cuatro reglas de esquina por lados adyacentes y la jugada aleatoria.
+
+\subsection{Variante MediumAI}
+Se implementó \texttt{MediumAIController} mediante la migración de la variante
+C\# de IA débil, con los pesos originales. El turno humano siempre inicia con X.
+Después de cada jugada válida, el controlador comprueba las ocho líneas ganadoras
+y el empate; al terminar, registra el mensaje del resultado y deshabilita el tablero.
+
+La JCC (O) aplica las reglas en este orden:
+\begin{enumerate}
+  \item Si el centro (\texttt{CENTER\_INDEX = 4}) está vacío, lo elige.
+  \item Si el centro está ocupado, busca una suma de 6 para completar una línea y ganar.
+  \item Si no la hay, busca una suma de 2 para bloquear la primera amenaza de X.
+  \item Si ninguna regla aplica, elige al azar una casilla vacía.
+\end{enumerate}
+Esta variante no incluye las reglas de suma 5 ni la estrategia de esquinas y lados
+de UnbeatableAI.
+
+\subsection{Variante UnbeatableAI con Minimax}
+Minimax selecciona la jugada con el mejor resultado posible frente a un adversario
+que también busca su mejor resultado. Se migraron los métodos de
+\texttt{UnbeatableAIController.cs} y el flujo de \texttt{frmTicTacToe.cs} de la
+variante \texttt{Tic-Tac-Toe-Version-MiniMax}~\cite{minimax-docente}.
+
+\texttt{getBestMove} recorre 0--8 y calcula fila $\lfloor i/3\rfloor$ y columna
+$i\bmod3$. Simula O en cada espacio libre, llama a \texttt{minimax(board, 0, false)}
+y restaura el espacio. Actualiza la mejor jugada solo cuando
+\texttt{score > bestScore}: conserva la primera de igual puntuación. Sin casillas
+libres devuelve $-1$. \texttt{minimax} devuelve $10-d$ si gana O, $-10+d$ si gana
+X y 0 en empate; en otro caso, O maximiza y X minimiza. Los límites iniciales son
+los de \texttt{int.MinValue} e \texttt{int.MaxValue} de C\#.
+
+\begin{table}[H]
+\centering\small
+\caption{Correspondencia de la variante Minimax C\# con JavaScript}
+\begin{tabular}{p{6.3cm}p{6.6cm}}
+\toprule Método o estructura C\# & Adaptación JavaScript\\\midrule
+\texttt{char[3,3] board} & \texttt{board}: arreglo 3$\times$3 de \texttt{'X'}, \texttt{'O'} y \texttt{' '}\\
+\texttt{GetBestMove / Minimax} & \texttt{getBestMove / minimax}\\
+\texttt{EvaluateBoard / IsMovesLeft} & \texttt{evaluateBoard / isMovesLeft}\\
+\texttt{ResetBoard} & \texttt{initializeData / initializeControls}\\
+\texttt{OnButtonClick / AIMove} & \texttt{playUser / playNPC}, coordinados por \texttt{Form.click}\\
+\texttt{MakeMove / CheckGameEnd} & \texttt{makeMove / checkGameEnd}\\
+\texttt{CheckWin / IsBoardFull} & \texttt{checkWin / isBoardFull}\\
+\texttt{MessageBox.Show} & \texttt{Board.showMessage}: evento con texto y título originales\\
+\texttt{int.MinValue / int.MaxValue} & \texttt{-2147483648 / 2147483647}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Diagramas}
+% =====================================================================
+Las figuras~\ref{fig:uml-casos}, \ref{fig:uml-secuencia} y \ref{fig:uml-clases}
+representan los casos de uso, la comunicación entre módulos y la estructura del
+sistema implementado.
+
+\subsection{Diagrama de casos de uso}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+ uc/.style={ellipse,draw,fill=xcol!8,minimum width=4.4cm,minimum height=0.9cm,font=\small,align=center},
+ sysuc/.style={uc,fill=ocol!8,minimum width=3.8cm},
+ rel/.style={dashed,->},
+ lbl/.style={font=\scriptsize,fill=white,inner sep=1pt},>=Stealth]
+ \node[draw,rounded corners,minimum width=11.5cm,minimum height=10cm] (sys) at (1.15,0) {};
+ \node[font=\bfseries\small,anchor=south] at (sys.north) {Tres en Raya IA (JavaScript)};
+ \node[uc] (mode) at (-2,3.7) {Seleccionar modo:\\Medium / Unbeatable /\\Minimax};
+ \node[uc] (new) at (-2,1.9) {Iniciar o reiniciar partida};
+ \node[uc] (move) at (-2,0) {Jugar turno humano};
+ \node[uc] (score) at (-2,-1.9) {Consultar marcador};
+ \node[uc] (inspect) at (-2,-3.7) {Ver inspector de IA};
+ \node[sysuc] (check) at (4.7,2.6) {Comprobar final};
+ \node[sysuc] (ai) at (4.7,0) {Responder con IA};
+ \node[sysuc] (result) at (4.7,-2.6) {Presentar resultado};
+ \begin{scope}[shift={(-6.7,0)},line width=0.9pt,xcol!70!black]
+  \draw[fill=xcol!8] (0,0.8) circle (0.27);
+  \draw (0,0.53) -- (0,-0.3) (-0.42,0.2) -- (0.42,0.2) (0,-0.3) -- (-0.33,-0.9) (0,-0.3) -- (0.33,-0.9);
+ \end{scope}
+ \node[font=\small] at (-6.7,-1.2) {Usuario};
+ \coordinate (usr) at (-6.1,0);
+ \foreach \n in {mode,new,move,score,inspect} \draw (usr) -- (\n.west);
+ \draw[rel] (move.north east) -- node[lbl]{$\ll$include$\gg$} (check.south west);
+ \draw[rel] (ai.west) -- node[lbl]{$\ll$extend$\gg$} (move.east);
+ \draw[rel] (result.north west) -- node[lbl]{$\ll$extend$\gg$} (move.south east);
+\end{tikzpicture}
+\caption{Casos de uso de las tres modalidades. La respuesta de la IA extiende el
+turno si la jugada fue aceptada y la partida continúa; el resultado aparece al
+terminar. La lógica forma parte del sistema, no es un actor externo.}
+\label{fig:uml-casos}
+\end{figure}
+
+\subsection{Diagrama de secuencia: marcar casilla con Minimax}
+\begin{figure}[H]
+\centering\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\small,>=Stealth,
+ obj/.style={draw,fill=xcol!10,minimum width=2.6cm,minimum height=1.2cm,align=center},
+ msg/.style={align=center,fill=white,inner sep=1pt},
+ self/.style={right,align=left}]
+ \node[obj] (a) at (0,0) {:Usuario};
+ \node[obj] (b) at (3.8,0) {:app.js\\(interfaz)};
+ \node[obj] (c) at (7.6,0) {:Form};
+ \node[obj] (d) at (11.4,0) {:Minimax-\\AIController};
+ \node[obj] (e) at (15.2,0) {:Board};
+ \foreach \n in {a,b,c,d,e} \draw[dashed,gray] (\n.south) -- ++(0,-14.1);
+ \foreach \x/\ini/\fin in {3.8/-1.5/-13.9,7.6/-2.4/-10.6,11.4/-3.3/-5.9,11.4/-7.4/-10.4}
+  \draw[fill=xcol!12,draw=xcol!60!black] (\x-0.09,\ini) rectangle (\x+0.09,\fin);
+ \draw[gray,rounded corners=1pt] (7.0,-6.3) rectangle (17.6,-10.8);
+ \node[anchor=north west,draw=gray,fill=white,font=\scriptsize,inner sep=2.5pt] at (7.0,-6.3) {\textbf{opt} [jugada aceptada y sin final]};
+ \draw[->] (0,-1.5) -- node[msg,above=1pt]{clic o tecla $i$} (3.8,-1.5);
+ \draw[->] (3.8,-2.4) -- node[msg,above=1pt]{click($i$)} (7.6,-2.4);
+ \draw[->] (7.6,-3.3) -- node[msg,above=1pt]{playUser(board,$i$)} (11.4,-3.3);
+ \draw[->] (11.4,-4.0) -- node[msg,above=1pt]{setText($i$, X)} (15.2,-4.0);
+ \draw[->] (11.4,-4.5) -- ++(0.8,0) -- node[self]{checkGameEnd} ++(0,-0.6) -- (11.4,-5.1);
+ \draw[dashed,->] (11.4,-5.8) -- node[msg,above=1pt]{true} (7.6,-5.8);
+ \draw[->] (7.6,-7.4) -- node[msg,above=1pt]{playNPC(board)} (11.4,-7.4);
+ \draw[->] (11.4,-7.8) -- ++(0.8,0) -- node[self]{getBestMove,\\minimax} ++(0,-0.8) -- (11.4,-8.6);
+ \draw[->] (11.4,-9.2) -- node[msg,above=1pt]{setText($j$, O)} (15.2,-9.2);
+ \draw[->] (11.4,-9.6) -- ++(0.8,0) -- node[self]{checkGameEnd} ++(0,-0.6) -- (11.4,-10.2);
+ \draw[->] (3.8,-11.4) -- node[msg,above=1pt,pos=0.75]{takeEvents()} (15.2,-11.4);
+ \draw[dashed,->] (15.2,-12.1) -- node[msg,above=1pt,pos=0.25]{eventos: X, O y MessageBox} (3.8,-12.1);
+ \draw[->] (3.8,-12.5) -- ++(0.8,0) -- node[self]{replay: animar X,\\«pensando», O y resultado} ++(0,-0.8) -- (3.8,-13.3);
+ \draw[dashed,->] (3.8,-13.8) -- node[msg,above=1pt]{tablero y tarjeta} (0,-13.8);
+\end{tikzpicture}}
+\caption{Jugada del nivel 3. \texttt{Form.click} solo despacha \texttt{playNPC}
+si la jugada humana fue aceptada, y \texttt{playNPC} no actúa si la partida ya
+terminó. En los niveles 1 y 2 cambia el controlador, pero el flujo es el mismo.}
+\label{fig:uml-secuencia}
+\end{figure}
+
+\subsection{Diagrama de clases}
+\begin{figure}[H]
+\centering\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize,>=Stealth,
+ cls/.style={draw,rectangle split,rectangle split parts=3,rectangle split part fill={xcol!14,white,white},text width=5.6cm,align=left,inner sep=3pt,anchor=north},
+ real/.style={dashed,-{Triangle[open,length=2.6mm,width=2.2mm]}}]
+ \node[cls] (form) at (0,8) {\makebox[\linewidth]{\textbf{Form}}
+  \nodepart{second}+level: number\\+controlPlayer: boolean\\+board: Board\\+medium: MediumAIController\\+unbeatable: UnbeatableAIController\\+minimax: MinimaxAIController
+  \nodepart{third}+get controller(): controlador\\+setLevel(level)\\+initializeGame()\\+click(index)};
+ \node[cls,rectangle split part fill={gray!15,white,white},text width=4.1cm] (app) at ([xshift=-7.4cm]form.north) {\makebox[\linewidth]{$\ll$módulo$\gg$ \textbf{ui/app.js}}
+  \nodepart{second}state: form, view, busy, scores
+  \nodepart{third}clickCell(i)\\replay(events)\\renderAll()\\selectMode(level)};
+ \node[cls,text width=4.4cm] (board) at (7.3,8) {\makebox[\linewidth]{\textbf{Board}}
+  \nodepart{second}+buttons: string[9]\\+enabled: boolean\\+events: Event[]
+  \nodepart{third}+setText(index, mark, who)\\+clearTexts()\\+showMessage(text, caption)\\+takeEvents(): Event[]};
+ \node[cls,rectangle split part fill={ocol!12,white,white}] (ctrl) at (0,3.2) {\makebox[\linewidth]{$\ll$interfaz implícita$\gg$ \textbf{Controlador}}
+  \nodepart{second}Sin atributos
+  \nodepart{third}+initializeData()\\+initializeControls(board)\\+playUser(board, index): boolean\\+playNPC(board)\\+get flag(): string\\+weights(): number[9]};
+ \node[cls] (strong) at (-7.1,-1.3) {\makebox[\linewidth]{\textbf{UnbeatableAIController}}
+  \nodepart{second}+currentPlayerFlag: Player\\+moveCount: number\\+currentGameState: GameState\\+boardState: Player[9]\\+arrayMoves: number[9]\\+heuristicSum: number
+  \nodepart{third}+initializeGameData()\\+checkWinner(board): GameState\\+heuristicNumericalMethod(): number\\+pick(a, b, d): number\\+randomFreeAmong(...allowed): number\\+generateRandomNPCMove(): number};
+ \node[cls] (weak) at (0,-1.3) {\makebox[\linewidth]{\textbf{MediumAIController}}
+  \nodepart{second}+currentPlayerFlag: Player\\+moveCount: number\\+currentGameState: GameState\\+boardState: Player[9]\\+arrayMoves: number[9]
+  \nodepart{third}+initializeGameData()\\+checkWinner(board): GameState\\+heuristicNumericalMethod(): number\\+firstEmpty(a, b, d): number\\+generateRandomNPCMove(): number};
+ \node[cls] (minmax) at (7.1,-1.3) {\makebox[\linewidth]{\textbf{MinimaxAIController}}
+  \nodepart{second}+board: string[3][3]\\+isHumanTurn: boolean\\+isGameOver: boolean
+  \nodepart{third}+getBestMove(board): number\\+minimax(board, depth, isMaximizing): number\\+evaluateBoard(board): number\\+isMovesLeft(board): boolean\\+makeMove(board, index, player)\\+checkGameEnd(board): boolean\\+checkWin(player): boolean\\+isBoardFull(): boolean};
+ \draw[dashed,->] (app.east |- form.center) -- node[above,align=center]{usa} (form.west |- form.center);
+ \draw[{Diamond[fill=black]}-] (board.west -| form.east) -- node[above]{1} (board.west);
+ \draw[dashed,->] (form.south) -- node[right]{controller} (ctrl.north);
+ \draw[real] (strong.north) -- (ctrl.west);
+ \draw[real] (weak.north) -- (ctrl.south);
+ \draw[real] (minmax.north) -- (ctrl.east);
+\end{tikzpicture}}
+\caption{Estructura en UML. JavaScript no tiene interfaces: los tres controladores
+exponen los mismos métodos y \texttt{Form} los usa sin distinguirlos. Los métodos
+comunes del controlador se omiten en cada clase concreta.}
+\label{fig:uml-clases}
+\end{figure}
+
+% =====================================================================
+\section{Metodología SCRUM + XP}
+% =====================================================================
+El desarrollo se organizó en tres sprints, con Scrum como marco de planificación
+y prácticas XP para el diseño, la implementación y las pruebas. Se reutilizaron
+las historias de usuario y los casos de prueba de la Unidad~1, de modo que la
+versión en JavaScript se valida con los mismos criterios que la versión en Go.
+
+\subsection{Roles}
+\begin{table}[H]
+\centering
+\caption{Distribución de roles y responsabilidades}
+\begin{tabular}{ll}
+\toprule
+\textbf{Rol} & \textbf{Responsable}\\
+\midrule
+Product Owner & Ing. César Villacís Silva, MSc.\\
+Scrum Master & Diana Guerra\\
+Desarrollo -- UnbeatableAI e interfaz web & Germán Cáceres\\
+Desarrollo -- MediumAI & Paul Moreno\\
+Desarrollo -- UnbeatableAI $\rightarrow$ MinMax & Diana Guerra\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Product Backlog}
+\begin{longtable}{p{1.1cm}p{8.6cm}p{1.2cm}p{1.6cm}}
+\caption{Historias de usuario}\\
+\toprule
+\textbf{HU} & \textbf{Historia} & \textbf{Pts} & \textbf{Sprint}\\
+\midrule\endfirsthead
+\toprule
+\textbf{HU} & \textbf{Historia} & \textbf{Pts} & \textbf{Sprint}\\
+\midrule\endhead
+HU01 & Como usuario, quiero ver un tablero 3$\times$3 en el navegador, para jugar una partida de Tres en Raya. & 3 & 1\\
+HU02 & Como usuario, quiero marcar una casilla y recibir la respuesta de la JCC, para alternar los turnos de la partida. & 5 & 1\\
+HU03 & Como usuario, quiero enfrentar a UnbeatableAI con reglas de victoria y bloqueo, para jugar contra una estrategia que aproveche oportunidades y responda a mis amenazas. & 8 & 1\\
+HU04 & Como usuario, quiero conocer el ganador o el empate, para identificar el resultado de la partida. & 3 & 1\\
+HU05 & Como usuario, quiero elegir la modalidad de IA, para jugar contra la estrategia seleccionada. & 3 & 2\\
+HU06 & Como usuario, quiero animaciones y sonidos durante la partida, para recibir retroalimentación visual y auditiva. & 5 & 2\\
+HU07 & Como estudiante, quiero ver los pesos y sumas de las IA numéricas, para comprender sus decisiones. & 3 & 2\\
+HU08 & Como usuario, quiero consultar un marcador por modalidad, para conocer mis partidas ganadas, empatadas y perdidas. & 2 & 2\\
+HU09 & Como usuario, quiero jugar contra MediumAI, para enfrentar su estrategia de centro, victoria, bloqueo y selección aleatoria. & 5 & 3\\
+HU10 & Como usuario, quiero jugar contra Minimax con las decisiones de la variante C\#, para enfrentar una búsqueda completa sin derrotas. & 8 & 3\\
+\bottomrule
+\end{longtable}
+
+\subsection{Sprints}
+\begin{description}
+  \item[Sprint 1 -- Núcleo del juego.] Migración del método numérico a JavaScript
+        (\texttt{unbeatable-ai.js}), tablero (\texttt{board.js}), despacho de clics
+        (\texttt{form.js}) y pruebas de los Casos 1--3.
+  \item[Sprint 2 -- Experiencia web.] Interfaz con HTML, CSS y DOM: tablero con
+        trazos animados, línea ganadora, sonidos sintetizados con Web Audio,
+        inspector de IA, marcador, bitácora y tarjeta de resultado.
+  \item[Sprint 3 -- MediumAI y Minimax.] Migración de MediumAI y de Minimax con el
+        flujo de su formulario, pruebas automatizadas, comparación con el C\# y
+        validación en el navegador.
+\end{description}
+Se completó HU10 con 2\,097 decisiones coincidentes con el C\# y 569 finales sin derrotas.
+
+\subsection{Prácticas XP aplicadas}
+\begin{itemize}
+ \item \textbf{Diseño simple:} un módulo por modalidad, sin frameworks, con los
+       mismos métodos en los tres controladores.
+ \item \textbf{Pruebas automatizadas:} 24 pruebas de primer nivel con el ejecutor
+       nativo de Node.js (\texttt{node:test}), sin bibliotecas externas.
+ \item \textbf{Integración incremental:} la interfaz se conectó a \texttt{Form} y
+       \texttt{Board}, manteniendo la estrategia de IA separada del DOM.
+ \item \textbf{Reutilización de la Unidad~1:} los mismos identificadores de prueba
+       (U, D y M) y la misma referencia SHA-256 permiten comparar ambas versiones.
+\end{itemize}
+
+\subsection{Diseño}
+La aplicación se organiza en dos capas dentro del navegador:
+\begin{itemize}
+  \item \textbf{Lógica (\texttt{src/game}):} los controladores trabajan sobre
+        \texttt{Board}, que reemplaza a \texttt{ListButtons}, \texttt{GroupBox} y
+        \texttt{MessageBox}, de modo que el código sigue casi línea por línea al C\#.
+        No accede al DOM, por eso las pruebas lo ejecutan en Node.js.
+  \item \textbf{Interfaz (\texttt{src/ui}):} \texttt{app.js} dibuja el tablero y
+        reproduce con pausas los eventos que deja cada jugada; no decide ninguna jugada.
+\end{itemize}
+
+\begin{table}[H]
+\centering\small
+\caption{Estructura del proyecto}
+\begin{tabular}{p{4.6cm}p{9cm}}
+\toprule
+\textbf{Archivo} & \textbf{Responsabilidad}\\
+\midrule
+\texttt{index.html}, \texttt{css/styles.css} & Estructura y estilo de la página, adaptable a celular\\
+\texttt{src/game/constants.js} & \texttt{Player}, \texttt{GameState}, índices, líneas y catálogo de modos\\
+\texttt{src/game/board.js} & Tablero visible y registro de eventos\\
+\texttt{src/game/form.js} & \texttt{frmTicTacToe}: nivel, despacho de clics y reinicio\\
+\texttt{src/game/*-ai.js} & Un controlador por modalidad\\
+\texttt{src/ui/app.js}, \texttt{sound.js} & Dibujo, animación, marcador, bitácora y sonido\\
+\texttt{server.js} & Servidor estático sin dependencias\\
+\texttt{test/*.test.js} & Pruebas U01--U08, D01--D08 y M01--M08\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Desarrollo}
+La migración de C\# a JavaScript estableció las siguientes correspondencias:
+
+\begin{table}[H]
+\centering
+\caption{Correspondencia C\# $\rightarrow$ JavaScript}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{C\# (original)} & \textbf{JavaScript}\\
+\midrule
+\texttt{ListButtons[i].Text} & \texttt{board.buttons[i]}\\
+\texttt{grbTicTacToe.Enabled} & \texttt{board.enabled}\\
+\texttt{MessageBox.Show(...)} & \texttt{board.showMessage(...)} $\rightarrow$ evento\\
+\texttt{enum Player} / \texttt{enum GameState} & \texttt{Object.freeze(\{...\})}\\
+\texttt{mBoardState} (\texttt{Player[]}) & \texttt{boardState}: arreglo de 9\\
+\texttt{mArrayMoves} (\texttt{int[]}) & \texttt{arrayMoves}: arreglo de 9\\
+\texttt{CENTER\_INDEX}, \texttt{CORNER\_/SIDE\_INDICES} & \texttt{CENTER\_INDEX}, \texttt{CORNER\_/SIDE\_INDICES}\\
+\texttt{new Random().Next(0, 9)} & \texttt{Math.floor(random() * 9)}\\
+\texttt{public string Flag \{ get; \}} & \texttt{get flag()}\\
+\texttt{static bool ControlPlayer} & \texttt{form.controlPlayer}\\
+\texttt{btnTicTacToeN\_Click} & \texttt{form.click(index)}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El generador aleatorio se recibe en el constructor (\texttt{Math.random} por
+defecto), lo que permite inyectar uno controlado sin cambiar la lógica. En la IA
+fuerte se incorporó una comprobación de disponibilidad en los \texttt{do/while}
+aleatorios: si no queda ninguna casilla del grupo pedido, el original entra en un
+bucle infinito, que en el navegador congelaría la pestaña (RNF07).
+
+\subsection{Pruebas}
+Se realizaron pruebas funcionales y de integración el 19 de noviembre de 2026.
+Desde la carpeta \texttt{UNIDAD II/Projectos/TickTackToe-JavaScript} se ejecutaron:
+\begin{lstlisting}
+npm test                  # node --test
+npm run test:coverage     # node --test --experimental-test-coverage
+\end{lstlisting}
+Se aprobaron 24 pruebas de primer nivel (8 por modalidad) con 77 subcasos, en
+total 101 pruebas sin fallos. Las tablas siguientes presentan los resultados de
+una ejecución por archivo; las exploraciones aleatorias (D08 y U08) varían entre
+ejecuciones.
+
+\subsubsection{Pruebas automatizadas de MediumAI}
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.6cm}}
+\caption{Objetivos, escenarios y resultados de MediumAI}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+D01 & Inicializar y reiniciar controlador y tablero. & Pesos vacíos, turno X y tablero habilitado. & Estado y tablero restablecidos. & PASS\\
+D02 & X marca 0 con el centro libre. & O toma el centro (4). & O en 4; turno X. & PASS\\
+D03 & Intentar jugar en el centro ocupado. & Sin cambios en tablero, pesos ni eventos. & Jugada ocupada ignorada. & PASS\\
+D04 & Probar las ocho líneas, suma 6/2 y cada casilla vacía. & Ganar o bloquear en el espacio correcto. & 48 subcasos aprobados. & PASS\\
+D05 & Presentar una victoria y un bloqueo posibles. & Priorizar suma 6. & Selecciona la victoria en 8. & PASS\\
+D06 & Sin suma 6/2 y una casilla libre. & Elegir al azar entre libres. & Elige la casilla libre 4. & PASS\\
+D07 & Comprobar victoria de X y empate. & Mensaje y tablero deshabilitado. & Ambos finales correctos. & PASS\\
+D08 & Explorar 30 árboles con respuestas aleatorias. & Registrar finales y derrotas de la IA. & 15\,934 finales; 606 derrotas (3,80\%). & PASS\\
+\bottomrule
+\end{longtable}
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-medium-ai.txt}
+\caption{Salida de consola de las pruebas de MediumAI.}
+\label{fig:consola-medium}
+\end{figure}
+
+\subsubsection{Pruebas automatizadas de UnbeatableAI}
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.6cm}}
+\caption{Objetivos, escenarios y resultados de UnbeatableAI}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+U01 & Primera respuesta a X en 0. & O ocupa el centro. & O en 4. & PASS\\
+U02 & Humano ocupa el centro; 50 repeticiones. & O elige una esquina. & Las 50 respuestas son esquinas. & PASS\\
+U03 & Caso 1: X4, O0; humano marca 2. & Bloqueo en 6. & O en 6. & PASS\\
+U04 & Caso 2: O en 2 y 8; humano marca 6. & O gana en 5 y deshabilita el tablero. & Jugada, mensaje y final correctos. & PASS\\
+U05 & Amenaza y victoria simultáneas; X marca 5. & Priorizar la victoria diagonal. & O en 8. & PASS\\
+U06 & X en lados 1 y 3; luego 5. & Primera regla de esquina: 0. & O en 0. & PASS\\
+U07 & X0, O4; X8; 200 repeticiones. & O en 1, 5 o 7; nunca 3. & Restricción original conservada. & PASS\\
+U08 & Recorrer las opciones humanas en 30 árboles con IA aleatoria. & Partidas terminan; derrotas de la IA no mayores al 3\%. & 15\,006 finales, 151 derrotas (1,01\%); 0 bloqueos. & PASS\\
+\bottomrule
+\end{longtable}
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-unbeatable-ai.txt}
+\caption{Salida de consola de las pruebas de UnbeatableAI.}
+\label{fig:consola-unbeatable}
+\end{figure}
+
+\subsubsection{Pruebas automatizadas de Minimax}
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.6cm}}
+\caption{Objetivos, escenarios y resultados de Minimax}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+M01 & Reiniciar tras victoria de la IA; comparar con el constructor. & Matriz vacía, turno X y tablero habilitado. & Datos y controles reiniciados. & PASS\\
+M02 & X0; índices inválidos, doble turno y casillas ocupadas. & Rechazo de ilegales; O4 y pesos 1/3. & Turnos, pesos y eventos correctos. & PASS\\
+M03 & Tablero vacío, aperturas, victoria, bloqueo y tablero lleno. & Índices 0, 4, 0, 2, 2, $-1$; restauración íntegra. & Índices y matriz correctos. & PASS\\
+M04 & Ocho líneas con X y O; profundidades 0, 1 y 4. & $+10/-10$ y ajuste por profundidad. & Líneas, puntuaciones y orden correctos. & PASS\\
+M05 & Completar finales e intentar más movimientos. & Mensajes originales y ninguna jugada posterior. & Cuatro escenarios terminales correctos. & PASS\\
+M06 & Ramificar todos los movimientos humanos contra la IA. & Ninguna victoria humana. & 569 finales: 386 victorias de la IA, 183 empates, 0 derrotas. & PASS\\
+M07 & Enumerar estados legales; comparar decisiones con el C\#. & Mismos conteos y SHA-256. & 5\,478 estados; 2\,097 decisiones coincidentes. & PASS\\
+M08 & \texttt{Form} con nivel 3: click, reinicio y cambio de nivel. & Despacho, rechazo y reinicio correctos. & Sin O extra tras final humano; reinicio completo. & PASS\\
+\bottomrule
+\end{longtable}
+
+M07 enumera los estados legales empezando con X y corta cada rama al ganar o
+llenar el tablero. Deduplica 5\,478 tableros y compara las 2\,097 posiciones no
+terminales con turno de O. Ordena los tableros y concatena nueve caracteres,
+barra vertical, índice devuelto y salto de línea; calcula SHA-256 en UTF-8. La
+referencia se obtuvo en la Unidad~1 al compilar y ejecutar el C\# original. La
+versión JavaScript produjo el mismo resumen, lo que demuestra que toma las mismas
+decisiones que el C\# y que la versión Go en todo ese dominio:
+\begin{lstlisting}
+fb6a9200c81c724a24f04ddad024e88659df8a3837e3c2c4c5fb9d6c84d7b31f
+\end{lstlisting}
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-minimax-ai.txt}
+\caption{Salida de consola de las pruebas de Minimax, con la comparación SHA-256.}
+\label{fig:consola-minimax}
+\end{figure}
+
+\subsubsection{Integración en el navegador}
+Para verificar la integración se inició el servidor con \texttt{npm start} y se
+jugaron partidas reales en Google Chrome 157, controlado mediante un script que
+pulsa las teclas de las casillas en la interfaz.
+\begin{longtable}{p{1cm}p{3.4cm}p{3.3cm}p{3.4cm}p{1.6cm}}
+\caption{Integración en el navegador}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+I01 & Solicitar la página, un módulo, la hoja de estilos y una ruta fuera de la carpeta. & 200 con el tipo correcto; 404 fuera de la carpeta. & 200 en los tres archivos; 404 al salir de la carpeta con \texttt{/../}. & PASS\\
+I02 & Seleccionar cada modo y jugar dos turnos. & Inspector en los modos numéricos y oculto en Minimax. & Correcto en los tres modos. & PASS\\
+I03 & Jugar hasta el final en cada modo. & Tarjeta con el mensaje original de la variante. & «¡Ganó X!», «¡Ganó O!», «AI Wins!» e «It's a Draw!». & PASS\\
+I04 & Revisar el tablero tras cada final. & Ninguna casilla habilitada. & 0 casillas habilitadas en los tres modos. & PASS\\
+I05 & Abrir la página a 390 px de ancho. & Sin desplazamiento horizontal. & 0 px de desborde. & PASS\\
+I06 & Registrar errores de la página durante todas las partidas. & Ningún error. & Ningún error en consola. & PASS\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{Validación visual en el navegador}
+Las figuras~\ref{fig:captura-modos}--\ref{fig:captura-resultados} presentan la
+pantalla principal, una partida de cada modalidad con su tablero final y la
+tarjeta de resultado de cada variante.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.72\linewidth}\centering
+\captura[height=5.4cm]{js-captura-modos.png}
+\caption{Escritorio.}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.26\linewidth}\centering
+\captura[height=5.4cm,trim=0 488 0 0,clip]{js-captura-celular.png}
+\caption{Celular (390 px).}
+\end{subfigure}
+\caption{Pantalla principal con MediumAI, UnbeatableAI y Minimax disponibles.}
+\label{fig:captura-modos}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=170 0 170 0,clip]{js-captura-medium.png}
+\caption{Partida en curso.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=170 0 170 0,clip]{js-final-medium.png}
+\caption{Victoria de X: línea ganadora y tablero bloqueado.}
+\end{subfigure}
+\caption{Partida de MediumAI, con pesos y sumas en el inspector.}
+\label{fig:captura-medium}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=170 0 170 0,clip]{js-captura-unbeatable.png}
+\caption{Partida en curso, con suma 6 en la columna 2.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=170 0 170 0,clip]{js-final-unbeatable.png}
+\caption{Victoria de O: línea ganadora y tablero bloqueado.}
+\end{subfigure}
+\caption{Partida de UnbeatableAI, con la regla numérica observable en el inspector.}
+\label{fig:captura-unbeatable}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=170 0 170 0,clip]{js-captura-minimax.png}
+\caption{Partida en curso.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=170 0 170 0,clip]{js-final-minimax.png}
+\caption{Victoria de la IA: línea ganadora y tablero bloqueado.}
+\end{subfigure}
+\caption{Partida de Minimax, con tablero y bitácora y sin inspector numérico.}
+\label{fig:captura-minimax}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=560 280 560 280,clip]{js-resultado-medium.png}
+\caption{MediumAI: «¡Ganó X!».}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=560 280 560 280,clip]{js-resultado-unbeatable.png}
+\caption{UnbeatableAI: «¡Ganó O!».}
+\end{subfigure}\\[6pt]
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=560 280 560 280,clip]{js-resultado-minimax-victoria.png}
+\caption{Minimax: «AI Wins!».}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}\centering
+\captura[width=0.99\linewidth,trim=560 280 560 280,clip]{js-resultado-minimax.png}
+\caption{Minimax: «It's a Draw!».}
+\end{subfigure}
+\caption{Tarjeta de resultado de cada modalidad, con el mensaje y el título originales de su variante C\#.}
+\label{fig:captura-resultados}
+\end{figure}
+
+Las pruebas en el navegador documentan partidas concretas y no sustituyen una
+suite automatizada de extremo a extremo.
+
+% =====================================================================
+\section{Análisis de Resultados: Métricas de Software}
+% =====================================================================
+
+\subsection{Líneas de código}
+Se contabilizaron las líneas de código el 19 de noviembre de 2026 con un script
+de Node.js y el mismo criterio de la Unidad~1: una línea sin caracteres no blancos
+es vacía; si, al retirar comentarios respetando cadenas, queda código, es LOC; si
+solo queda comentario, es comentario. Una línea con código y comentario cuenta
+una vez como LOC. En JavaScript se cuentan como funciones las declaraciones, los
+métodos, los constructores y los \emph{getters}.
+
+\begin{table}[H]
+\centering\small
+\caption{Tamaño por alcance de código fuente}
+\begin{tabular}{lrrrrr}
+\toprule Alcance & Archivos & LOC & Coment. & Blanco & Total\\\midrule
+Lógica (\texttt{src/game}) & 6 & 554 & 82 & 74 & 710\\
+Interfaz (\texttt{src/ui}, HTML y CSS) & 4 & 672 & 19 & 61 & 752\\
+Servidor estático & 1 & 30 & 2 & 2 & 34\\
+Pruebas (\texttt{test}) & 4 & 422 & 11 & 34 & 467\\
+\textbf{Total} & \textbf{15} & \textbf{1\,678} & \textbf{114} & \textbf{171} & \textbf{1\,963}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering\small
+\caption{Controladores por modalidad: C\#, Go (Unidad 1) y JavaScript}
+\begin{tabular}{lrrrrr}
+\toprule Archivo & LOC & Coment. & Blanco & Total & Func.\\\midrule
+C\# MediumAIController & 315 & 83 & 39 & 437 & 13\\
+Go medium\_ai.go & 240 & 4 & 14 & 258 & 14\\
+JS medium-ai.js & 102 & 12 & 16 & 130 & 16\\\midrule
+C\# UnbeatableAIController (fuerte) & 417 & 83 & 39 & 539 & 13\\
+Go unbeatable\_ai.go & 223 & 39 & 26 & 288 & 17\\
+JS unbeatable-ai.js & 170 & 26 & 21 & 217 & 17\\\midrule
+C\# UnbeatableAIController (Minimax) & 120 & 3 & 15 & 138 & 4\\
+Go minimax\_ai.go & 228 & 17 & 17 & 262 & 15\\
+JS minimax-ai.js & 149 & 16 & 17 & 182 & 15\\
+\bottomrule
+\end{tabular}
+\end{table}
+La reducción en MediumAI y UnbeatableAI se debe principalmente a que las 16 ramas
+\texttt{if/else if} de las sumas 6 y 2 se expresan como dos recorridos de
+\texttt{WINNING\_LINES}. En Minimax, el archivo JavaScript reúne además el flujo
+migrado de \texttt{frmTicTacToe}, por eso supera al controlador C\#. El tamaño
+del código se interpreta como una métrica descriptiva, no de rendimiento.
+
+\subsection{Otras métricas}
+\begin{table}[H]
+\centering\small
+\caption{Métricas funcionales por modalidad}
+\begin{tabular}{p{4.6cm}rrr}
+\toprule Métrica & MediumAI & UnbeatableAI & Minimax\\\midrule
+Archivos de controlador / prueba & 1 / 1 & 1 / 1 & 1 / 1\\
+Funciones del controlador & 16 & 17 & 15\\
+Pruebas de primer nivel aprobadas & 8 / 8 & 8 / 8 & 8 / 8\\
+Finales explorados por sus pruebas & 15\,934 & 15\,006 & 569\\
+Derrotas de la IA & 606 & 151 & 0\\
+Porcentaje de derrotas de la IA & 3,80\% & 1,01\% & 0\%\\
+Cobertura de líneas & 97,69\% & 93,55\% & 100\%\\
+Dependencias externas & 0 & 0 & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Se obtuvo una cobertura de \textbf{97,61\% de líneas}, 96,90\% de ramas y 95,52\%
+de funciones en \texttt{src/game}. Las líneas sin cubrir de UnbeatableAI coinciden
+con los hallazgos de la sección~\ref{sec:hallazgos}: la protección contra el
+bloqueo nunca se activa y la regla del centro a partir de la segunda jugada nunca
+se ejecuta. El resto son \texttt{flag} y \texttt{weights}, que solo usa la
+interfaz, y ramas defensivas equivalentes a las del original.
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-cobertura.txt}
+\caption{Cobertura de la lógica del juego con el ejecutor nativo de Node.js.}
+\label{fig:consola-cobertura}
+\end{figure}
+
+\subsubsection{Tiempo de decisión}
+Se midió \texttt{form.click(0)} en Node.js~24.19.0, sobre Windows~11
+(10.0.26300) con un procesador AMD Ryzen~5 7520U. La medición incluye la jugada
+del usuario y la respuesta de la IA, y excluye las pausas que la interfaz añade
+a propósito para animar. Se descartaron 5 ejecuciones de calentamiento por modo
+y se tomaron 30 muestras: mediana = promedio de las posiciones 15 y 16;
+P95 = posición 29.
+\begin{table}[H]
+\centering\small
+\caption{Tiempo de la primera respuesta de la IA, en milisegundos}
+\begin{tabular}{lrrrrr}
+\toprule Modo & Muestras & Mínimo & Mediana & P95 & Máximo\\\midrule
+MediumAI & 30 & 0,004 & 0,005 & 0,012 & 0,022\\
+UnbeatableAI & 30 & 0,004 & 0,006 & 0,017 & 0,441\\
+Minimax & 30 & 2,744 & 2,776 & 3,332 & 3,481\\
+\bottomrule
+\end{tabular}
+\end{table}
+Todas las muestras están muy por debajo de los 50~ms de RNF02. Minimax es el más
+lento porque explora todas las continuaciones legales, pero incluso en el tablero
+casi vacío responde en menos de 4~ms. La interfaz espera 550~ms antes de mostrar
+la jugada de la JCC para que el usuario la perciba.
+
+\subsection{Comportamiento de la variante UnbeatableAI}\label{sec:hallazgos}
+La migración reprodujo los mismos comportamientos de la estrategia numérica que
+se identificaron en la Unidad~1:
+
+\begin{enumerate}
+  \item \textbf{Derrotas observadas.} Se registraron \textbf{151 derrotas de la JCC
+        en 15\,006 finales (1,01\%)} durante el recorrido con muestreo. Cuando
+        ninguna regla aplica, la JCC juega al azar y a veces deja al usuario un
+        \emph{tenedor} (dos amenazas a la vez). Ejemplo: X en 0, O en 4, X en 7,
+        O en 2 (al azar), X en 6; la JCC solo puede tapar una de las amenazas
+        (0--3--6 y 6--7--8).
+  \item \textbf{La regla de suma 5 excluye el lado 3.} La condición original del
+        lado aleatorio compara \texttt{SIDE\_INDICES[0]} dos veces, así que el
+        lado 3 nunca se elige en esa regla. La versión JavaScript conserva el
+        error y la prueba U07 lo verifica.
+  \item \textbf{Posible bloqueo.} Los \texttt{do/while} aleatorios no tienen salida
+        si no queda casilla válida del grupo. En los 15\,006 finales se registraron
+        \textbf{0 casos}; aun así se mantiene la comprobación de disponibilidad.
+  \item \textbf{Regla del centro sin efecto.} A partir de la segunda jugada,
+        \texttt{playNPC} revisa si el centro está libre; nunca lo está a esa altura.
+        La cobertura lo confirma: esas líneas no se ejecutaron en ninguna prueba.
+\end{enumerate}
+
+Con \textbf{Minimax} se obtuvieron cero derrotas en los 569 finales explorados
+frente a todos los movimientos humanos legales.
+
+% =====================================================================
+\section{Conclusiones y Recomendaciones}
+% =====================================================================
+\subsection{Conclusiones}
+\begin{itemize}
+ \item Se migraron las tres modalidades del Tres en Raya a JavaScript para la web,
+       sin frameworks ni dependencias. La separación entre la lógica
+       (\texttt{src/game}) y la interfaz (\texttt{src/ui}) permitió probar las
+       reglas en Node.js y jugar en el navegador con el mismo código.
+ \item Minimax en JavaScript toma las mismas 2\,097 decisiones que el C\# original,
+       con el mismo SHA-256 obtenido en la Unidad~1; en 569 finales no perdió ninguna partida.
+ \item MediumAI y UnbeatableAI conservan sus reglas, incluidos los comportamientos
+       del original: UnbeatableAI perdió el 1,01\% de los finales explorados por
+       los tenedores que dejan sus jugadas al azar.
+ \item Se aprobaron 24 pruebas de primer nivel (101 con subcasos), con 97,61\% de
+       cobertura de líneas. En el navegador se jugaron partidas de los tres modos,
+       sin errores y con el tablero bloqueado al terminar.
+ \item Frente a la versión Go y Angular, esta versión elimina el servidor de
+       lógica y la API: la respuesta de la IA es inmediata (menos de 4~ms) y
+       el proyecto se ejecuta solo con Node.js y un navegador.
+\end{itemize}
+
+\subsection{Recomendaciones}
+\begin{itemize}
+ \item Incorporar una suite de pruebas de navegador de extremo a extremo.
+ \item Mantener la referencia SHA-256 y las pruebas M06 y M07 para detectar
+       cambios de comportamiento en futuras modificaciones.
+ \item Si se desea una IA verdaderamente imbatible con el método numérico, evaluar
+       como mejora aparte reemplazar las jugadas al azar, ya que hacerlo cambiaría
+       la lógica del original.
+\end{itemize}
+
+% =====================================================================
+\begin{thebibliography}{9}
+\bibitem{guia-lab} C. Villacís Silva, \emph{Informe de laboratorio Desarrollo de Videojuegos}, indicaciones del Proyecto 3.
+\bibitem{minimax-docente} Material del docente, \emph{Tic-Tac-Toe-Version-MiniMax}: \texttt{UnbeatableAIController.cs}, \texttt{frmTicTacToe.cs} y \texttt{minmax-ia-explicacion.docx}, incluidos en \texttt{UNIDAD I/Material}.
+\bibitem{ieee830} IEEE, \emph{IEEE Recommended Practice for Software Requirements Specifications}, IEEE Std 830-1998.
+\bibitem{villacis} C. Villacís, W. Fuertes, A. Bustamante et al., \emph{Optimización del Juego del Tres en Raya con Niveles de Dificultad, Utilizando Técnicas Heurísticas de Inteligencia Artificial}, Universidad de las Fuerzas Armadas -- ESPE.
+\bibitem{mdn} Mozilla, \emph{MDN Web Docs: JavaScript}, \url{https://developer.mozilla.org/docs/Web/JavaScript}.
+\bibitem{node} OpenJS Foundation, \emph{Node.js Documentation: Test runner}, \url{https://nodejs.org/api/test.html}.
+\bibitem{scrum} K. Schwaber y J. Sutherland, \emph{La Guía de Scrum}, 2020.
+\bibitem{xp} K. Beck, \emph{Extreme Programming Explained: Embrace Change}, Addison-Wesley, 2004.
+\end{thebibliography}
+
+\end{document}
