@@ -1,0 +1,13 @@
+# Comprobación de la API con Node.js contra http://localhost:4200/api/game (proxy de Angular)
+API left: 66 ticks, meta (17,16), mensaje «Has llegado al final», dirección «»
+API left: tick tras salir -> HTTP 409
+API right: 161 ticks, meta (17,16), mensaje «Has llegado al final», dirección «»
+API right: tick tras salir -> HTTP 409
+API manual: inicio (1,2)
+API manual: ArrowLeft contra pared -> (1,2)
+API manual: ArrowRight y ArrowDown -> (2,2)
+API modo inválido -> HTTP 400
+API acción inválida -> HTTP 400
+API sesión vacía -> HTTP 400
+API GET -> HTTP 405
+latencia tick (227 peticiones): mín 2.92 ms, mediana 3.45 ms, P95 4.94 ms, máx 7.40 ms

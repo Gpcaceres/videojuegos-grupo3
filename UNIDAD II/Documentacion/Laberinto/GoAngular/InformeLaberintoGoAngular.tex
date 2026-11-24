@@ -1,0 +1,776 @@
+% =====================================================================
+%  Informe - Grupo 3 - Desarrollo de Videojuegos (ESPE)
+%  Unidad 2: Laberinto con IA en Go (backend) y Angular (frontend)
+%  Compilar:  pdflatex InformeLaberintoGoAngular.tex  (dos veces, para el índice)
+% =====================================================================
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-noshorthands]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyhdr}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,shapes.multipart,arrows.meta,positioning,calc,babel}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{Img/}}
+
+% ---------- colores y utilidades ----------
+\definecolor{espe}{RGB}{0,102,51}
+\definecolor{xcol}{RGB}{8,145,178}
+\definecolor{ocol}{RGB}{219,39,119}
+\definecolor{codebg}{RGB}{245,245,250}
+
+% Captura con borde fino; el argumento opcional recibe las opciones de la imagen.
+\newcommand{\captura}[2][width=0.99\linewidth]{%
+ \begingroup\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}%
+ \fcolorbox{gray!50}{white}{\includegraphics[#1]{#2}}\endgroup}
+
+\captionsetup{font=small,labelfont=bf,labelsep=period}
+\captionsetup[sub]{font=footnotesize,labelfont=bf}
+
+% Salida real de consola, guardada en Img/consola-*.txt.
+\definecolor{consolabg}{RGB}{24,26,38}
+\definecolor{consolafg}{RGB}{226,232,240}
+\lstdefinestyle{consola}{basicstyle=\ttfamily\scriptsize\color{consolafg},
+  backgroundcolor=\color{consolabg}, frame=single, rulecolor=\color{consolabg},
+  framesep=4pt, xleftmargin=4pt, xrightmargin=4pt, aboveskip=0pt, belowskip=0pt,
+  breaklines=true, breakindent=1.2em, columns=fullflexible, keepspaces=true}
+
+\lstdefinelanguage{Go}{
+  morekeywords={package,import,func,return,if,else,for,range,switch,case,default,type,struct,var,const,interface,map,go,defer,true,false,nil},
+  sensitive=true, morecomment=[l]{//}, morestring=[b]"}
+\lstset{basicstyle=\ttfamily\footnotesize, backgroundcolor=\color{codebg},
+  keywordstyle=\color{xcol}\bfseries, commentstyle=\color{gray}\itshape,
+  stringstyle=\color{ocol}, frame=single, rulecolor=\color{gray!40},
+  breaklines=true, columns=fullflexible, showstringspaces=false,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+    {¡}{{!`}}1 {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1
+    {✔}{{$\checkmark$}}1 {▶}{{$\blacktriangleright$}}1 {ℹ}{{\textit{i}}}1}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Desarrollo de Videojuegos -- Unidad 2}
+\fancyhead[R]{\small Grupo N.º 3}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\sloppy
+
+% =====================================================================
+%  CARÁTULA
+% =====================================================================
+\begin{titlepage}
+  \centering
+  \includegraphics[width=0.55\textwidth]{logoINFESPE.png}\par\vspace{1cm}
+  {\Large\bfseries UNIVERSIDAD DE LAS FUERZAS ARMADAS -- ESPE\par}
+  \vspace{0.3cm}
+  {\large DEPARTAMENTO DE CIENCIAS DE LA COMPUTACIÓN\par}
+  \vspace{0.2cm}
+  {\large CARRERA DE INGENIERÍA EN SOFTWARE\par}
+  \vspace{1.2cm}
+  {\large\bfseries ASIGNATURA: DESARROLLO DE VIDEOJUEGOS\par}
+  \vspace{0.3cm}
+  {\large UNIDAD 2\par}
+  \vspace{1.2cm}
+  {\color{espe}\rule{\linewidth}{1pt}}\par\vspace{0.3cm}
+  {\LARGE\bfseries Laberinto con Inteligencia Artificial\par}
+  \vspace{0.2cm}
+  {\large Modos manual, mano derecha y mano izquierda -- Go (Web) + Angular\par}
+  \vspace{0.3cm}
+  {\color{espe}\rule{\linewidth}{1pt}}\par
+  \vspace{1.2cm}
+  {\large DOCENTE: ING. CÉSAR VILLACÍS SILVA, MSC.\par}
+  \vspace{0.8cm}
+  {\large\bfseries ESTUDIANTES:\par}
+  \vspace{0.2cm}
+  {\large Diana Guerra\par Paul Moreno\par Germán Cáceres\par}
+  \vspace{0.8cm}
+  {\large\bfseries GRUPO N.º 3\par}
+  \vfill
+  {\large FECHA: NOVIEMBRE 2026\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Presentación del proyecto}
+% =====================================================================
+Se migró a la web el videojuego \emph{Laberinto con Inteligencia Artificial} del
+docente, desarrollado originalmente en C\# con Windows Forms. El jugador recorre
+un laberinto de 19$\times$19 casillas desde el inicio hasta la meta, controlándolo
+con el teclado o con la voz, o deja que la computadora lo resuelva siguiendo la
+pared derecha o la izquierda.
+
+La arquitectura es cliente--servidor: un backend en Go ejecuta toda la lógica del
+juego y la expone en una API HTTP/JSON, y un frontend en Angular presenta el
+tablero y envía las acciones del usuario. Existe una segunda migración del mismo
+juego en JavaScript puro, documentada en un informe aparte.
+
+\begin{table}[H]
+\centering
+\caption{Modos de juego implementados}
+\begin{tabular}{p{2.8cm}p{5cm}p{5.6cm}}
+\toprule
+\textbf{Modo} & \textbf{Comportamiento} & \textbf{Formulario original}\\
+\midrule
+Manual & El usuario mueve al caminante con las flechas o con la voz. & \texttt{frmBeginnerManual}\\
+Mano derecha & La IA sigue la pared derecha hasta la meta. & \texttt{frmBeginnerAutomatic}\\
+Mano izquierda & La IA sigue la pared izquierda hasta la meta. & \texttt{frmBeginnerAutomaticLeft}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Se conservaron las dos clases del original como estructuras de Go,
+\texttt{Walker} (11 métodos) y \texttt{NonPlayerCharacter} (19 métodos), con los
+mismos nombres, condiciones y orden de evaluación. La lógica no se reemplazó por
+tablas, rutas precalculadas ni otro algoritmo.
+
+% =====================================================================
+\section{Especificación de Requerimientos (IEEE 830)}
+% =====================================================================
+
+\subsection{Introducción}
+
+\subsubsection{Propósito}
+Se especifican los requisitos funcionales y no funcionales del videojuego web
+\emph{Laberinto con IA} en Go y Angular, con base en IEEE 830-1998~\cite{ieee830}.
+
+\subsubsection{Alcance}
+El sistema presenta un menú con tres modos y un laberinto de nivel principiante.
+En el modo manual el usuario controla al caminante; en los modos automáticos un
+\emph{Personaje No Jugador} (NPC) aplica la regla de la mano derecha o de la mano
+izquierda. El backend guarda una partida por pestaña del navegador y responde a
+cada acción con el estado del tablero.
+
+\subsubsection{Definiciones, acrónimos y abreviaturas}
+\begin{description}[leftmargin=2.8cm,style=nextline]
+  \item[Walker] Estructura del caminante controlado por el usuario.
+  \item[NPC] \emph{Non-Player Character}: estructura \texttt{NonPlayerCharacter}, que resuelve el laberinto sola.
+  \item[Matriz] Tablero de 19$\times$19 con 0 (pared), 1 (camino), 2 (inicio) y 3 (meta).
+  \item[Tick] Cada avance de la IA, que el frontend solicita 50 ms después de recibir la respuesta anterior.
+  \item[Sesión] Identificador aleatorio de cada pestaña, con el que el backend separa las partidas.
+\end{description}
+
+\subsubsection{Referencias}
+\begin{itemize}
+  \item IEEE Std 830-1998, \emph{Recommended Practice for Software Requirements Specifications}.
+  \item Proyecto C\# Windows Forms del docente: clases \texttt{Walker} y \texttt{NonPlayerCharacter}, y formularios del nivel principiante.
+  \item Referencias del C\# original usadas en la migración: \texttt{testdata/original\_decisions.json} y \texttt{original\_routes.json}.
+\end{itemize}
+
+\subsection{Descripción general}
+
+\subsubsection{Perspectiva del producto}
+El backend (\texttt{backend/}) contiene la matriz, \texttt{Walker},
+\texttt{NonPlayerCharacter} y el servidor HTTP, solo con la librería estándar de
+Go. El frontend (\texttt{frontend/src/main.ts}) es un componente Angular que
+dibuja el tablero con la matriz recibida, ubica al caminante según su posición y
+programa los ticks. Durante el desarrollo, Angular redirige \texttt{/api} al
+puerto 8080 con \texttt{proxy.conf.json}.
+
+\subsubsection{Funciones del producto}
+Se permite elegir el modo, mover al caminante con las flechas o con las órdenes de
+voz \emph{right}, \emph{left}, \emph{up} y \emph{down}, resolver el laberinto con
+la IA, reiniciar el recorrido, volver al menú y salir. Al llegar a la meta se
+muestra el mensaje que devuelve el backend.
+
+\subsubsection{Características de los usuarios}
+Estudiantes y jugadores sin conocimiento técnico. El modo manual requiere usar
+las flechas del teclado; la voz es opcional.
+
+\subsubsection{Restricciones}
+\begin{itemize}
+  \item La migración debe conservar los métodos, condiciones y orden de evaluación del C\#.
+  \item Backend en Go~1.22 o superior, solo con la librería estándar.
+  \item Frontend en Angular~19 con Node.js~22 o~24.
+  \item La voz depende de la API \texttt{SpeechRecognition} del navegador y del permiso de micrófono.
+\end{itemize}
+
+\subsubsection{Suposiciones y dependencias}
+El backend escucha en \texttt{127.0.0.1:8080} y el frontend en
+\texttt{http://localhost:4200}; ambos deben estar en ejecución.
+
+\subsection{Requerimientos específicos}
+
+\subsubsection{Requerimientos funcionales}
+\begin{longtable}{p{1.3cm}p{9.2cm}p{2.6cm}}
+\caption{Requerimientos funcionales}\\
+\toprule
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad}\\
+\midrule\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad}\\
+\midrule\endhead
+RF01 & El sistema usará la misma matriz de 19$\times$19 del original, con inicio en (1,2) y meta en (17,16). & Alta\\
+RF02 & El menú permitirá elegir el modo manual, mano derecha o mano izquierda, y salir del juego. & Alta\\
+RF03 & En modo manual, las flechas moverán al caminante una casilla; una pared impedirá el movimiento. & Alta\\
+RF04 & En modo manual, las órdenes de voz moverán al caminante; otros textos se añadirán al cuadro de reconocimiento. & Media\\
+RF05 & Al llegar a la meta con el teclado se mostrará «Felicitaciones, buen trabajo.» y el teclado dejará de mover al caminante. & Alta\\
+RF06 & La acción \texttt{solve} reiniciará la posición, determinará la dirección inicial y hará el primer movimiento de la IA. & Alta\\
+RF07 & Cada acción \texttt{tick} ejecutará un movimiento de la IA y comprobará la meta. & Alta\\
+RF08 & La IA de mano derecha y la de mano izquierda conservarán las condiciones del original, incluidos los \texttt{if} independientes de la mano derecha. & Alta\\
+RF09 & Al llegar a la meta en modo automático, el backend devolverá \texttt{running = false} y el mensaje, y el frontend dejará de pedir ticks. & Alta\\
+RF10 & La acción \texttt{exit} liberará la sesión; un \texttt{tick} posterior responderá con un error. & Media\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{Requerimientos no funcionales}
+\begin{longtable}{p{1.3cm}p{2.9cm}p{9.2cm}}
+\caption{Requerimientos no funcionales}\\
+\toprule
+\textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
+\midrule\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
+\midrule\endhead
+RNF01 & Fidelidad & Mismos métodos de \texttt{Walker} y \texttt{NonPlayerCharacter}, sin métodos de juego añadidos.\\
+RNF02 & Rendimiento & Cada petición de tick se responderá muy por debajo del intervalo de 50 ms.\\
+RNF03 & Robustez & La API rechazará métodos, acciones, modos y sesiones inválidos, y limitará el cuerpo de la petición a 4\,096 bytes.\\
+RNF04 & Concurrencia & Varias pestañas podrán jugar a la vez, cada una con su sesión, protegidas por exclusión mutua.\\
+RNF05 & Portabilidad & La interfaz se adaptará a celular sin desplazamiento horizontal.\\
+RNF06 & Calidad & Las pruebas de paridad deberán aprobar con \texttt{go test ./...} y \texttt{go vet ./...} no emitirá diagnósticos.\\
+\bottomrule
+\end{longtable}
+
+% =====================================================================
+\section{Modelo de Inteligencia Artificial}
+% =====================================================================
+El laberinto se representa con una matriz de 19$\times$19. Cada paso mueve al
+caminante una casilla y desplaza su posición 25 píxeles lógicos.
+
+\begin{table}[H]
+\centering
+\caption{Valores de la matriz del laberinto}
+\begin{tabular}{cll}
+\toprule
+\textbf{Valor} & \textbf{Significado} & \textbf{Casillas}\\
+\midrule
+0 & Pared & 232\\
+1 & Camino & 127\\
+2 & Inicio, en (1,2) & 1\\
+3 & Meta, en (17,16) & 1\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La IA aplica la regla de \emph{seguir la pared}: si se mantiene siempre una pared
+del mismo lado, el caminante termina recorriendo el borde de la región hasta la
+salida. \texttt{NonPlayerCharacter} observa las cuatro casillas vecinas con
+\texttt{ObserveRightSide}, \texttt{ObserveLeftSide}, \texttt{ObserveUpSide} y
+\texttt{ObserveDownSide}, y decide según la dirección actual. Por ejemplo, la mano
+derecha mirando a la derecha, en Go:
+
+\begin{lstlisting}[language=Go]
+if p.Direction == Right {
+    if !p.ObserveUpSide() && !p.ObserveDownSide() && p.ObserveRightSide() {
+        p.Direction = Right
+        p.MoveRightSide()
+    } else if p.ObserveUpSide() && !p.ObserveDownSide() && p.ObserveRightSide() {
+        p.Direction = Right
+        p.MoveRightSide()
+    } else if p.ObserveDownSide() {
+        p.Direction = Down
+        p.MoveDownSide()
+    } // ... gira hacia arriba o retrocede si no hay salida
+}
+if p.Direction == Left { // if independiente, como en el C#
+\end{lstlisting}
+
+En la mano derecha, los bloques de cada dirección son \texttt{if} independientes,
+como en el C\#: si un bloque cambia la dirección, el siguiente puede volver a mover
+al caminante en la misma llamada. En la mano izquierda los bloques son
+\texttt{else if} y hay un solo movimiento por llamada. Se conservó esa diferencia.
+
+\begin{table}[H]
+\centering\small
+\caption{Recorridos de la IA en el laberinto principiante}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Modo} & \textbf{Ticks} & \textbf{Movim.} & \shortstack{\textbf{Ticks con}\\\textbf{2+ movim.}} & \shortstack{\textbf{Casillas}\\\textbf{distintas}} & \shortstack{\textbf{Tiempo}\\\textbf{nominal}}\\
+\midrule
+Mano izquierda & 66 & 68 & 1 & 60 & 3,35 s\\
+Mano derecha & 161 & 178 & 15 & 106 & 8,10 s\\
+\bottomrule
+\end{tabular}
+\end{table}
+El tiempo nominal es de 50 ms por tick; en esta versión se suma la latencia de
+cada petición, porque el siguiente tick se programa al recibir la respuesta. El
+camino más corto del inicio a la meta tiene 54 movimientos; ninguna de las dos
+manos lo sigue, solo garantizan llegar a la salida en un laberinto como este.
+
+% =====================================================================
+\section{Diagramas}
+% =====================================================================
+Las figuras~\ref{fig:uml-casos}, \ref{fig:uml-secuencia} y \ref{fig:uml-clases}
+representan los casos de uso, la resolución automática a través de la API y la
+estructura del sistema.
+
+\subsection{Diagrama de casos de uso}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+ uc/.style={ellipse,draw,fill=xcol!8,minimum width=4.4cm,minimum height=0.9cm,font=\small,align=center},
+ sysuc/.style={uc,fill=ocol!8,minimum width=3.8cm},
+ rel/.style={dashed,->},
+ lbl/.style={font=\scriptsize,fill=white,inner sep=1pt},>=Stealth]
+ \node[draw,rounded corners,minimum width=11.5cm,minimum height=10cm] (sys) at (1.15,0) {};
+ \node[font=\bfseries\small,anchor=south] at (sys.north) {Laberinto con IA (Go + Angular)};
+ \node[uc] (mode) at (-2,3.7) {Elegir modo};
+ \node[uc] (keys) at (-2,1.9) {Mover con el teclado};
+ \node[uc] (voice) at (-2,0) {Mover con la voz};
+ \node[uc] (solve) at (-2,-1.9) {Resolver con la IA};
+ \node[uc] (exit) at (-2,-3.7) {Volver al menú o salir};
+ \node[sysuc] (move) at (4.7,2.6) {Mover caminante};
+ \node[sysuc] (goal) at (4.7,0) {Comprobar meta};
+ \node[sysuc] (ai) at (4.7,-2.6) {Seguir la pared};
+ \begin{scope}[shift={(-6.7,0)},line width=0.9pt,xcol!70!black]
+  \draw[fill=xcol!8] (0,0.8) circle (0.27);
+  \draw (0,0.53) -- (0,-0.3) (-0.42,0.2) -- (0.42,0.2) (0,-0.3) -- (-0.33,-0.9) (0,-0.3) -- (0.33,-0.9);
+ \end{scope}
+ \node[font=\small] at (-6.7,-1.2) {Usuario};
+ \coordinate (usr) at (-6.1,0);
+ \foreach \n in {mode,keys,voice,solve,exit} \draw (usr) -- (\n.west);
+ \draw[rel] (keys.east) -- node[lbl]{$\ll$include$\gg$} (move.west);
+ \draw[rel] (voice.north east) -- node[lbl]{$\ll$include$\gg$} (move.south west);
+ \draw[rel] (move.south) -- node[lbl]{$\ll$include$\gg$} (goal.north);
+ \draw[rel] (solve.east) -- node[lbl]{$\ll$include$\gg$} (ai.west);
+ \draw[rel] (ai.north) -- node[lbl]{$\ll$include$\gg$} (goal.south);
+\end{tikzpicture}
+\caption{Casos de uso. El NPC y el backend forman parte del sistema: el usuario solo inicia la resolución.}
+\label{fig:uml-casos}
+\end{figure}
+
+\subsection{Diagrama de secuencia: resolver con la mano derecha}
+\begin{figure}[H]
+\centering\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\small,>=Stealth,
+ obj/.style={draw,fill=xcol!10,minimum width=2.8cm,minimum height=1.2cm,align=center},
+ msg/.style={align=center,fill=white,inner sep=1pt},
+ self/.style={right,align=left}]
+ \node[obj] (a) at (0,0) {:Usuario};
+ \node[obj] (b) at (4.2,0) {:App\\(Angular)};
+ \node[obj] (c) at (8.6,0) {:API Go\\POST /api/game};
+ \node[obj] (d) at (15.6,0) {:NonPlayer-\\Character};
+ \foreach \n in {a,b,c,d} \draw[dashed,gray] (\n.south) -- ++(0,-12.8);
+ \foreach \x/\ini/\fin in {4.2/-1.5/-12.4,8.6/-2.3/-5.6,15.6/-3.1/-4.8,8.6/-7.6/-10.6,15.6/-8.4/-9.8}
+  \draw[fill=xcol!12,draw=xcol!60!black] (\x-0.09,\ini) rectangle (\x+0.09,\fin);
+ \draw[->] (0,-1.5) -- node[msg,above=1pt]{clic en Resolver} (4.2,-1.5);
+ \draw[->] (4.2,-2.3) -- node[msg,above=1pt]{action: solve} (8.6,-2.3);
+ \draw[->] (8.6,-3.1) -- node[msg,above=1pt]{InitializeRoad, LocalizeStart} (15.6,-3.1);
+ \draw[->] (8.6,-4.0) -- node[msg,above=1pt]{DetermineStartDirection,\\RapidMovementWithRightHandAI} (15.6,-4.0);
+ \draw[dashed,->] (8.6,-5.4) -- node[msg,above=1pt]{JSON: posición, running} (4.2,-5.4);
+ \draw[gray,rounded corners=1pt] (3.5,-6.4) rectangle (17.0,-11.2);
+ \node[anchor=north west,draw=gray,fill=white,font=\scriptsize,inner sep=2.5pt] at (3.5,-6.4) {\textbf{loop} [50 ms después de cada respuesta, mientras running]};
+ \draw[->] (4.2,-7.6) -- node[msg,above=1pt]{action: tick} (8.6,-7.6);
+ \draw[->] (8.6,-8.4) -- node[msg,above=1pt]{RapidMovementWithRightHandAI} (15.6,-8.4);
+ \draw[->] (8.6,-9.2) -- node[msg,above=1pt]{DetermineFinishDirection} (15.6,-9.2);
+ \draw[dashed,->] (8.6,-10.4) -- node[msg,above=1pt]{JSON: posición, running, message} (4.2,-10.4);
+ \draw[dashed,->] (4.2,-12.2) -- node[msg,above=1pt]{tablero y aviso de meta} (0,-12.2);
+\end{tikzpicture}}
+\caption{Resolución automática con la mano derecha. El backend ejecuta la lógica;
+Angular solo programa los ticks y dibuja el estado. La mano izquierda sigue el
+mismo flujo con \texttt{RapidMovementWithLeftHandAI}.}
+\label{fig:uml-secuencia}
+\end{figure}
+
+\subsection{Diagrama de clases}
+\begin{figure}[H]
+\centering\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize,>=Stealth,
+ cls/.style={draw,rectangle split,rectangle split parts=3,rectangle split part fill={xcol!14,white,white},text width=6.6cm,align=left,inner sep=3pt,anchor=north}]
+ \node[cls,text width=6cm] (walker) at (-7.3,8) {\makebox[\linewidth]{\textbf{Walker}}
+  \nodepart{second}+Matrix: [][]int\\+Row, Column, X, Y: int\\+Table: []string\\+Data, Message: string
+  \nodepart{third}+CreateMatrix(r, c), InitializeMatrix(a)\\+InitializeRoad(), LocalizeStart()\\+MoveRight/Left/Up/DownSide()\\+InitializeGrammar()\\+ControlMovesInLaberynth(key string)\\+ControlSpeechMoves(text string)};
+ \node[cls] (npc) at (0,8) {\makebox[\linewidth]{\textbf{NonPlayerCharacter}}
+  \nodepart{second}+Matrix: [][]int\\+Row, Column, X, Y: int\\+Direction, DirectionText, Message: string\\+Miliseconds: int
+  \nodepart{third}+CreateMatrix, InitializeMatrix\\+InitializeRoad, LocalizeStart\\+MoveRight/Left/Up/DownSide()\\+DetermineStartDirection()\\+DetermineFinishDirection(): bool\\+ObserveRight/Left/Up/DownSide(): bool\\+RapidMovementWithLeftHandAI()\\+RapidMovementWithRightHandAI()\\+InitializeRapidMovement()\\+InitializePausedMovement()\\+PausedMovementWithAI()};
+ \node[cls,rectangle split part fill={gray!15,white,white},text width=4.6cm] (game) at (-7.3,1.6) {\makebox[\linewidth]{\textbf{game}}
+  \nodepart{second}+Mode: string\\+NPC: NonPlayerCharacter\\+Walker: Walker\\+Running: bool
+  \nodepart{third}---};
+ \node[cls,rectangle split part fill={gray!15,white,white},text width=5.4cm] (main) at (0,0.6) {\makebox[\linewidth]{$\ll$función$\gg$ \textbf{main} (handler /api/game)}
+  \nodepart{second}games: map[string]*game\\mutex: sync.Mutex
+  \nodepart{third}load, solve, tick, key, speech, exit};
+ \node[cls,rectangle split part fill={ocol!12,white,white},text width=4.8cm] (app) at (7.3,8) {\makebox[\linewidth]{\textbf{App} (Angular)}
+  \nodepart{second}mode, state, busy, session
+  \nodepart{third}load(mode)\\solve()\\schedule()\\keydown(event)\\StartSpeech()\\exit()};
+ \draw[{Diamond[fill=black]}-] (game.north) -- node[right]{1} (walker.south);
+ \draw[{Diamond[fill=black]}-] (game.north east) -- node[above,sloped]{1} (npc.south west);
+ \draw[{Diamond[open]}-] (main.west) -- node[above]{0..*} (game.east);
+ \draw[dashed,->] (app.south) |- node[pos=0.25,right]{HTTP / JSON} (main.east);
+\end{tikzpicture}}
+\caption{Estructura en UML. \texttt{Walker} y \texttt{NonPlayerCharacter} son la
+lógica traducida desde C\#; \texttt{game} guarda una partida por sesión y el
+manejador de \texttt{main} despacha las acciones. \texttt{App} es el componente
+Angular, que se comunica con el backend por HTTP.}
+\label{fig:uml-clases}
+\end{figure}
+
+% =====================================================================
+\section{Metodología SCRUM + XP}
+% =====================================================================
+El desarrollo se organizó en sprints, con Scrum como marco de planificación y
+prácticas XP para el diseño, la implementación y las pruebas.
+
+\subsection{Roles}
+\begin{table}[H]
+\centering
+\caption{Distribución de roles y responsabilidades}
+\begin{tabular}{ll}
+\toprule
+\textbf{Rol} & \textbf{Responsable}\\
+\midrule
+Product Owner & Ing. César Villacís Silva, MSc.\\
+Scrum Master & Diana Guerra\\
+Desarrollo, pruebas y documentación & Diana Guerra, Paul Moreno y Germán Cáceres\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Product Backlog}
+\begin{longtable}{p{1.1cm}p{8.6cm}p{1.2cm}p{1.6cm}}
+\caption{Historias de usuario}\\
+\toprule
+\textbf{HU} & \textbf{Historia} & \textbf{Pts} & \textbf{Sprint}\\
+\midrule\endfirsthead
+\toprule
+\textbf{HU} & \textbf{Historia} & \textbf{Pts} & \textbf{Sprint}\\
+\midrule\endhead
+HU01 & Como usuario, quiero ver el laberinto con el inicio y la meta, para saber adónde llegar. & 3 & 1\\
+HU02 & Como usuario, quiero mover al caminante con las flechas, para recorrer el laberinto. & 5 & 1\\
+HU03 & Como usuario, quiero que las paredes me detengan, para que el recorrido respete el laberinto. & 3 & 1\\
+HU04 & Como usuario, quiero mover al caminante con mi voz, para jugar sin teclado. & 5 & 2\\
+HU05 & Como usuario, quiero que la IA resuelva el laberinto con la mano derecha, para observar su estrategia. & 8 & 2\\
+HU06 & Como usuario, quiero que la IA lo resuelva con la mano izquierda, para comparar ambas rutas. & 5 & 2\\
+HU07 & Como usuario, quiero un aviso al llegar a la meta, para saber que terminé. & 2 & 3\\
+HU08 & Como usuario, quiero que varias pestañas jueguen a la vez sin mezclarse, para compartir el equipo. & 3 & 3\\
+\bottomrule
+\end{longtable}
+
+\subsection{Sprints}
+\begin{description}
+  \item[Sprint 1 -- Núcleo en Go.] Traducción de la matriz y de \texttt{Walker}; movimiento con teclado y paredes; pruebas de paridad.
+  \item[Sprint 2 -- IA y API.] Traducción de \texttt{NonPlayerCharacter}, acciones \texttt{solve} y \texttt{tick}, sesiones por pestaña y voz.
+  \item[Sprint 3 -- Angular e integración.] Componente Angular con interfaz arcade, proxy de desarrollo y validación en el navegador.
+\end{description}
+
+\subsection{Prácticas XP aplicadas}
+\begin{itemize}
+ \item \textbf{Diseño simple:} un solo endpoint con seis acciones y un solo componente Angular.
+ \item \textbf{Pruebas automatizadas:} comparación de cada decisión y de cada recorrido con las referencias del C\#.
+ \item \textbf{Estándares de código:} \texttt{go vet} sin diagnósticos y compilación de producción de Angular.
+\end{itemize}
+
+\subsection{Diseño}
+\begin{table}[H]
+\centering\small
+\caption{Estructura del proyecto}
+\begin{tabular}{p{5.4cm}p{8.2cm}}
+\toprule
+\textbf{Archivo} & \textbf{Responsabilidad}\\
+\midrule
+\texttt{backend/matrix.go} & Matriz original de 19$\times$19\\
+\texttt{backend/walker.go} & \texttt{Walker}: modo manual con teclado y voz\\
+\texttt{backend/npc.go} & \texttt{NonPlayerCharacter}: IA de mano derecha e izquierda\\
+\texttt{backend/main.go} & Servidor HTTP, validación y sesiones\\
+\texttt{backend/parity\_test.go} & Pruebas de paridad con el C\#\\
+\texttt{frontend/src/main.ts} & Componente Angular: menú, tablero, ticks y voz\\
+\texttt{frontend/src/styles.css} & Interfaz arcade adaptable\\
+\texttt{frontend/proxy.conf.json} & Redirección de \texttt{/api} al backend\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering\small
+\caption{Acciones de \texttt{POST /api/game}}
+\begin{tabular}{p{1.8cm}p{5.8cm}p{5.6cm}}
+\toprule
+\textbf{Acción} & \textbf{Efecto} & \textbf{Equivale a (original)}\\
+\midrule
+load & Crea la partida del modo indicado & Abrir el formulario\\
+solve & Reinicia y hace el primer movimiento de la IA & \texttt{btnSolve\_Click}\\
+tick & Mueve la IA y comprueba la meta & \texttt{tmrBeginner\_Tick}\\
+key & Mueve con una flecha & \texttt{frmLaberynth\_KeyDown}\\
+speech & Mueve con una orden de voz & \texttt{SpeechRecognized}\\
+exit & Libera la sesión & \texttt{btnExit\_Click}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Desarrollo}
+\begin{table}[H]
+\centering
+\caption{Correspondencia C\# $\rightarrow$ Go y Angular}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{C\# (original)} & \textbf{Go y Angular}\\
+\midrule
+\texttt{PictureBox picWalker} & campos \texttt{X} e \texttt{Y} de la estructura\\
+\texttt{TextBox txtDirection / txtData} & campos \texttt{DirectionText} y \texttt{Data}\\
+\texttt{enum Direction} & constantes \texttt{Up}, \texttt{Down}, \texttt{Left} y \texttt{Right}\\
+\texttt{Timer tmrBeginner} (50 ms) & \texttt{setTimeout} en Angular y acción \texttt{tick}\\
+\texttt{Thread.Sleep(mMiliseconds)} & \texttt{time.Sleep}\\
+\texttt{System.Speech} & \texttt{SpeechRecognition} del navegador y acción \texttt{speech}\\
+\texttt{MessageBox.Show} & campo \texttt{Message} en el JSON y aviso en la página\\
+Formularios Windows Forms & componente Angular y manejador \texttt{/api/game}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Pruebas}
+Se ejecutaron el 24 de noviembre de 2026, desde
+\texttt{UNIDAD II/Projectos/Laberinto Go Angular/backend}, con
+\texttt{go vet ./...} y \texttt{go test -count=1 -v ./...}. Las referencias son
+archivos JSON generados con el C\# original durante la migración.
+
+\begin{longtable}{p{1cm}p{3.6cm}p{3.3cm}p{3.2cm}p{1.6cm}}
+\caption{Objetivos, escenarios y resultados de las pruebas automatizadas}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+G01 & Ejecutar 320 decisiones de referencia (64 por cada uno de 5 métodos). & Misma fila, columna, dirección, posición y resultado. & 320 coincidencias. & PASS\\
+G02 & Reproducir los recorridos completos de ambas manos, tick por tick. & Cada posición igual a la del original. & Izquierda 66 ticks; derecha 161; meta (17,16). & PASS\\
+G03 & Teclado, voz, paredes y llegada a la meta. & Movimientos válidos, bloqueo y mensaje. & Teclado bloqueado en la meta; voz no, como en el original. & PASS\\
+G04 & Análisis estático con \texttt{go vet}. & Sin diagnósticos. & Sin diagnósticos. & PASS\\
+\bottomrule
+\end{longtable}
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-pruebas.txt}
+\caption{Salida de consola de las pruebas de Go. G01--G03 corresponden a \texttt{TestOriginalDecisions}, \texttt{TestOriginalRoutes} y \texttt{TestWalkerControls}.}
+\label{fig:consola-pruebas}
+\end{figure}
+
+\subsubsection{Pruebas de la API}
+Con el backend y el frontend en ejecución, se enviaron peticiones con Node.js a
+\texttt{http://localhost:4200/api/game}, a través del proxy de Angular.
+\begin{longtable}{p{1cm}p{3.6cm}p{3.3cm}p{3.2cm}p{1.6cm}}
+\caption{Pruebas de la API}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+A01 & Resolver con cada mano pidiendo ticks hasta que \texttt{running} sea falso. & 66 y 161 ticks; meta (17,16). & Iguales al original; dirección vacía. & PASS\\
+A02 & Pedir un tick después de \texttt{exit}. & Sesión liberada. & HTTP 409. & PASS\\
+A03 & Modo manual: flecha contra una pared y luego dos flechas válidas. & Sin movimiento y luego (2,2). & (1,2) y luego (2,2). & PASS\\
+A04 & Modo, acción o sesión inválidos. & Rechazo. & HTTP 400 en los tres casos. & PASS\\
+A05 & Petición con GET. & Método no permitido. & HTTP 405. & PASS\\
+A06 & Medir la latencia de 227 ticks. & Muy por debajo de 50 ms. & Mediana 3,45 ms; P95 4,94 ms; máximo 7,40 ms. & PASS\\
+\bottomrule
+\end{longtable}
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-api.txt}
+\caption{Salida de consola de las pruebas de la API.}
+\label{fig:consola-api}
+\end{figure}
+
+\subsubsection{Integración en el navegador}
+Se abrió \texttt{http://localhost:4200} en Google Chrome 157 y se jugó con un
+script que pulsa las flechas y los botones de la interfaz.
+\begin{longtable}{p{1cm}p{3.6cm}p{3.3cm}p{3.2cm}p{1.6cm}}
+\caption{Integración en el navegador}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+I01 & Recorrer el modo manual con 54 flechas hasta la meta. & «Felicitaciones, buen trabajo.». & Meta alcanzada con ese mensaje. & PASS\\
+I02 & Pulsar otra flecha en la meta. & El caminante no se mueve. & Posición sin cambios. & PASS\\
+I03 & Resolver con la mano derecha. & Llegada a la meta con aviso. & «Has llegado al final». & PASS\\
+I04 & Resolver con la mano izquierda. & Llegada a la meta con aviso. & «Has llegado al final». & PASS\\
+I05 & Abrir la página a 390 px de ancho. & Sin desplazamiento horizontal. & 0 px de desborde. & PASS\\
+I06 & Registrar errores de la página. & Ningún error del juego. & Solo un 404 de \texttt{favicon.ico}, que no afecta al juego. & PASS\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{Validación visual en el navegador}
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.72\linewidth}\centering
+\captura[height=6cm]{go-menu.png}
+\caption{Escritorio.}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.26\linewidth}\centering
+\captura[height=6cm,trim=0 400 0 0,clip]{go-celular-menu.png}
+\caption{Celular (390 px).}
+\end{subfigure}
+\caption{Menú principal con los tres modos de juego.}
+\label{fig:captura-menu}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-manual-inicio.png}
+\caption{Inicio.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-manual-recorrido.png}
+\caption{Tras 25 movimientos.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-manual-meta.png}
+\caption{Meta: «Felicitaciones, buen trabajo.».}
+\end{subfigure}
+\caption{Modo manual con el teclado.}
+\label{fig:captura-manual}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-right-inicio.png}
+\caption{Antes de resolver.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-right-recorrido.png}
+\caption{En el recorrido.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-right-meta.png}
+\caption{Meta: «Has llegado al final».}
+\end{subfigure}
+\caption{Resolución automática con la mano derecha.}
+\label{fig:captura-derecha}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-left-inicio.png}
+\caption{Antes de resolver.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-left-recorrido.png}
+\caption{En el recorrido.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{go-left-meta.png}
+\caption{Meta: «Has llegado al final».}
+\end{subfigure}
+\caption{Resolución automática con la mano izquierda.}
+\label{fig:captura-izquierda}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\captura[height=8cm]{go-celular-juego.png}
+\caption{Mano izquierda resuelta en un celular de 390 px.}
+\label{fig:captura-celular}
+\end{figure}
+
+La voz se verificó con el manejador del backend en las pruebas; no se usó un
+micrófono real.
+
+% =====================================================================
+\section{Análisis de Resultados: Métricas de Software}
+% =====================================================================
+
+\subsection{Líneas de código}
+Se contabilizaron con el mismo criterio de los informes anteriores: líneas de
+código (LOC), de comentario y en blanco.
+
+\begin{table}[H]
+\centering\small
+\caption{Tamaño por archivo}
+\begin{tabular}{lrrrr}
+\toprule Archivo & LOC & Coment. & Blanco & Total\\\midrule
+\texttt{backend/npc.go} & 463 & 0 & 59 & 522\\
+\texttt{backend/walker.go} & 114 & 0 & 25 & 139\\
+\texttt{backend/main.go} & 133 & 0 & 4 & 137\\
+\texttt{backend/matrix.go} & 22 & 0 & 1 & 23\\
+\textbf{Backend: producción} & \textbf{732} & \textbf{0} & \textbf{89} & \textbf{821}\\
+\texttt{backend/parity\_test.go} & 128 & 0 & 3 & 131\\
+\texttt{frontend/src/main.ts} & 65 & 0 & 0 & 65\\
+\texttt{frontend/src/styles.css} & 13 & 1 & 12 & 26\\
+\texttt{frontend/src/index.html} & 1 & 0 & 0 & 1\\
+\textbf{Total} & \textbf{939} & \textbf{1} & \textbf{104} & \textbf{1\,044}\\
+\bottomrule
+\end{tabular}
+\end{table}
+El componente Angular y la hoja de estilos tienen pocas líneas porque su contenido
+está en líneas largas (la hoja de estilos ocupa 15\,452 bytes).
+
+\subsection{Otras métricas}
+\begin{table}[H]
+\centering\small
+\caption{Métricas funcionales}
+\begin{tabular}{p{7.8cm}r}
+\toprule Métrica & Valor\\\midrule
+Métodos de \texttt{Walker} / \texttt{NonPlayerCharacter} & 11 / 19\\
+Pruebas de Go aprobadas & 3 / 3\\
+Decisiones comparadas con el C\# & 320\\
+Ticks hasta la meta: mano izquierda / derecha & 66 / 161\\
+Latencia de un tick por la API (mediana / P95) & 3,45 / 4,94 ms\\
+Paquete inicial de Angular (transferencia estimada) & 168,34 kB (50,95 kB)\\
+Dependencias externas del backend & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+La latencia se midió en el mismo equipo, a través del proxy de desarrollo de
+Angular; en un despliegue real dependerá de la red.
+
+\subsection{Comportamientos observados}\label{sec:hallazgos}
+\begin{enumerate}
+  \item \textbf{Varios movimientos por tick en la mano derecha.} Por los \texttt{if}
+        independientes, 15 de los 161 ticks mueven al caminante más de una casilla.
+  \item \textbf{La voz no se bloquea en la meta.} El teclado deja de mover al
+        caminante al llegar, pero la voz no, como en el original.
+  \item \textbf{Mensaje de la mano derecha.} Esta versión muestra «Has llegado al
+        final» en las dos manos, mientras que la versión JavaScript muestra
+        «Haz llegado al final» en la mano derecha. Conviene confirmar con el
+        código C\# cuál es el texto original.
+  \item \textbf{Métodos sin uso.} \texttt{InitializeRapidMovement},
+        \texttt{InitializePausedMovement} y \texttt{PausedMovementWithAI} se
+        conservan aunque ninguna acción los usa.
+  \item \textbf{Ritmo de los ticks.} El intervalo efectivo es de 50 ms más la
+        latencia de cada petición, porque cada tick se pide al recibir el anterior.
+\end{enumerate}
+
+% =====================================================================
+\section{Conclusiones y Recomendaciones}
+% =====================================================================
+\subsection{Conclusiones}
+\begin{itemize}
+ \item Se migró el Laberinto con IA a una arquitectura web con Go y Angular; el
+       backend ejecuta toda la lógica con los mismos métodos de \texttt{Walker} y
+       \texttt{NonPlayerCharacter}.
+ \item Las 320 decisiones y los dos recorridos completos coinciden con el C\#
+       original, tick por tick.
+ \item La API valida sus entradas, separa las partidas por sesión y responde un
+       tick en unos 3,5 ms, muy por debajo del intervalo de 50 ms.
+ \item Se jugaron los tres modos en el navegador hasta la meta, en escritorio y en celular.
+\end{itemize}
+
+\subsection{Recomendaciones}
+\begin{itemize}
+ \item Unificar el mensaje de la mano derecha con el del original en ambas versiones.
+ \item Agregar un \texttt{favicon.ico} para evitar el error 404 en la consola.
+ \item Probar la voz con un micrófono real en varios navegadores.
+ \item Liberar automáticamente las sesiones inactivas del backend.
+\end{itemize}
+
+% =====================================================================
+\begin{thebibliography}{9}
+\bibitem{ieee830} IEEE, \emph{IEEE Recommended Practice for Software Requirements Specifications}, IEEE Std 830-1998.
+\bibitem{go} The Go Authors, \emph{The Go Programming Language Documentation}, \url{https://go.dev/doc/}.
+\bibitem{angular} Google, \emph{Angular Documentation}, \url{https://angular.dev}.
+\bibitem{mdn} Mozilla, \emph{MDN Web Docs: Web Speech API}, \url{https://developer.mozilla.org/docs/Web/API/Web_Speech_API}.
+\bibitem{scrum} K. Schwaber y J. Sutherland, \emph{La Guía de Scrum}, 2020.
+\bibitem{xp} K. Beck, \emph{Extreme Programming Explained: Embrace Change}, Addison-Wesley, 2004.
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,735 @@
+% =====================================================================
+%  Informe - Grupo 3 - Desarrollo de Videojuegos (ESPE)
+%  Unidad 2: Laberinto con IA en JavaScript (Web)
+%  Compilar:  pdflatex InformeLaberintoJavaScript.tex  (dos veces, para el índice)
+% =====================================================================
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-noshorthands]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyhdr}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,shapes.multipart,arrows.meta,positioning,calc,babel}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{Img/}}
+
+% ---------- colores y utilidades ----------
+\definecolor{espe}{RGB}{0,102,51}
+\definecolor{xcol}{RGB}{8,145,178}
+\definecolor{ocol}{RGB}{219,39,119}
+\definecolor{codebg}{RGB}{245,245,250}
+
+% Captura con borde fino; el argumento opcional recibe las opciones de la imagen.
+\newcommand{\captura}[2][width=0.99\linewidth]{%
+ \begingroup\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}%
+ \fcolorbox{gray!50}{white}{\includegraphics[#1]{#2}}\endgroup}
+
+\captionsetup{font=small,labelfont=bf,labelsep=period}
+\captionsetup[sub]{font=footnotesize,labelfont=bf}
+
+% Salida real de consola, guardada en Img/consola-*.txt.
+\definecolor{consolabg}{RGB}{24,26,38}
+\definecolor{consolafg}{RGB}{226,232,240}
+\lstdefinestyle{consola}{basicstyle=\ttfamily\scriptsize\color{consolafg},
+  backgroundcolor=\color{consolabg}, frame=single, rulecolor=\color{consolabg},
+  framesep=4pt, xleftmargin=4pt, xrightmargin=4pt, aboveskip=0pt, belowskip=0pt,
+  breaklines=true, breakindent=1.2em, columns=fullflexible, keepspaces=true}
+
+\lstdefinelanguage{JavaScript}{
+  morekeywords={const,let,var,function,return,if,else,for,of,in,while,class,constructor,this,new,import,export,from,static,get,set,true,false,null,undefined,throw,async,await,switch,case,break},
+  sensitive=true, morecomment=[l]{//}, morecomment=[s]{/*}{*/}, morestring=[b]', morestring=[b]"}
+\lstset{basicstyle=\ttfamily\footnotesize, backgroundcolor=\color{codebg},
+  keywordstyle=\color{xcol}\bfseries, commentstyle=\color{gray}\itshape,
+  stringstyle=\color{ocol}, frame=single, rulecolor=\color{gray!40},
+  breaklines=true, columns=fullflexible, showstringspaces=false,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+    {¡}{{!`}}1 {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1
+    {✔}{{$\checkmark$}}1 {▶}{{$\blacktriangleright$}}1 {ℹ}{{\textit{i}}}1}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Desarrollo de Videojuegos -- Unidad 2}
+\fancyhead[R]{\small Grupo N.º 3}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{15pt}
+
+\begin{document}
+\sloppy
+
+% =====================================================================
+%  CARÁTULA
+% =====================================================================
+\begin{titlepage}
+  \centering
+  \includegraphics[width=0.55\textwidth]{logoINFESPE.png}\par\vspace{1cm}
+  {\Large\bfseries UNIVERSIDAD DE LAS FUERZAS ARMADAS -- ESPE\par}
+  \vspace{0.3cm}
+  {\large DEPARTAMENTO DE CIENCIAS DE LA COMPUTACIÓN\par}
+  \vspace{0.2cm}
+  {\large CARRERA DE INGENIERÍA EN SOFTWARE\par}
+  \vspace{1.2cm}
+  {\large\bfseries ASIGNATURA: DESARROLLO DE VIDEOJUEGOS\par}
+  \vspace{0.3cm}
+  {\large UNIDAD 2\par}
+  \vspace{1.2cm}
+  {\color{espe}\rule{\linewidth}{1pt}}\par\vspace{0.3cm}
+  {\LARGE\bfseries Laberinto con Inteligencia Artificial\par}
+  \vspace{0.2cm}
+  {\large Modos manual, mano derecha y mano izquierda -- JavaScript (Web)\par}
+  \vspace{0.3cm}
+  {\color{espe}\rule{\linewidth}{1pt}}\par
+  \vspace{1.2cm}
+  {\large DOCENTE: ING. CÉSAR VILLACÍS SILVA, MSC.\par}
+  \vspace{0.8cm}
+  {\large\bfseries ESTUDIANTES:\par}
+  \vspace{0.2cm}
+  {\large Diana Guerra\par Paul Moreno\par Germán Cáceres\par}
+  \vspace{0.8cm}
+  {\large\bfseries GRUPO N.º 3\par}
+  \vfill
+  {\large FECHA: NOVIEMBRE 2026\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Presentación del proyecto}
+% =====================================================================
+Se migró a JavaScript el videojuego \emph{Laberinto con Inteligencia Artificial}
+del docente, desarrollado originalmente en C\# con Windows Forms. El jugador
+recorre un laberinto de 19$\times$19 casillas desde el inicio hasta la meta,
+controlándolo con el teclado o con la voz, o deja que la computadora lo resuelva
+siguiendo la pared derecha o la izquierda.
+
+La aplicación es una página web en HTML, CSS y JavaScript puro, sin frameworks,
+dependencias ni servidor: se abre directamente desde \texttt{index.html}. Existe
+una segunda migración del mismo juego en Go y Angular, documentada en un informe
+aparte.
+
+\begin{table}[H]
+\centering
+\caption{Modos de juego implementados}
+\begin{tabular}{p{2.8cm}p{5cm}p{5.6cm}}
+\toprule
+\textbf{Modo} & \textbf{Comportamiento} & \textbf{Formulario original}\\
+\midrule
+Manual & El usuario mueve al caminante con las flechas o con la voz. & \texttt{frmBeginnerManual}\\
+Mano derecha & La IA sigue la pared derecha hasta la meta. & \texttt{frmBeginnerAutomatic}\\
+Mano izquierda & La IA sigue la pared izquierda hasta la meta. & \texttt{frmBeginnerAutomaticLeft}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Se conservaron las dos clases del original, \texttt{Walker} (11 métodos públicos)
+y \texttt{NonPlayerCharacter} (19 métodos públicos), con los mismos nombres,
+parámetros, orden y condiciones. La lógica no se reemplazó por tablas, rutas
+precalculadas ni otro algoritmo.
+
+% =====================================================================
+\section{Especificación de Requerimientos (IEEE 830)}
+% =====================================================================
+
+\subsection{Introducción}
+
+\subsubsection{Propósito}
+Se especifican los requisitos funcionales y no funcionales del videojuego web
+\emph{Laberinto con IA} en JavaScript, con base en IEEE 830-1998~\cite{ieee830}.
+
+\subsubsection{Alcance}
+El sistema presenta un menú con tres modos y un laberinto de nivel principiante.
+En el modo manual el usuario controla al caminante; en los modos automáticos un
+\emph{Personaje No Jugador} (NPC) aplica la regla de la mano derecha o de la mano
+izquierda. El sistema comprende el movimiento por casillas, el bloqueo por paredes,
+la detección de la meta y su presentación en la misma página.
+
+\subsubsection{Definiciones, acrónimos y abreviaturas}
+\begin{description}[leftmargin=2.8cm,style=nextline]
+  \item[Walker] Clase del caminante controlado por el usuario.
+  \item[NPC] \emph{Non-Player Character}: clase \texttt{NonPlayerCharacter}, que resuelve el laberinto sola.
+  \item[Matriz] Tablero de 19$\times$19 con 0 (pared), 1 (camino), 2 (inicio) y 3 (meta).
+  \item[Tick] Cada ejecución del temporizador \texttt{tmrBeginner}, cada 50 ms.
+  \item[Mano derecha/izquierda] Estrategia que mantiene una pared a ese lado para encontrar la salida.
+\end{description}
+
+\subsubsection{Referencias}
+\begin{itemize}
+  \item IEEE Std 830-1998, \emph{Recommended Practice for Software Requirements Specifications}.
+  \item Proyecto C\# Windows Forms del docente: clases \texttt{Walker} y \texttt{NonPlayerCharacter}, y formularios del nivel principiante.
+  \item Referencias del C\# original usadas en la migración: \texttt{tests/fixtures/original\_decisions.json} y \texttt{original\_routes.json}.
+\end{itemize}
+
+\subsection{Descripción general}
+
+\subsubsection{Perspectiva del producto}
+La aplicación separa la lógica de la presentación. \texttt{walker.js},
+\texttt{non-player-character.js}, \texttt{matrix.js} y \texttt{direction.js}
+contienen la lógica traducida desde C\#; \texttt{app.js} conserva los nombres de
+los formularios y de sus manejadores (\texttt{btnSolve\_Click},
+\texttt{tmrBeginner\_Tick}, \ldots) y actualiza el DOM en lugar de los controles
+de Windows Forms.
+
+\subsubsection{Funciones del producto}
+Se permite elegir el modo, mover al caminante con las flechas o con las órdenes de
+voz \emph{right}, \emph{left}, \emph{up} y \emph{down}, resolver el laberinto con
+la IA, reiniciar el recorrido, volver al menú y salir. Al llegar a la meta se
+muestra el mensaje del formulario correspondiente.
+
+\subsubsection{Características de los usuarios}
+Estudiantes y jugadores sin conocimiento técnico. El modo manual requiere usar
+las flechas del teclado; la voz es opcional.
+
+\subsubsection{Restricciones}
+\begin{itemize}
+  \item La migración debe conservar los métodos, condiciones y orden de evaluación del C\#.
+  \item HTML, CSS y JavaScript estándar, sin frameworks ni dependencias.
+  \item La voz depende de la API \texttt{SpeechRecognition} del navegador y del permiso de micrófono.
+\end{itemize}
+
+\subsubsection{Suposiciones y dependencias}
+La página funciona abierta desde \texttt{file://}. Las pruebas requieren Node.js~22
+o superior, solo con sus herramientas incluidas.
+
+\subsection{Requerimientos específicos}
+
+\subsubsection{Requerimientos funcionales}
+\begin{longtable}{p{1.3cm}p{9.2cm}p{2.6cm}}
+\caption{Requerimientos funcionales}\\
+\toprule
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad}\\
+\midrule\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad}\\
+\midrule\endhead
+RF01 & El sistema usará la misma matriz de 19$\times$19 del original, con inicio en (1,2) y meta en (17,16). & Alta\\
+RF02 & El menú permitirá elegir el modo manual, mano derecha o mano izquierda, y salir del juego. & Alta\\
+RF03 & En modo manual, las flechas moverán al caminante una casilla; una pared impedirá el movimiento. & Alta\\
+RF04 & En modo manual, las órdenes de voz \emph{right}, \emph{left}, \emph{up} y \emph{down} moverán al caminante; otros textos se añadirán al cuadro de reconocimiento. & Media\\
+RF05 & Al llegar a la meta con el teclado se mostrará «Felicitaciones, buen trabajo.» y el teclado dejará de mover al caminante. & Alta\\
+RF06 & El botón Resolver reiniciará la posición, determinará la dirección inicial y hará el primer movimiento de la IA. & Alta\\
+RF07 & Cada tick de 50 ms ejecutará un movimiento de la IA y comprobará la meta. & Alta\\
+RF08 & La IA de mano derecha y la de mano izquierda conservarán las condiciones del original, incluidos los \texttt{if} independientes de la mano derecha. & Alta\\
+RF09 & Al llegar a la meta en modo automático se detendrá el temporizador y se mostrará el mensaje del formulario. & Alta\\
+RF10 & Volver al menú detendrá el temporizador y el reconocimiento de voz. & Media\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{Requerimientos no funcionales}
+\begin{longtable}{p{1.3cm}p{2.9cm}p{9.2cm}}
+\caption{Requerimientos no funcionales}\\
+\toprule
+\textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
+\midrule\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Tipo} & \textbf{Descripción}\\
+\midrule\endhead
+RNF01 & Fidelidad & Mismos métodos públicos de \texttt{Walker} y \texttt{NonPlayerCharacter}, sin métodos de juego añadidos.\\
+RNF02 & Portabilidad & La página funciona abierta desde \texttt{file://}, sin servidor, y se adapta a celular sin desplazamiento horizontal.\\
+RNF03 & Rendimiento & Cada decisión de la IA tarda mucho menos que el intervalo de 50 ms.\\
+RNF04 & Simplicidad & Cero dependencias de terceros en la aplicación y en las pruebas.\\
+RNF05 & Calidad & Las pruebas de paridad con el C\# deberán aprobar con \texttt{npm test}.\\
+\bottomrule
+\end{longtable}
+
+% =====================================================================
+\section{Modelo de Inteligencia Artificial}
+% =====================================================================
+El laberinto se representa con una matriz de 19$\times$19. Cada paso mueve al
+caminante una casilla y desplaza su imagen 25 píxeles lógicos.
+
+\begin{table}[H]
+\centering
+\caption{Valores de la matriz del laberinto}
+\begin{tabular}{cll}
+\toprule
+\textbf{Valor} & \textbf{Significado} & \textbf{Casillas}\\
+\midrule
+0 & Pared & 232\\
+1 & Camino & 127\\
+2 & Inicio, en (1,2) & 1\\
+3 & Meta, en (17,16) & 1\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La IA aplica la regla de \emph{seguir la pared}: si se mantiene siempre una pared
+del mismo lado, el caminante termina recorriendo el borde de la región hasta la
+salida. \texttt{NonPlayerCharacter} observa las cuatro casillas vecinas con
+\texttt{ObserveRightSide}, \texttt{ObserveLeftSide}, \texttt{ObserveUpSide} y
+\texttt{ObserveDownSide}, y decide según la dirección actual. Por ejemplo, la mano
+derecha mirando a la derecha:
+
+\begin{lstlisting}[language=JavaScript]
+if (this.mDirection == Direction.Right)
+{
+    if (this.ObserveUpSide() == false && this.ObserveDownSide() == false && this.ObserveRightSide() == true)
+    { this.mDirection = Direction.Right; this.MoveRightSide(picWalker); }
+    else if (this.ObserveUpSide() == true && this.ObserveDownSide() == false && this.ObserveRightSide() == true)
+    { this.mDirection = Direction.Right; this.MoveRightSide(picWalker); }
+    else if (this.ObserveDownSide() == true)
+    { this.mDirection = Direction.Down; this.MoveDownSide(picWalker); }
+    // ... gira hacia arriba o retrocede si no hay salida
+}
+if (this.mDirection == Direction.Left)   // if independiente, como en el C#
+\end{lstlisting}
+
+En la mano derecha, los bloques de cada dirección son \texttt{if} independientes,
+como en el C\#: si un bloque cambia la dirección, el siguiente bloque puede volver a
+mover al caminante en la misma llamada. En la mano izquierda los bloques son
+\texttt{else if} y hay un solo movimiento por llamada. Se conservó esa diferencia.
+
+\begin{table}[H]
+\centering\small
+\caption{Recorridos de la IA en el laberinto principiante}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Modo} & \textbf{Ticks} & \textbf{Movim.} & \shortstack{\textbf{Ticks con}\\\textbf{2+ movim.}} & \shortstack{\textbf{Casillas}\\\textbf{distintas}} & \shortstack{\textbf{Tiempo}\\\textbf{nominal}}\\
+\midrule
+Mano izquierda & 66 & 68 & 1 & 60 & 3,35 s\\
+Mano derecha & 161 & 178 & 15 & 106 & 8,10 s\\
+\bottomrule
+\end{tabular}
+\end{table}
+El camino más corto del inicio a la meta tiene 54 movimientos. La mano izquierda
+llega casi directo; la mano derecha recorre callejones sin salida antes de llegar.
+Ninguna de las dos busca el camino más corto: solo garantizan llegar a la salida
+en un laberinto como este.
+
+% =====================================================================
+\section{Diagramas}
+% =====================================================================
+Las figuras~\ref{fig:uml-casos}, \ref{fig:uml-secuencia} y \ref{fig:uml-clases}
+representan los casos de uso, la resolución automática y la estructura del sistema.
+
+\subsection{Diagrama de casos de uso}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+ uc/.style={ellipse,draw,fill=xcol!8,minimum width=4.4cm,minimum height=0.9cm,font=\small,align=center},
+ sysuc/.style={uc,fill=ocol!8,minimum width=3.8cm},
+ rel/.style={dashed,->},
+ lbl/.style={font=\scriptsize,fill=white,inner sep=1pt},>=Stealth]
+ \node[draw,rounded corners,minimum width=11.5cm,minimum height=10cm] (sys) at (1.15,0) {};
+ \node[font=\bfseries\small,anchor=south] at (sys.north) {Laberinto con IA (JavaScript)};
+ \node[uc] (mode) at (-2,3.7) {Elegir modo};
+ \node[uc] (keys) at (-2,1.9) {Mover con el teclado};
+ \node[uc] (voice) at (-2,0) {Mover con la voz};
+ \node[uc] (solve) at (-2,-1.9) {Resolver con la IA};
+ \node[uc] (exit) at (-2,-3.7) {Volver al menú o salir};
+ \node[sysuc] (move) at (4.7,2.6) {Mover caminante};
+ \node[sysuc] (goal) at (4.7,0) {Comprobar meta};
+ \node[sysuc] (ai) at (4.7,-2.6) {Seguir la pared};
+ \begin{scope}[shift={(-6.7,0)},line width=0.9pt,xcol!70!black]
+  \draw[fill=xcol!8] (0,0.8) circle (0.27);
+  \draw (0,0.53) -- (0,-0.3) (-0.42,0.2) -- (0.42,0.2) (0,-0.3) -- (-0.33,-0.9) (0,-0.3) -- (0.33,-0.9);
+ \end{scope}
+ \node[font=\small] at (-6.7,-1.2) {Usuario};
+ \coordinate (usr) at (-6.1,0);
+ \foreach \n in {mode,keys,voice,solve,exit} \draw (usr) -- (\n.west);
+ \draw[rel] (keys.east) -- node[lbl]{$\ll$include$\gg$} (move.west);
+ \draw[rel] (voice.north east) -- node[lbl]{$\ll$include$\gg$} (move.south west);
+ \draw[rel] (move.south) -- node[lbl]{$\ll$include$\gg$} (goal.north);
+ \draw[rel] (solve.east) -- node[lbl]{$\ll$include$\gg$} (ai.west);
+ \draw[rel] (ai.north) -- node[lbl]{$\ll$include$\gg$} (goal.south);
+\end{tikzpicture}
+\caption{Casos de uso. El NPC forma parte del sistema: el usuario solo inicia la resolución.}
+\label{fig:uml-casos}
+\end{figure}
+
+\subsection{Diagrama de secuencia: resolver con la mano derecha}
+\begin{figure}[H]
+\centering\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\small,>=Stealth,
+ obj/.style={draw,fill=xcol!10,minimum width=2.8cm,minimum height=1.2cm,align=center},
+ msg/.style={align=center,fill=white,inner sep=1pt},
+ self/.style={right,align=left}]
+ \node[obj] (a) at (0,0) {:Usuario};
+ \node[obj] (b) at (4.2,0) {:frmBeginner-\\AutomaticRight};
+ \node[obj] (c) at (10.2,0) {:NonPlayer-\\Character};
+ \node[obj] (d) at (15.6,0) {:DOM\\(InitializeComponent)};
+ \foreach \n in {a,b,c,d} \draw[dashed,gray] (\n.south) -- ++(0,-12.6);
+ \foreach \x/\ini/\fin in {4.2/-1.5/-12.2,10.2/-2.3/-4.9,10.2/-7.6/-9.4}
+  \draw[fill=xcol!12,draw=xcol!60!black] (\x-0.09,\ini) rectangle (\x+0.09,\fin);
+ \draw[->] (0,-1.5) -- node[msg,above=1pt]{clic en Resolver} (4.2,-1.5);
+ \draw[->] (4.2,-2.3) -- node[msg,above=1pt]{InitializeRoad, LocalizeStart} (10.2,-2.3);
+ \draw[->] (4.2,-3.2) -- node[msg,above=1pt]{DetermineStartDirection} (10.2,-3.2);
+ \draw[->] (4.2,-4.1) -- node[msg,above=1pt]{RapidMovementWithRightHandAI} (10.2,-4.1);
+ \draw[->] (4.2,-5.6) -- node[msg,above=1pt]{mostrar posición} (15.6,-5.6);
+ \draw[gray,rounded corners=1pt] (3.5,-6.4) rectangle (17.2,-11.0);
+ \node[anchor=north west,draw=gray,fill=white,font=\scriptsize,inner sep=2.5pt] at (3.5,-6.4) {\textbf{loop} [cada 50 ms, hasta la meta]};
+ \draw[->] (4.2,-7.6) -- node[msg,above=1pt]{RapidMovementWithRightHandAI} (10.2,-7.6);
+ \draw[->] (4.2,-8.5) -- node[msg,above=1pt]{DetermineFinishDirection} (10.2,-8.5);
+ \draw[dashed,->] (10.2,-9.3) -- node[msg,above=1pt]{true al llegar} (4.2,-9.3);
+ \draw[->] (4.2,-10.2) -- node[msg,above=1pt]{mostrar posición} (15.6,-10.2);
+ \draw[->] (4.2,-11.5) -- node[msg,above=1pt]{mensaje de meta} (15.6,-11.5);
+ \draw[dashed,->] (4.2,-12.1) -- node[msg,above=1pt]{«Haz llegado al final»} (0,-12.1);
+\end{tikzpicture}}
+\caption{Resolución automática con la mano derecha. \texttt{tmrBeginner\_Tick} se
+ejecuta con \texttt{setInterval} cada 50 ms y se detiene al llegar a la meta. La
+mano izquierda sigue el mismo flujo con \texttt{RapidMovementWithLeftHandAI}.}
+\label{fig:uml-secuencia}
+\end{figure}
+
+\subsection{Diagrama de clases}
+\begin{figure}[H]
+\centering\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize,>=Stealth,
+ cls/.style={draw,rectangle split,rectangle split parts=3,rectangle split part fill={xcol!14,white,white},text width=6.6cm,align=left,inner sep=3pt,anchor=north}]
+ \node[cls,text width=6cm] (walker) at (-7.3,8) {\makebox[\linewidth]{\textbf{Walker}}
+  \nodepart{second}-mMatrix: number[][]\\-mRow, mColumn: number\\-mM, mN: number\\+Table, Elements: string[]\\+Message: string
+  \nodepart{third}+CreateMatrix(r, c)\\+InitializeMatrix(a)\\+InitializeRoad()\\+LocalizeStart()\\+MoveRight/Left/Up/DownSide(picWalker)\\+InitializeGrammar()\\+ControlMovesInLaberynth(picWalker, e)\\+ControlSpeechMoves(picWalker, txtData, e)};
+ \node[cls] (npc) at (0,8) {\makebox[\linewidth]{\textbf{NonPlayerCharacter}}
+  \nodepart{second}-mMatrix: number[][]\\-mRow, mColumn: number\\-mDirection: Direction\\-mMiliseconds: number
+  \nodepart{third}+CreateMatrix, InitializeMatrix\\+InitializeRoad, LocalizeStart\\+MoveRight/Left/Up/DownSide(picWalker)\\+DetermineStartDirection()\\+DetermineFinishDirection(picWalker): boolean\\+ObserveRight/Left/Up/DownSide(): boolean\\+RapidMovementWithLeftHandAI(picWalker)\\+RapidMovementWithRightHandAI(picWalker)\\+InitializeRapidMovement(picWalker)\\+InitializePausedMovement(txt, picWalker)\\+PausedMovementWithAI(txt, picWalker)};
+ \node[cls,rectangle split part fill={ocol!12,white,white},text width=3.2cm] (dir) at (6.8,8) {\makebox[\linewidth]{$\ll$enum$\gg$ \textbf{Direction}}
+  \nodepart{second}Up, Down, Left, Right
+  \nodepart{third}---};
+ \node[cls,rectangle split part fill={gray!15,white,white},text width=5.6cm] (manual) at (-7.3,1.2) {\makebox[\linewidth]{\textbf{frmBeginnerManual}}
+  \nodepart{second}ObjectWalker, picWalker, txtData
+  \nodepart{third}frmLaberynth\_Load()\\frmLaberynth\_KeyDown(sender, e)\\MRecognition\_SpeechRecognized(sender, e)};
+ \node[cls,rectangle split part fill={gray!15,white,white},text width=4.6cm] (auto) at (0,1.2) {\makebox[\linewidth]{\textbf{frmBeginnerAutomatic(Left)}}
+  \nodepart{second}ObjectNPC, picWalker, tmrBeginner
+  \nodepart{third}btnSolve\_Click()\\tmrBeginner\_Tick()\\btnExit\_Click()};
+ \node[cls,rectangle split part fill={gray!15,white,white},text width=4.8cm] (menu) at (6.8,1.2) {\makebox[\linewidth]{\textbf{frmMenu}}
+  \nodepart{second}closed
+  \nodepart{third}btnBeginnerManual\_Click()\\btnBeginnerAutomatic\_Click()\\btnBeginnerAutomaticLeft\_Click()\\btnExit\_Click()};
+ \draw[{Diamond[fill=black]}-] (manual.north) -- node[right]{1} (walker.south);
+ \draw[{Diamond[fill=black]}-] (auto.north) -- node[right]{1} (npc.south);
+ \draw[dashed,->] (npc.east |- dir.center) -- node[above]{usa} (dir.west);
+ \draw[dashed,->] (menu.west) -- node[above]{crea} (auto.east);
+\end{tikzpicture}}
+\caption{Estructura en UML. Las clases de la fila superior son la lógica traducida
+desde C\#; las de la fila inferior, los formularios de \texttt{app.js}, que
+conservan los nombres de sus manejadores. \texttt{frmMenu} crea también
+\texttt{frmBeginnerManual}.}
+\label{fig:uml-clases}
+\end{figure}
+
+% =====================================================================
+\section{Metodología SCRUM + XP}
+% =====================================================================
+El desarrollo se organizó en sprints, con Scrum como marco de planificación y
+prácticas XP para el diseño, la implementación y las pruebas.
+
+\subsection{Roles}
+\begin{table}[H]
+\centering
+\caption{Distribución de roles y responsabilidades}
+\begin{tabular}{ll}
+\toprule
+\textbf{Rol} & \textbf{Responsable}\\
+\midrule
+Product Owner & Ing. César Villacís Silva, MSc.\\
+Scrum Master & Diana Guerra\\
+Desarrollo, pruebas y documentación & Diana Guerra, Paul Moreno y Germán Cáceres\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Product Backlog}
+\begin{longtable}{p{1.1cm}p{8.6cm}p{1.2cm}p{1.6cm}}
+\caption{Historias de usuario}\\
+\toprule
+\textbf{HU} & \textbf{Historia} & \textbf{Pts} & \textbf{Sprint}\\
+\midrule\endfirsthead
+\toprule
+\textbf{HU} & \textbf{Historia} & \textbf{Pts} & \textbf{Sprint}\\
+\midrule\endhead
+HU01 & Como usuario, quiero ver el laberinto con el inicio y la meta, para saber adónde llegar. & 3 & 1\\
+HU02 & Como usuario, quiero mover al caminante con las flechas, para recorrer el laberinto. & 5 & 1\\
+HU03 & Como usuario, quiero que las paredes me detengan, para que el recorrido respete el laberinto. & 3 & 1\\
+HU04 & Como usuario, quiero mover al caminante con mi voz, para jugar sin teclado. & 5 & 2\\
+HU05 & Como usuario, quiero que la IA resuelva el laberinto con la mano derecha, para observar su estrategia. & 8 & 2\\
+HU06 & Como usuario, quiero que la IA lo resuelva con la mano izquierda, para comparar ambas rutas. & 5 & 2\\
+HU07 & Como usuario, quiero un aviso al llegar a la meta, para saber que terminé. & 2 & 3\\
+HU08 & Como usuario, quiero jugar desde el celular, para usar el juego en cualquier dispositivo. & 3 & 3\\
+\bottomrule
+\end{longtable}
+
+\subsection{Sprints}
+\begin{description}
+  \item[Sprint 1 -- Núcleo.] Traducción de la matriz, \texttt{Direction} y \texttt{Walker}; movimiento con teclado y paredes.
+  \item[Sprint 2 -- IA y voz.] Traducción de \texttt{NonPlayerCharacter}, temporizador de 50 ms, modos de mano derecha e izquierda y reconocimiento de voz.
+  \item[Sprint 3 -- Interfaz y pruebas.] Interfaz arcade adaptable, pruebas de paridad con el C\# y validación en el navegador.
+\end{description}
+
+\subsection{Prácticas XP aplicadas}
+\begin{itemize}
+ \item \textbf{Diseño simple:} sin frameworks ni servidor; la página se abre directamente.
+ \item \textbf{Pruebas automatizadas:} comparación de cada decisión y de cada recorrido con las referencias del C\#.
+ \item \textbf{Fidelidad por nombres:} los formularios y manejadores conservan sus nombres, lo que facilita la revisión frente al original.
+\end{itemize}
+
+\subsection{Diseño}
+\begin{table}[H]
+\centering\small
+\caption{Estructura del proyecto}
+\begin{tabular}{p{5.4cm}p{8.2cm}}
+\toprule
+\textbf{Archivo} & \textbf{Responsabilidad}\\
+\midrule
+\texttt{index.html}, \texttt{styles.css} & Menú, tablero y panel de control, adaptables a celular\\
+\texttt{js/direction.js} & \texttt{Direction}: Up, Down, Left y Right\\
+\texttt{js/matrix.js} & Matriz original de 19$\times$19\\
+\texttt{js/walker.js} & \texttt{Walker}: modo manual con teclado y voz\\
+\texttt{js/non-player-character.js} & \texttt{NonPlayerCharacter}: IA de mano derecha e izquierda\\
+\texttt{js/app.js} & Formularios, temporizador, voz y actualización del DOM\\
+\texttt{tests/parity.test.cjs} & Pruebas de paridad con el C\#\\
+\texttt{assets/} & Imágenes originales del caminante, el queso y el laberinto\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Desarrollo}
+\begin{table}[H]
+\centering
+\caption{Correspondencia C\# $\rightarrow$ JavaScript}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{C\# (original)} & \textbf{JavaScript}\\
+\midrule
+\texttt{PictureBox picWalker} & objeto \texttt{\{Left, Top\}}\\
+\texttt{TextBox.Text} & objeto \texttt{\{Text\}}\\
+\texttt{enum Direction} & \texttt{Object.freeze(\{Up, Down, Left, Right\})}\\
+\texttt{Timer tmrBeginner} (50 ms) & \texttt{setInterval(..., 50)}\\
+\texttt{Thread.Sleep(mMiliseconds)} & \texttt{await} con \texttt{setTimeout}\\
+\texttt{System.Speech} & \texttt{SpeechRecognition} del navegador\\
+\texttt{MessageBox.Show} & aviso de meta dentro de la página\\
+\texttt{InitializeComponent} & actualización del DOM\\
+\texttt{Close()} & libera el temporizador y el micrófono y vuelve al menú\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Pruebas}
+Se ejecutaron el 24 de noviembre de 2026, desde
+\texttt{UNIDAD II/Projectos/Laberinto JavaScript}, con
+\texttt{node --test tests/parity.test.cjs}. Las referencias son archivos JSON
+generados con el C\# original durante la migración.
+
+\begin{longtable}{p{1cm}p{3.6cm}p{3.3cm}p{3.2cm}p{1.6cm}}
+\caption{Objetivos, escenarios y resultados de las pruebas automatizadas}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+P01 & Comparar los métodos públicos de las dos clases con los del C\#. & 11 y 19 métodos, sin agregados. & Listas idénticas. & PASS\\
+P02 & Ejecutar 320 decisiones de referencia (64 por cada uno de 5 métodos). & Misma fila, columna, dirección, posición y resultado. & 320 coincidencias. & PASS\\
+P03 & Reproducir los recorridos completos de ambas manos, tick por tick. & Cada posición igual a la del original. & Izquierda 66 ticks; derecha 161; meta (17,16). & PASS\\
+P04 & Teclado, voz, paredes y llegada a la meta. & Movimientos válidos, bloqueo y mensaje original. & Teclado bloqueado en la meta; voz no, como en el original. & PASS\\
+P05 & Inicialización rápida y pausada. & Primer movimiento hacia abajo, a (2,2). & Ambas correctas; dirección «Down». & PASS\\
+\bottomrule
+\end{longtable}
+
+\begin{figure}[H]
+\lstinputlisting[style=consola]{Img/consola-pruebas.txt}
+\caption{Salida de consola de las pruebas de paridad.}
+\label{fig:consola-pruebas}
+\end{figure}
+
+\subsubsection{Integración en el navegador}
+Se abrió \texttt{index.html} desde \texttt{file://} en Google Chrome 157 y se
+jugó con un script que pulsa las flechas y los botones de la interfaz.
+\begin{longtable}{p{1cm}p{3.6cm}p{3.3cm}p{3.2cm}p{1.6cm}}
+\caption{Integración en el navegador}\\
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endfirsthead
+\toprule ID & Objetivo y procedimiento & Esperado & Obtenido & Estado\\\midrule\endhead
+I01 & Recorrer el modo manual con 54 flechas hasta la meta. & «Felicitaciones, buen trabajo.». & Meta alcanzada con ese mensaje. & PASS\\
+I02 & Pulsar otra flecha en la meta. & El caminante no se mueve. & Posición sin cambios. & PASS\\
+I03 & Resolver con la mano derecha. & Llegada a la meta con el mensaje del formulario. & «Haz llegado al final». & PASS\\
+I04 & Resolver con la mano izquierda. & Llegada a la meta con el mensaje del formulario. & «Has llegado al final». & PASS\\
+I05 & Abrir la página a 390 px de ancho. & Sin desplazamiento horizontal. & 0 px de desborde. & PASS\\
+I06 & Registrar errores de la página durante todas las partidas. & Ningún error. & Ningún error en consola. & PASS\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{Validación visual en el navegador}
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.72\linewidth}\centering
+\captura[height=6cm]{js-menu.png}
+\caption{Escritorio.}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.26\linewidth}\centering
+\captura[height=6cm,trim=0 400 0 0,clip]{js-celular-menu.png}
+\caption{Celular (390 px).}
+\end{subfigure}
+\caption{Menú principal con los tres modos de juego.}
+\label{fig:captura-menu}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-manual-inicio.png}
+\caption{Inicio.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-manual-recorrido.png}
+\caption{Tras 25 movimientos.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-manual-meta.png}
+\caption{Meta: «Felicitaciones, buen trabajo.».}
+\end{subfigure}
+\caption{Modo manual con el teclado.}
+\label{fig:captura-manual}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-right-inicio.png}
+\caption{Antes de resolver.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-right-recorrido.png}
+\caption{Recorriendo un callejón.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-right-meta.png}
+\caption{Meta: «Haz llegado al final».}
+\end{subfigure}
+\caption{Resolución automática con la mano derecha.}
+\label{fig:captura-derecha}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-left-inicio.png}
+\caption{Antes de resolver.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-left-recorrido.png}
+\caption{En el recorrido.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\linewidth}\centering
+\captura[width=0.99\linewidth,trim=150 0 150 60,clip]{js-left-meta.png}
+\caption{Meta: «Has llegado al final».}
+\end{subfigure}
+\caption{Resolución automática con la mano izquierda.}
+\label{fig:captura-izquierda}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\captura[height=8cm]{js-celular-juego.png}
+\caption{Mano izquierda resuelta en un celular de 390 px.}
+\label{fig:captura-celular}
+\end{figure}
+
+La voz se verificó con su manejador de eventos en las pruebas; no se usó un
+micrófono real.
+
+% =====================================================================
+\section{Análisis de Resultados: Métricas de Software}
+% =====================================================================
+
+\subsection{Líneas de código}
+Se contabilizaron con el mismo criterio de los informes anteriores: líneas de
+código (LOC), de comentario y en blanco.
+
+\begin{table}[H]
+\centering\small
+\caption{Tamaño por archivo}
+\begin{tabular}{lrrrr}
+\toprule Archivo & LOC & Coment. & Blanco & Total\\\midrule
+\texttt{js/non-player-character.js} & 581 & 0 & 68 & 649\\
+\texttt{js/walker.js} & 134 & 0 & 31 & 165\\
+\texttt{js/app.js} & 224 & 4 & 7 & 235\\
+\texttt{js/matrix.js}\textsuperscript{*} & 402 & 1 & 0 & 403\\
+\texttt{js/direction.js} & 2 & 1 & 0 & 3\\
+\texttt{index.html} & 31 & 0 & 0 & 31\\
+\texttt{styles.css} & 15 & 1 & 13 & 29\\
+\texttt{tests/parity.test.cjs} & 77 & 0 & 5 & 82\\
+\textbf{Total} & \textbf{1\,466} & \textbf{7} & \textbf{124} & \textbf{1\,597}\\
+\bottomrule
+\end{tabular}\\[2pt]
+{\footnotesize \textsuperscript{*}La matriz se escribe con un número por línea: 361 valores en 403 líneas.}
+\end{table}
+\texttt{index.html} y \texttt{styles.css} tienen pocas líneas porque su contenido
+está en líneas largas (la hoja de estilos ocupa 15\,548 bytes).
+
+\subsection{Otras métricas}
+\begin{table}[H]
+\centering\small
+\caption{Métricas funcionales}
+\begin{tabular}{p{7.4cm}r}
+\toprule Métrica & Valor\\\midrule
+Métodos públicos de \texttt{Walker} / \texttt{NonPlayerCharacter} & 11 / 19\\
+Pruebas automatizadas aprobadas & 5 / 5\\
+Decisiones comparadas con el C\# & 320\\
+Ticks hasta la meta: mano izquierda / derecha & 66 / 161\\
+Cálculo del recorrido completo (mediana): izquierda / derecha & 0,017 / 0,039 ms\\
+Tiempo nominal en pantalla: izquierda / derecha & 3,35 / 8,10 s\\
+Dependencias externas & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+El cálculo de todo el recorrido tarda menos de una décima de milisegundo en Node.js~24;
+el tiempo que ve el usuario lo marca el temporizador de 50 ms por tick.
+
+\subsection{Comportamientos del original conservados}\label{sec:hallazgos}
+\begin{enumerate}
+  \item \textbf{Varios movimientos por tick en la mano derecha.} Por los \texttt{if}
+        independientes, 15 de los 161 ticks mueven al caminante más de una casilla.
+  \item \textbf{La voz no se bloquea en la meta.} El teclado deja de mover al
+        caminante al llegar, pero la voz no, como en el original.
+  \item \textbf{Mensajes distintos por formulario.} La mano derecha muestra
+        «Haz llegado al final» y la izquierda «Has llegado al final».
+  \item \textbf{Métodos sin uso.} \texttt{InitializeRapidMovement},
+        \texttt{InitializePausedMovement} y \texttt{PausedMovementWithAI} se
+        conservan aunque ningún botón los usa; las pruebas los ejercitan.
+  \item \textbf{Dirección vacía.} En los modos automáticos el cuadro Dirección
+        queda vacío, porque el flujo activo del original lo limpia.
+\end{enumerate}
+
+% =====================================================================
+\section{Conclusiones y Recomendaciones}
+% =====================================================================
+\subsection{Conclusiones}
+\begin{itemize}
+ \item Se migró el Laberinto con IA a JavaScript puro, con los mismos métodos de
+       \texttt{Walker} y \texttt{NonPlayerCharacter}; la página funciona sin
+       servidor ni dependencias.
+ \item Las 320 decisiones y los dos recorridos completos coinciden con el C\#
+       original, tick por tick.
+ \item Se jugaron los tres modos en el navegador hasta la meta, sin errores, en
+       escritorio y en celular.
+ \item La mano izquierda llega en 66 ticks y la derecha en 161; ninguna sigue el
+       camino más corto, de 54 movimientos.
+\end{itemize}
+
+\subsection{Recomendaciones}
+\begin{itemize}
+ \item Probar la voz con un micrófono real en varios navegadores.
+ \item Incorporar una suite de pruebas de navegador de extremo a extremo.
+ \item Si se agregan niveles, reutilizar las pruebas de paridad con sus propias referencias.
+\end{itemize}
+
+% =====================================================================
+\begin{thebibliography}{9}
+\bibitem{ieee830} IEEE, \emph{IEEE Recommended Practice for Software Requirements Specifications}, IEEE Std 830-1998.
+\bibitem{mdn} Mozilla, \emph{MDN Web Docs: Web Speech API}, \url{https://developer.mozilla.org/docs/Web/API/Web_Speech_API}.
+\bibitem{node} OpenJS Foundation, \emph{Node.js Documentation: Test runner}, \url{https://nodejs.org/api/test.html}.
+\bibitem{scrum} K. Schwaber y J. Sutherland, \emph{La Guía de Scrum}, 2020.
+\bibitem{xp} K. Beck, \emph{Extreme Programming Explained: Embrace Change}, Addison-Wesley, 2004.
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,16 @@
+$ node --test --test-reporter=spec tests/parity.test.cjs
+✔ Mismos metodos que las clases C#; no se agregaron metodos de juego (1.5843ms)
+left: 66 ticks, igual al original.
+right: 161 ticks, igual al original.
+✔ 320 decisiones coinciden con las referencias del C# original (1353.7827ms)
+✔ Recorridos completos conservan cada posicion del original (1.8625ms)
+✔ Teclado, voz, paredes y diferencias originales al llegar a meta (0.6087ms)
+✔ Inicializaciones rapida y pausada conservan el movimiento inicial (3.6209ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1453.6356

@@ -1,0 +1,8 @@
+$ go vet ./... && go test -count=1 -v ./... | grep -E "^(--- |ok|PASS)|_test.go"
+--- PASS: TestOriginalDecisions (0.00s)
+    parity_test.go:87: left: 66 ticks, meta (17,16)
+    parity_test.go:87: right: 161 ticks, meta (17,16)
+--- PASS: TestOriginalRoutes (0.00s)
+--- PASS: TestWalkerControls (0.00s)
+PASS
+ok  	laberinto	1.032s
