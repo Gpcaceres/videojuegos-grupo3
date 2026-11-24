@@ -1,0 +1,36 @@
+{
+  "Walker": [
+    "CreateMatrix",
+    "InitializeMatrix",
+    "InitializeRoad",
+    "LocalizeStart",
+    "MoveRightSide",
+    "MoveLeftSide",
+    "MoveUpSide",
+    "MoveDownSide",
+    "InitializeGrammar",
+    "ControlMovesInLaberynth",
+    "ControlSpeechMoves"
+  ],
+  "NonPlayerCharacter": [
+    "CreateMatrix",
+    "InitializeMatrix",
+    "InitializeRoad",
+    "LocalizeStart",
+    "MoveRightSide",
+    "MoveLeftSide",
+    "MoveUpSide",
+    "MoveDownSide",
+    "DetermineStartDirection",
+    "InitializeRapidMovement",
+    "InitializePausedMovement",
+    "DetermineFinishDirection",
+    "ObserveRightSide",
+    "ObserveLeftSide",
+    "ObserveUpSide",
+    "ObserveDownSide",
+    "RapidMovementWithLeftHandAI",
+    "RapidMovementWithRightHandAI",
+    "PausedMovementWithAI"
+  ]
+}

@@ -1,0 +1,1176 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>game: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game/board.go (91.7%)</option>
+				
+				<option value="file1">github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game/controller.go (85.7%)</option>
+				
+				<option value="file2">github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game/form.go (81.2%)</option>
+				
+				<option value="file3">github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game/medium_ai.go (4.3%)</option>
+				
+				<option value="file4">github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game/minimax_ai.go (100.0%)</option>
+				
+				<option value="file5">github.com/Gpcaceres/videojuegos-grupo3/backend/internal/game/unbeatable_ai.go (91.4%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package game
+
+// Board reemplaza a los controles de Windows Forms del proyecto original:
+//
+//   - Buttons[i]  &lt;-&gt; ListButtons[i].Text   (btnTicTacToe1..9, TabIndex 0..8)
+//   - Enabled     &lt;-&gt; grbTicTacToe.Enabled  (GroupBox que contiene los botones)
+//   - Events      &lt;-&gt; lo que el usuario "ve": jugadas y MessageBox.Show(...)
+//
+// La lógica de los controladores trabaja sobre este tablero exactamente igual
+// que el original trabajaba sobre los botones; el frontend solo lo dibuja.
+type Board struct {
+        Buttons [9]string
+        Enabled bool
+        Events  []Event
+}
+
+// Event describe algo que ocurrió en la interfaz, en orden, para que el
+// frontend lo pueda animar paso a paso.
+type Event struct {
+        Type    string `json:"type"`              // "user" | "npc" | "message"
+        Index   *int   `json:"index,omitempty"`   // casillero (TabIndex) para user/npc
+        Mark    string `json:"mark,omitempty"`    // "X" u "O"
+        Text    string `json:"text,omitempty"`    // texto del MessageBox
+        Caption string `json:"caption,omitempty"` // título del MessageBox
+}
+
+// NewBoard crea el tablero vacío y habilitado.
+func NewBoard() *Board <span class="cov8" title="1">{
+        return &amp;Board{Enabled: true}
+}</span>
+
+// SetText equivale a ListButtons[index].Text = mark.
+// who indica quién hizo la jugada ("user" o "npc") para el log de eventos.
+func (b *Board) SetText(index int, mark, who string) <span class="cov8" title="1">{
+        b.Buttons[index] = mark
+        i := index
+        b.Events = append(b.Events, Event{Type: who, Index: &amp;i, Mark: mark})
+}</span>
+
+// ClearTexts equivale a recorrer ListButtons poniendo Text = "".
+func (b *Board) ClearTexts() <span class="cov8" title="1">{
+        for i := range b.Buttons </span><span class="cov8" title="1">{
+                b.Buttons[i] = ""
+        }</span>
+}
+
+// ShowMessage equivale a MessageBox.Show(text, caption).
+func (b *Board) ShowMessage(text, caption string) <span class="cov8" title="1">{
+        b.Events = append(b.Events, Event{Type: "message", Text: text, Caption: caption})
+}</span>
+
+// TakeEvents devuelve y limpia los eventos pendientes.
+func (b *Board) TakeEvents() []Event <span class="cov8" title="1">{
+        ev := b.Events
+        b.Events = nil
+        if ev == nil </span><span class="cov0" title="0">{
+                ev = []Event{}
+        }</span>
+        <span class="cov8" title="1">return ev</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package game
+
+// Controller es lo que comparten los controladores del profesor
+// (MediumAIController, UnbeatableAIController y la versión MiniMax).
+// Cada modo debe implementarla.
+type Controller interface {
+        // InitializeData = InitializeGameData() del original.
+        InitializeData()
+        InitializeControls(b *Board)
+        // PlayUser marca la jugada del usuario; devuelve true si se jugó.
+        PlayUser(b *Board, index int) bool
+        // PlayNPC hace la jugada del jugador controlado por la computadora (JCC).
+        PlayNPC(b *Board)
+        // Flag devuelve a quién le toca: "X" u "O".
+        Flag() string
+        // Weights devuelve mArrayMoves (pesos 0/1/3) para el inspector del frontend.
+        // Si el modo no usa pesos (MiniMax), devolver el tablero como 0/1/3.
+        Weights() [9]int
+}
+
+// Player = enum Player de los controladores del profesor.
+type Player int
+
+const (
+        PlayerNone Player = 0 // casilla vacía
+        PlayerUser Player = 1 // usuario (X)
+        PlayerNPC  Player = 2 // JCC (O)
+)
+
+// GameState = enum GameState de los controladores del profesor.
+type GameState int
+
+const (
+        GameOver GameState = 0
+        Active   GameState = 1
+)
+
+// Constantes de los controladores del profesor (CENTER_INDEX, CORNER_INDICES, SIDE_INDICES).
+const CenterIndex = 4
+
+var (
+        CornerIndices = [4]int{0, 2, 6, 8}
+        SideIndices   = [4]int{1, 3, 5, 7}
+
+        // WinningLines: filas, columnas y diagonales, en el orden del original.
+        WinningLines = [8][3]int{
+                {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
+                {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
+                {0, 4, 8}, {2, 4, 6},
+        }
+)
+
+// FlagForPlayer convierte Player en "X" u "O" (FlagForPlayer del original).
+func FlagForPlayer(p Player) string <span class="cov8" title="1">{
+        if p == PlayerUser </span><span class="cov8" title="1">{
+                return "X"
+        }</span>
+        <span class="cov8" title="1">return "O"</span>
+}
+
+// Niveles del Proyecto 3 (un modo por variante del enunciado).
+const (
+        LevelMediumAI     = 1 // MediumAIController            (Tic-Tac-Toe-Versión-IA-Debil)
+        LevelUnbeatableAI = 2 // UnbeatableAIController        (Tic-Tac-Toe-Versión-IA-Fuerte)
+        LevelMinimax      = 3 // UnbeatableAIController MiniMax (Tic-Tac-Toe-Version-MiniMax)
+)
+
+// Mode describe un modo para el selector del frontend.
+type Mode struct {
+        Level       int    `json:"level"`
+        Key         string `json:"key"`
+        Name        string `json:"name"`
+        Description string `json:"description"`
+        Original    string `json:"original"`    // clase del profesor que se porta
+        Implemented bool   `json:"implemented"` // false = apartado pendiente para un compañero
+        Owner       string `json:"owner"`       // responsable
+}
+
+// Modes es el catálogo. Cuando un compañero termine su modo, cambia
+// Implemented a true.
+var Modes = []Mode{
+        {LevelMediumAI, "medium-ai", "MediumAI", "IA intermedia: gana y bloquea con el método numérico, si no, juega al azar.", "MediumAIController", true, "Paul Moreno"},
+        {LevelUnbeatableAI, "unbeatable-ai", "UnbeatableAI", "Método numérico heurístico (pesos 1/3/0). Casos 1, 2 y 3.", "UnbeatableAIController", true, "Germán Cáceres"},
+        {LevelMinimax, "unbeatable-minmax", "UnbeatableAI · MinMax", "IA imbatible con el algoritmo Minimax.", "UnbeatableAIController (MiniMax)", true, "Diana Guerra"},
+}
+
+// FindMode busca un modo por nivel.
+func FindMode(level int) (Mode, bool) <span class="cov8" title="1">{
+        for _, m := range Modes </span><span class="cov8" title="1">{
+                if m.Level == level </span><span class="cov8" title="1">{
+                        return m, true
+                }</span>
+        }
+        <span class="cov0" title="0">return Mode{}, false</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package game
+
+import "errors"
+
+var (
+        ErrDisabled       = errors.New("el tablero está deshabilitado (la partida terminó)")
+        ErrBadIndex       = errors.New("casillero fuera de rango (0..8)")
+        ErrUnknownLevel   = errors.New("nivel de juego desconocido")
+        ErrNotImplemented = errors.New("este modo todavía no está implementado")
+)
+
+// Form es el equivalente a frmTicTacToe del profesor: tiene el tablero
+// (los 9 botones + el GroupBox), el controlador del modo elegido y reparte
+// los clics. En el original hay una app por modo; aquí se elige con GameLevel.
+type Form struct {
+        GameLevel     int
+        ControlPlayer bool // static bool ControlPlayer del frmTicTacToe
+        Board         *Board
+        Medium        *MediumAIController
+        Unbeatable    *UnbeatableAIController
+        Minimax       *MinimaxAIController
+}
+
+func NewForm(level int) (*Form, error) <span class="cov8" title="1">{
+        f := &amp;Form{
+                Board:      NewBoard(),
+                Medium:     NewMediumAIController(),
+                Unbeatable: NewUnbeatableAIController(),
+                Minimax:    NewMinimaxAIController(),
+        }
+        if err := f.SetLevel(level); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return f, nil</span>
+}
+
+// Controller devuelve el controlador del modo actual.
+func (f *Form) Controller() Controller <span class="cov8" title="1">{
+        switch f.GameLevel </span>{
+        case LevelMediumAI:<span class="cov0" title="0">
+                return f.Medium</span>
+        case LevelUnbeatableAI:<span class="cov8" title="1">
+                return f.Unbeatable</span>
+        case LevelMinimax:<span class="cov8" title="1">
+                return f.Minimax</span>
+        }
+        <span class="cov0" title="0">return nil</span>
+}
+
+// SetLevel cambia de modo e inicializa el juego.
+func (f *Form) SetLevel(level int) error <span class="cov8" title="1">{
+        mode, ok := FindMode(level)
+        if !ok </span><span class="cov0" title="0">{
+                return ErrUnknownLevel
+        }</span>
+        <span class="cov8" title="1">if !mode.Implemented </span><span class="cov0" title="0">{
+                return ErrNotImplemented
+        }</span>
+        <span class="cov8" title="1">f.GameLevel = level
+        f.InitializeGame()
+        return nil</span>
+}
+
+// InitializeGame = frmTicTacToe.InitializeGame (también btnNew).
+func (f *Form) InitializeGame() <span class="cov8" title="1">{
+        if c := f.Controller(); c != nil </span><span class="cov8" title="1">{
+                c.InitializeData()
+                c.InitializeControls(f.Board)
+        }</span>
+        <span class="cov8" title="1">f.Board.Events = nil</span>
+}
+
+// Click = btnTicTacToeN_Click (N = index + 1).
+func (f *Form) Click(index int) error <span class="cov8" title="1">{
+        if index &lt; 0 || index &gt; 8 </span><span class="cov8" title="1">{
+                return ErrBadIndex
+        }</span>
+        <span class="cov8" title="1">if !f.Board.Enabled </span><span class="cov8" title="1">{
+                return ErrDisabled
+        }</span>
+        <span class="cov8" title="1">c := f.Controller()
+        if c == nil </span><span class="cov0" title="0">{
+                return ErrUnknownLevel
+        }</span>
+        <span class="cov8" title="1">f.ControlPlayer = c.PlayUser(f.Board, index)
+        if f.ControlPlayer </span><span class="cov8" title="1">{
+                c.PlayNPC(f.Board)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package game
+
+import "math/rand"
+
+// MediumAIController ports MediumAIController.cs from the professor's weak-AI version.
+type MediumAIController struct {
+        currentPlayerFlag Player
+        MoveCount         int
+        CurrentGameState  GameState
+        BoardState        [9]Player
+        ArrayMoves        [9]int
+}
+
+func NewMediumAIController() *MediumAIController <span class="cov8" title="1">{
+        c := &amp;MediumAIController{}
+        c.InitializeData()
+        return c
+}</span>
+
+// InitializeData is the project's Controller-interface equivalent of InitializeGameData.
+func (c *MediumAIController) InitializeData() <span class="cov8" title="1">{
+        c.ArrayMoves = [9]int{}
+        c.BoardState = [9]Player{}
+        c.currentPlayerFlag = PlayerUser
+        c.MoveCount = 0
+        c.CurrentGameState = Active
+}</span>
+
+// InitializeControls clears the visible board and enables it for a new game.
+func (c *MediumAIController) InitializeControls(b *Board) <span class="cov0" title="0">{
+        b.ClearTexts()
+        c.EnableControls(b)
+}</span>
+
+func (c *MediumAIController) DisableControls(b *Board) <span class="cov0" title="0">{ b.Enabled = false }</span>
+func (c *MediumAIController) EnableControls(b *Board)  <span class="cov0" title="0">{ b.Enabled = true }</span>
+
+// CheckWinner checks rows, columns, diagonals, and then a full-board draw.
+func (c *MediumAIController) CheckWinner(b *Board) GameState <span class="cov0" title="0">{
+        for _, line := range WinningLines </span><span class="cov0" title="0">{
+                cell1 := c.BoardState[line[0]]
+                cell2 := c.BoardState[line[1]]
+                cell3 := c.BoardState[line[2]]
+                if cell1 != PlayerNone &amp;&amp; cell1 == cell2 &amp;&amp; cell2 == cell3 </span><span class="cov0" title="0">{
+                        b.ShowMessage("\u00a1Gan\u00f3 "+FlagForPlayer(cell1)+"!", "Resultado")
+                        c.DisableControls(b)
+                        return GameOver
+                }</span>
+        }
+
+        <span class="cov0" title="0">if c.MoveCount == 9 </span><span class="cov0" title="0">{
+                b.ShowMessage("\u00a1Empate!", "Resultado")
+                c.DisableControls(b)
+                return GameOver
+        }</span>
+        <span class="cov0" title="0">return Active</span>
+}
+
+func (c *MediumAIController) Flag() string    <span class="cov0" title="0">{ return FlagForPlayer(c.currentPlayerFlag) }</span>
+func (c *MediumAIController) Weights() [9]int <span class="cov0" title="0">{ return c.ArrayMoves }</span>
+
+func (c *MediumAIController) ShowUserMove(b *Board, index int) <span class="cov0" title="0">{
+        b.SetText(index, FlagForPlayer(PlayerUser), "user")
+        c.BoardState[index] = PlayerUser
+        c.MoveCount++
+        c.currentPlayerFlag = PlayerNPC
+        c.ArrayMoves[index] = 1
+}</span>
+
+func (c *MediumAIController) PlayUser(b *Board, index int) bool <span class="cov0" title="0">{
+        if b.Buttons[index] == "" &amp;&amp; c.CurrentGameState == Active </span><span class="cov0" title="0">{
+                if c.currentPlayerFlag == PlayerUser </span><span class="cov0" title="0">{
+                        c.ShowUserMove(b, index)
+                        c.CurrentGameState = c.CheckWinner(b)
+                        return true
+                }</span>
+        }
+        <span class="cov0" title="0">return false</span>
+}
+
+func (c *MediumAIController) GenerateRandomNPCMove() int <span class="cov0" title="0">{
+        for </span><span class="cov0" title="0">{
+                index := rand.Intn(9)
+                if c.ArrayMoves[index] == 0 &amp;&amp; index &lt; len(c.ArrayMoves) </span><span class="cov0" title="0">{
+                        return index
+                }</span>
+        }
+}
+
+func (c *MediumAIController) ShowNPCMove(b *Board, index int) <span class="cov0" title="0">{
+        b.SetText(index, FlagForPlayer(PlayerNPC), "npc")
+        c.BoardState[index] = PlayerNPC
+        c.MoveCount++
+        c.currentPlayerFlag = PlayerUser
+        c.ArrayMoves[index] = 3
+}</span>
+
+func (c *MediumAIController) HeuristicNumericalMethod() int <span class="cov0" title="0">{
+        index := 0
+        if c.ArrayMoves[0]+c.ArrayMoves[1]+c.ArrayMoves[2] == 6 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[0] == 0 </span><span class="cov0" title="0">{
+                        index = 0
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[1] == 0 </span><span class="cov0" title="0">{
+                        index = 1
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[2] == 0 </span><span class="cov0" title="0">{
+                        index = 2
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[3]+c.ArrayMoves[4]+c.ArrayMoves[5] == 6 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[3] == 0 </span><span class="cov0" title="0">{
+                        index = 3
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                        index = 4
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[5] == 0 </span><span class="cov0" title="0">{
+                        index = 5
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[6]+c.ArrayMoves[7]+c.ArrayMoves[8] == 6 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[6] == 0 </span><span class="cov0" title="0">{
+                        index = 6
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[7] == 0 </span><span class="cov0" title="0">{
+                        index = 7
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[8] == 0 </span><span class="cov0" title="0">{
+                        index = 8
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[0]+c.ArrayMoves[3]+c.ArrayMoves[6] == 6 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[0] == 0 </span><span class="cov0" title="0">{
+                        index = 0
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[3] == 0 </span><span class="cov0" title="0">{
+                        index = 3
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[6] == 0 </span><span class="cov0" title="0">{
+                        index = 6
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[1]+c.ArrayMoves[4]+c.ArrayMoves[7] == 6 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[1] == 0 </span><span class="cov0" title="0">{
+                        index = 1
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                        index = 4
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[7] == 0 </span><span class="cov0" title="0">{
+                        index = 7
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[2]+c.ArrayMoves[5]+c.ArrayMoves[8] == 6 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[2] == 0 </span><span class="cov0" title="0">{
+                        index = 2
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[5] == 0 </span><span class="cov0" title="0">{
+                        index = 5
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[8] == 0 </span><span class="cov0" title="0">{
+                        index = 8
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[0]+c.ArrayMoves[4]+c.ArrayMoves[8] == 6 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[0] == 0 </span><span class="cov0" title="0">{
+                        index = 0
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                        index = 4
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[8] == 0 </span><span class="cov0" title="0">{
+                        index = 8
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[2]+c.ArrayMoves[4]+c.ArrayMoves[6] == 6 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[2] == 0 </span><span class="cov0" title="0">{
+                        index = 2
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                        index = 4
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[6] == 0 </span><span class="cov0" title="0">{
+                        index = 6
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[0]+c.ArrayMoves[1]+c.ArrayMoves[2] == 2 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[0] == 0 </span><span class="cov0" title="0">{
+                        index = 0
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[1] == 0 </span><span class="cov0" title="0">{
+                        index = 1
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[2] == 0 </span><span class="cov0" title="0">{
+                        index = 2
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[3]+c.ArrayMoves[4]+c.ArrayMoves[5] == 2 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[3] == 0 </span><span class="cov0" title="0">{
+                        index = 3
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                        index = 4
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[5] == 0 </span><span class="cov0" title="0">{
+                        index = 5
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[6]+c.ArrayMoves[7]+c.ArrayMoves[8] == 2 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[6] == 0 </span><span class="cov0" title="0">{
+                        index = 6
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[7] == 0 </span><span class="cov0" title="0">{
+                        index = 7
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[8] == 0 </span><span class="cov0" title="0">{
+                        index = 8
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[0]+c.ArrayMoves[3]+c.ArrayMoves[6] == 2 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[0] == 0 </span><span class="cov0" title="0">{
+                        index = 0
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[3] == 0 </span><span class="cov0" title="0">{
+                        index = 3
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[6] == 0 </span><span class="cov0" title="0">{
+                        index = 6
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[1]+c.ArrayMoves[4]+c.ArrayMoves[7] == 2 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[1] == 0 </span><span class="cov0" title="0">{
+                        index = 1
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                        index = 4
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[7] == 0 </span><span class="cov0" title="0">{
+                        index = 7
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[2]+c.ArrayMoves[5]+c.ArrayMoves[8] == 2 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[2] == 0 </span><span class="cov0" title="0">{
+                        index = 2
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[5] == 0 </span><span class="cov0" title="0">{
+                        index = 5
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[8] == 0 </span><span class="cov0" title="0">{
+                        index = 8
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[0]+c.ArrayMoves[4]+c.ArrayMoves[8] == 2 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[0] == 0 </span><span class="cov0" title="0">{
+                        index = 0
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                        index = 4
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[8] == 0 </span><span class="cov0" title="0">{
+                        index = 8
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> if c.ArrayMoves[2]+c.ArrayMoves[4]+c.ArrayMoves[6] == 2 </span><span class="cov0" title="0">{
+                if c.ArrayMoves[2] == 0 </span><span class="cov0" title="0">{
+                        index = 2
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                        index = 4
+                }</span> else<span class="cov0" title="0"> if c.ArrayMoves[6] == 0 </span><span class="cov0" title="0">{
+                        index = 6
+                }</span>
+                <span class="cov0" title="0">return index</span>
+        } else<span class="cov0" title="0"> {
+                index = c.GenerateRandomNPCMove()
+                return index
+        }</span>
+}
+func (c *MediumAIController) PlayNPC(b *Board) <span class="cov0" title="0">{
+        if c.CurrentGameState == Active </span><span class="cov0" title="0">{
+                index := CenterIndex
+                if c.ArrayMoves[CenterIndex] != 0 </span><span class="cov0" title="0">{
+                        index = c.HeuristicNumericalMethod()
+                }</span>
+                <span class="cov0" title="0">c.ShowNPCMove(b, index)
+                c.CurrentGameState = c.CheckWinner(b)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package game
+
+// Port of the professor's UnbeatableAIController.cs and frmTicTacToe.cs.
+const (
+        minimaxAIPlayer    byte = 'O'
+        minimaxHumanPlayer byte = 'X'
+        minimaxEmpty       byte = ' '
+        // C# int.MinValue and int.MaxValue are signed 32-bit limits.
+        minimaxMinValue = -1 &lt;&lt; 31
+        minimaxMaxValue = 1&lt;&lt;31 - 1
+)
+
+type MinimaxAIController struct {
+        board       [3][3]byte
+        isHumanTurn bool
+        isGameOver  bool
+}
+
+func NewMinimaxAIController() *MinimaxAIController <span class="cov8" title="1">{
+        c := &amp;MinimaxAIController{}
+        c.InitializeData()
+        return c
+}</span>
+
+// InitializeData = ResetBoard (data).
+func (c *MinimaxAIController) InitializeData() <span class="cov8" title="1">{
+        for i := 0; i &lt; 3; i++ </span><span class="cov8" title="1">{
+                for j := 0; j &lt; 3; j++ </span><span class="cov8" title="1">{
+                        c.board[i][j] = minimaxEmpty
+                }</span>
+        }
+        <span class="cov8" title="1">c.isHumanTurn = true
+        c.isGameOver = false</span>
+}
+
+// InitializeControls = ResetBoard (buttons).
+func (c *MinimaxAIController) InitializeControls(b *Board) <span class="cov8" title="1">{
+        b.ClearTexts()
+        b.Enabled = true
+}</span>
+
+func (c *MinimaxAIController) Flag() string <span class="cov8" title="1">{
+        if c.isHumanTurn </span><span class="cov8" title="1">{
+                return "X"
+        }</span>
+        <span class="cov8" title="1">return "O"</span>
+}
+
+// Weights converts characters for the inspector only; Minimax never uses weights.
+func (c *MinimaxAIController) Weights() [9]int <span class="cov8" title="1">{
+        var weights [9]int
+        for i := 0; i &lt; 9; i++ </span><span class="cov8" title="1">{
+                switch c.board[i/3][i%3] </span>{
+                case minimaxHumanPlayer:<span class="cov8" title="1">
+                        weights[i] = 1</span>
+                case minimaxAIPlayer:<span class="cov8" title="1">
+                        weights[i] = 3</span>
+                }
+        }
+        <span class="cov8" title="1">return weights</span>
+}
+
+// PlayUser = OnButtonClick up to AIMove, dispatched separately by Form.Click.
+// The result reports an accepted move, including one that ends the game.
+func (c *MinimaxAIController) PlayUser(b *Board, index int) bool <span class="cov8" title="1">{
+        if c.isGameOver || !c.isHumanTurn || index &lt; 0 || index &gt;= 9 </span><span class="cov8" title="1">{
+                return false
+        }</span>
+        <span class="cov8" title="1">row, col := index/3, index%3
+        if c.board[row][col] != minimaxEmpty </span><span class="cov8" title="1">{
+                return false
+        }</span>
+        <span class="cov8" title="1">c.makeMove(b, index, minimaxHumanPlayer)
+        if c.checkGameEnd(b) </span><span class="cov8" title="1">{
+                return true
+        }</span>
+        <span class="cov8" title="1">c.isHumanTurn = false
+        return true</span>
+}
+
+// PlayNPC = AIMove. The turn guard adapts it to the public Controller API.
+func (c *MinimaxAIController) PlayNPC(b *Board) <span class="cov8" title="1">{
+        if c.isGameOver || c.isHumanTurn </span><span class="cov8" title="1">{
+                return
+        }</span>
+        <span class="cov8" title="1">bestMove := c.getBestMove(&amp;c.board)
+        if bestMove != -1 </span><span class="cov8" title="1">{
+                c.makeMove(b, bestMove, minimaxAIPlayer)
+                c.checkGameEnd(b)
+        }</span>
+        <span class="cov8" title="1">c.isHumanTurn = true</span>
+}
+
+// getBestMove = GetBestMove. Strict &gt; retains the first equally scoring move.
+func (c *MinimaxAIController) getBestMove(board *[3][3]byte) int <span class="cov8" title="1">{
+        bestScore := minimaxMinValue
+        bestMove := -1
+        for i := 0; i &lt; 9; i++ </span><span class="cov8" title="1">{
+                row, col := i/3, i%3
+                if board[row][col] == minimaxEmpty </span><span class="cov8" title="1">{
+                        board[row][col] = minimaxAIPlayer
+                        score := c.minimax(board, 0, false)
+                        board[row][col] = minimaxEmpty
+                        if score &gt; bestScore </span><span class="cov8" title="1">{
+                                bestScore = score
+                                bestMove = i
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">return bestMove</span>
+}
+
+// minimax = Minimax, preserving depth scores and row-major traversal.
+func (c *MinimaxAIController) minimax(board *[3][3]byte, depth int, isMaximizing bool) int <span class="cov8" title="1">{
+        score := c.evaluateBoard(board)
+        if score == 10 </span><span class="cov8" title="1">{
+                return score - depth
+        }</span>
+        <span class="cov8" title="1">if score == -10 </span><span class="cov8" title="1">{
+                return score + depth
+        }</span>
+        <span class="cov8" title="1">if !c.isMovesLeft(board) </span><span class="cov8" title="1">{
+                return 0
+        }</span>
+        <span class="cov8" title="1">if isMaximizing </span><span class="cov8" title="1">{
+                best := minimaxMinValue
+                for i := 0; i &lt; 3; i++ </span><span class="cov8" title="1">{
+                        for j := 0; j &lt; 3; j++ </span><span class="cov8" title="1">{
+                                if board[i][j] == minimaxEmpty </span><span class="cov8" title="1">{
+                                        board[i][j] = minimaxAIPlayer
+                                        best = max(best, c.minimax(board, depth+1, false))
+                                        board[i][j] = minimaxEmpty
+                                }</span>
+                        }
+                }
+                <span class="cov8" title="1">return best</span>
+        }
+        <span class="cov8" title="1">best := minimaxMaxValue
+        for i := 0; i &lt; 3; i++ </span><span class="cov8" title="1">{
+                for j := 0; j &lt; 3; j++ </span><span class="cov8" title="1">{
+                        if board[i][j] == minimaxEmpty </span><span class="cov8" title="1">{
+                                board[i][j] = minimaxHumanPlayer
+                                best = min(best, c.minimax(board, depth+1, true))
+                                board[i][j] = minimaxEmpty
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">return best</span>
+}
+
+// evaluateBoard = EvaluateBoard: rows, columns, then the two diagonals.
+func (c *MinimaxAIController) evaluateBoard(board *[3][3]byte) int <span class="cov8" title="1">{
+        for row := 0; row &lt; 3; row++ </span><span class="cov8" title="1">{
+                if board[row][0] == board[row][1] &amp;&amp; board[row][1] == board[row][2] </span><span class="cov8" title="1">{
+                        if board[row][0] == minimaxAIPlayer </span><span class="cov8" title="1">{
+                                return 10
+                        }</span>
+                        <span class="cov8" title="1">if board[row][0] == minimaxHumanPlayer </span><span class="cov8" title="1">{
+                                return -10
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">for col := 0; col &lt; 3; col++ </span><span class="cov8" title="1">{
+                if board[0][col] == board[1][col] &amp;&amp; board[1][col] == board[2][col] </span><span class="cov8" title="1">{
+                        if board[0][col] == minimaxAIPlayer </span><span class="cov8" title="1">{
+                                return 10
+                        }</span>
+                        <span class="cov8" title="1">if board[0][col] == minimaxHumanPlayer </span><span class="cov8" title="1">{
+                                return -10
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">if board[0][0] == board[1][1] &amp;&amp; board[1][1] == board[2][2] </span><span class="cov8" title="1">{
+                if board[0][0] == minimaxAIPlayer </span><span class="cov8" title="1">{
+                        return 10
+                }</span>
+                <span class="cov8" title="1">if board[0][0] == minimaxHumanPlayer </span><span class="cov8" title="1">{
+                        return -10
+                }</span>
+        }
+        <span class="cov8" title="1">if board[0][2] == board[1][1] &amp;&amp; board[1][1] == board[2][0] </span><span class="cov8" title="1">{
+                if board[0][2] == minimaxAIPlayer </span><span class="cov8" title="1">{
+                        return 10
+                }</span>
+                <span class="cov8" title="1">if board[0][2] == minimaxHumanPlayer </span><span class="cov8" title="1">{
+                        return -10
+                }</span>
+        }
+        <span class="cov8" title="1">return 0</span>
+}
+
+// isMovesLeft = IsMovesLeft.
+func (c *MinimaxAIController) isMovesLeft(board *[3][3]byte) bool <span class="cov8" title="1">{
+        for i := 0; i &lt; 3; i++ </span><span class="cov8" title="1">{
+                for j := 0; j &lt; 3; j++ </span><span class="cov8" title="1">{
+                        if board[i][j] == minimaxEmpty </span><span class="cov8" title="1">{
+                                return true
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">return false</span>
+}
+
+// makeMove = MakeMove. Occupancy checks replace disabling individual buttons.
+func (c *MinimaxAIController) makeMove(b *Board, index int, player byte) <span class="cov8" title="1">{
+        c.board[index/3][index%3] = player
+        who := "user"
+        if player == minimaxAIPlayer </span><span class="cov8" title="1">{
+                who = "npc"
+        }</span>
+        <span class="cov8" title="1">b.SetText(index, string(player), who)</span>
+}
+
+// checkGameEnd = CheckGameEnd, preserving human/AI/draw priority and messages.
+func (c *MinimaxAIController) checkGameEnd(b *Board) bool <span class="cov8" title="1">{
+        message := ""
+        if c.checkWin(minimaxHumanPlayer) </span><span class="cov8" title="1">{
+                message = "You Win!"
+        }</span> else<span class="cov8" title="1"> if c.checkWin(minimaxAIPlayer) </span><span class="cov8" title="1">{
+                message = "AI Wins!"
+        }</span> else<span class="cov8" title="1"> if c.isBoardFull() </span><span class="cov8" title="1">{
+                message = "It's a Draw!"
+        }</span> else<span class="cov8" title="1"> {
+                return false
+        }</span>
+        <span class="cov8" title="1">b.ShowMessage(message, "Tic Tac Toe")
+        c.isGameOver = true
+        // The web Board represents availability for the whole game.
+        b.Enabled = false
+        return true</span>
+}
+
+// checkWin = CheckWin: interleaved row/column checks, then diagonals.
+func (c *MinimaxAIController) checkWin(player byte) bool <span class="cov8" title="1">{
+        for i := 0; i &lt; 3; i++ </span><span class="cov8" title="1">{
+                if c.board[i][0] == player &amp;&amp; c.board[i][1] == player &amp;&amp; c.board[i][2] == player </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+                <span class="cov8" title="1">if c.board[0][i] == player &amp;&amp; c.board[1][i] == player &amp;&amp; c.board[2][i] == player </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">if c.board[0][0] == player &amp;&amp; c.board[1][1] == player &amp;&amp; c.board[2][2] == player </span><span class="cov8" title="1">{
+                return true
+        }</span>
+        <span class="cov8" title="1">if c.board[0][2] == player &amp;&amp; c.board[1][1] == player &amp;&amp; c.board[2][0] == player </span><span class="cov8" title="1">{
+                return true
+        }</span>
+        <span class="cov8" title="1">return false</span>
+}
+
+// isBoardFull = IsBoardFull.
+func (c *MinimaxAIController) isBoardFull() bool <span class="cov8" title="1">{
+        for i := 0; i &lt; 3; i++ </span><span class="cov8" title="1">{
+                for j := 0; j &lt; 3; j++ </span><span class="cov8" title="1">{
+                        if c.board[i][j] == minimaxEmpty </span><span class="cov8" title="1">{
+                                return false
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">return true</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package game
+
+import "math/rand"
+
+// UnbeatableAIController — UnbeatableAI (Grupo 3, ítem 1: Go). Responsable: Germán Cáceres.
+//
+// Port 1:1 de la versión oficial del profesor:
+//
+//        Material/Tic-Tac-Toe-Game-Windows-Professor/Tic-Tac-Toe-Versión-IA-Fuerte/
+//        WinAppTicTacToe/WinAppTicTacToe/UnbeatableAIController.cs
+//
+// NO cambiar la lógica: mismos pesos en mArrayMoves (usuario=1, JCC=3,
+// vacío=0), mismo orden de reglas del método numérico heurístico y mismos
+// movimientos aleatorios. Ver "UNIDAD I/Material/Caso 1..3 TTT.pdf".
+type UnbeatableAIController struct {
+        currentPlayerFlag Player    // mCurrentPlayerFlag
+        MoveCount         int       // mMoveCount
+        CurrentGameState  GameState // mCurrentGameState
+        BoardState        [9]Player // mBoardState
+        heuristicSum      int       // mHeuristicSum: se conserva entre turnos, igual que en el original
+        ArrayMoves        [9]int    // mArrayMoves (máquina de estados finitos: 0/1/3)
+}
+
+// NewUnbeatableAIController = constructor sin parámetros.
+func NewUnbeatableAIController() *UnbeatableAIController <span class="cov8" title="1">{
+        c := &amp;UnbeatableAIController{}
+        c.InitializeGameData()
+        return c
+}</span>
+
+// Flag devuelve "X" u "O" según a quién le toca (propiedad Flag del original).
+func (c *UnbeatableAIController) Flag() string <span class="cov0" title="0">{ return FlagForPlayer(c.currentPlayerFlag) }</span>
+
+// Weights cumple la interfaz Controller (expone mArrayMoves al frontend).
+func (c *UnbeatableAIController) Weights() [9]int <span class="cov0" title="0">{ return c.ArrayMoves }</span>
+
+// InitializeGameData reinicia todos los datos del juego.
+func (c *UnbeatableAIController) InitializeGameData() <span class="cov8" title="1">{
+        c.ArrayMoves = [9]int{}
+        c.BoardState = [9]Player{}
+        c.currentPlayerFlag = PlayerUser // el usuario (X) empieza
+        c.MoveCount = 0
+        c.CurrentGameState = Active
+        c.heuristicSum = 0
+}</span>
+
+// InitializeData cumple la interfaz Controller.
+func (c *UnbeatableAIController) InitializeData() <span class="cov8" title="1">{ c.InitializeGameData() }</span>
+
+// InitializeControls borra el texto de los botones y habilita el tablero.
+func (c *UnbeatableAIController) InitializeControls(b *Board) <span class="cov8" title="1">{
+        b.ClearTexts()
+        c.EnableControls(b)
+}</span>
+
+func (c *UnbeatableAIController) DisableControls(b *Board) <span class="cov8" title="1">{ b.Enabled = false }</span>
+func (c *UnbeatableAIController) EnableControls(b *Board)  <span class="cov8" title="1">{ b.Enabled = true }</span>
+
+// CheckWinner revisa las 8 líneas en orden y luego el empate (9 jugadas).
+func (c *UnbeatableAIController) CheckWinner(b *Board) GameState <span class="cov8" title="1">{
+        for _, line := range WinningLines </span><span class="cov8" title="1">{
+                cell1 := c.BoardState[line[0]]
+                cell2 := c.BoardState[line[1]]
+                cell3 := c.BoardState[line[2]]
+                if cell1 != PlayerNone &amp;&amp; cell1 == cell2 &amp;&amp; cell2 == cell3 </span><span class="cov8" title="1">{
+                        b.ShowMessage("¡Ganó "+FlagForPlayer(cell1)+"!", "Resultado")
+                        c.DisableControls(b)
+                        return GameOver
+                }</span>
+        }
+        <span class="cov8" title="1">if c.MoveCount == 9 </span><span class="cov8" title="1">{
+                b.ShowMessage("¡Empate!", "Resultado")
+                c.DisableControls(b)
+                return GameOver
+        }</span>
+        <span class="cov8" title="1">return Active</span>
+}
+
+func (c *UnbeatableAIController) showUserMove(b *Board, index int) <span class="cov8" title="1">{
+        b.SetText(index, FlagForPlayer(PlayerUser), "user")
+        c.BoardState[index] = PlayerUser
+        c.MoveCount++
+        c.currentPlayerFlag = PlayerNPC
+        c.ArrayMoves[index] = 1
+}</span>
+
+// PlayUser: solo si la casilla está vacía y el juego activo; true si se jugó.
+func (c *UnbeatableAIController) PlayUser(b *Board, index int) bool <span class="cov8" title="1">{
+        if b.Buttons[index] == "" &amp;&amp; c.CurrentGameState == Active </span><span class="cov8" title="1">{
+                if c.currentPlayerFlag == PlayerUser </span><span class="cov8" title="1">{
+                        c.showUserMove(b, index)
+                        c.CurrentGameState = c.CheckWinner(b)
+                        return true
+                }</span>
+        }
+        <span class="cov0" title="0">return false</span>
+}
+
+func (c *UnbeatableAIController) generateRandomNPCMove() int <span class="cov8" title="1">{
+        for </span><span class="cov8" title="1">{
+                index := rand.Intn(9) // Random.Next(0, 9)
+                if c.ArrayMoves[index] == 0 &amp;&amp; index &lt; len(c.ArrayMoves) </span><span class="cov8" title="1">{
+                        return index
+                }</span>
+        }
+}
+
+func (c *UnbeatableAIController) showNPCMove(b *Board, index int) <span class="cov8" title="1">{
+        b.SetText(index, FlagForPlayer(PlayerNPC), "npc")
+        c.BoardState[index] = PlayerNPC
+        c.MoveCount++
+        c.currentPlayerFlag = PlayerUser
+        c.ArrayMoves[index] = 3
+}</span>
+
+// pick devuelve el primer casillero vacío de la línea (a, b, d) en ese orden.
+// Equivale a: if (m[a]==0) index=a; else if (m[b]==0) index=b; else if (m[d]==0) index=d;
+func (c *UnbeatableAIController) pick(a, b, d int) int <span class="cov8" title="1">{
+        index := 0
+        if c.ArrayMoves[a] == 0 </span><span class="cov8" title="1">{
+                index = a
+        }</span> else<span class="cov8" title="1"> if c.ArrayMoves[b] == 0 </span><span class="cov8" title="1">{
+                index = b
+        }</span> else<span class="cov8" title="1"> if c.ArrayMoves[d] == 0 </span><span class="cov8" title="1">{
+                index = d
+        }</span>
+        <span class="cov8" title="1">c.heuristicSum = c.ArrayMoves[a] + c.ArrayMoves[b] + c.ArrayMoves[d]
+        return index</span>
+}
+
+func (c *UnbeatableAIController) heuristicNumericalMethod() int <span class="cov8" title="1">{
+        m := &amp;c.ArrayMoves
+        switch </span>{
+        // Suma 6 -&gt; la JCC tiene dos fichas en línea: GANA (Caso 2)
+        case m[0]+m[1]+m[2] == 6:<span class="cov8" title="1">
+                return c.pick(0, 1, 2)</span>
+        case m[3]+m[4]+m[5] == 6:<span class="cov8" title="1">
+                return c.pick(3, 4, 5)</span>
+        case m[6]+m[7]+m[8] == 6:<span class="cov8" title="1">
+                return c.pick(6, 7, 8)</span>
+        case m[0]+m[3]+m[6] == 6:<span class="cov8" title="1">
+                return c.pick(0, 3, 6)</span>
+        case m[1]+m[4]+m[7] == 6:<span class="cov8" title="1">
+                return c.pick(1, 4, 7)</span>
+        case m[2]+m[5]+m[8] == 6:<span class="cov8" title="1">
+                return c.pick(2, 5, 8)</span>
+        case m[0]+m[4]+m[8] == 6:<span class="cov8" title="1">
+                return c.pick(0, 4, 8)</span>
+        case m[2]+m[4]+m[6] == 6:<span class="cov8" title="1">
+                return c.pick(2, 4, 6)</span>
+
+        // Suma 2 -&gt; el usuario tiene dos fichas en línea: BLOQUEA (Caso 1)
+        case m[0]+m[1]+m[2] == 2:<span class="cov8" title="1">
+                return c.pick(0, 1, 2)</span>
+        case m[3]+m[4]+m[5] == 2:<span class="cov8" title="1">
+                return c.pick(3, 4, 5)</span>
+        case m[6]+m[7]+m[8] == 2:<span class="cov8" title="1">
+                return c.pick(6, 7, 8)</span>
+        case m[0]+m[3]+m[6] == 2:<span class="cov8" title="1">
+                return c.pick(0, 3, 6)</span>
+        case m[1]+m[4]+m[7] == 2:<span class="cov8" title="1">
+                return c.pick(1, 4, 7)</span>
+        case m[2]+m[5]+m[8] == 2:<span class="cov8" title="1">
+                return c.pick(2, 5, 8)</span>
+        case m[0]+m[4]+m[8] == 2:<span class="cov8" title="1">
+                return c.pick(0, 4, 8)</span>
+        case m[2]+m[4]+m[6] == 2:<span class="cov8" title="1">
+                return c.pick(2, 4, 6)</span>
+
+        // Suma 5 en diagonal -&gt; caso trivial: bloqueo en las diagonales (Caso 3)
+        case m[0]+m[4]+m[8] == 5:<span class="cov8" title="1">
+                var index int
+                if m[2] == 0 </span><span class="cov8" title="1">{
+                        index = 2
+                }</span> else<span class="cov8" title="1"> if m[6] == 0 </span><span class="cov0" title="0">{
+                        index = 6
+                }</span> else<span class="cov8" title="1"> {
+                        index = c.generateRandomNPCMove()
+                }</span>
+                <span class="cov8" title="1">c.heuristicSum = 5
+                return index</span>
+        case m[2]+m[4]+m[6] == 5:<span class="cov8" title="1">
+                var index int
+                if m[0] == 0 </span><span class="cov8" title="1">{
+                        index = 0
+                }</span> else<span class="cov0" title="0"> if m[8] == 0 </span><span class="cov0" title="0">{
+                        index = 8
+                }</span> else<span class="cov0" title="0"> {
+                        index = c.generateRandomNPCMove()
+                }</span>
+                <span class="cov8" title="1">c.heuristicSum = 5
+                return index</span>
+
+        // Usuario en dos lados adyacentes -&gt; ocupar la esquina entre ellos
+        case m[1]+m[3] == 2 &amp;&amp; m[0] == 0:<span class="cov8" title="1">
+                c.heuristicSum = 2
+                return CornerIndices[0]</span>
+        case m[1]+m[5] == 2 &amp;&amp; m[2] == 0:<span class="cov8" title="1">
+                c.heuristicSum = 2
+                return CornerIndices[1]</span>
+        case m[3]+m[7] == 2 &amp;&amp; m[6] == 0:<span class="cov8" title="1">
+                c.heuristicSum = 2
+                return CornerIndices[2]</span>
+        case m[5]+m[7] == 2 &amp;&amp; m[8] == 0:<span class="cov8" title="1">
+                c.heuristicSum = 2
+                return CornerIndices[3]</span>
+
+        default:<span class="cov8" title="1">
+                return c.generateRandomNPCMove()</span>
+        }
+}
+
+// randomFreeAmong repite Random.Next(0, 9) hasta caer en un casillero libre
+// que pertenezca a allowed, igual que los do/while del original.
+//
+// Única diferencia con el original: si no queda NINGÚN casillero libre de ese
+// grupo, el original se queda en un bucle infinito (la ventana se congela).
+// En un servidor eso bloquearía la petición para siempre, así que en ese caso
+// devolvemos ok=false y el llamador sigue con la jugada heurística.
+// frozenCases cuenta cuántas veces el original se habría congelado (lo usan las pruebas).
+var frozenCases int
+
+func (c *UnbeatableAIController) randomFreeAmong(allowed ...int) (int, bool) <span class="cov8" title="1">{
+        anyFree := false
+        for _, a := range allowed </span><span class="cov8" title="1">{
+                if c.ArrayMoves[a] == 0 </span><span class="cov8" title="1">{
+                        anyFree = true
+                        break</span>
+                }
+        }
+        <span class="cov8" title="1">if !anyFree </span><span class="cov0" title="0">{
+                frozenCases++
+                return 0, false
+        }</span>
+        <span class="cov8" title="1">for </span><span class="cov8" title="1">{
+                index := rand.Intn(9)
+                if c.ArrayMoves[index] != 0 </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                <span class="cov8" title="1">for _, a := range allowed </span><span class="cov8" title="1">{
+                        if index == a </span><span class="cov8" title="1">{
+                                return index, true
+                        }</span>
+                }
+        }
+}
+
+// PlayNPC orquesta el turno de la JCC.
+func (c *UnbeatableAIController) PlayNPC(b *Board) <span class="cov8" title="1">{
+        if c.CurrentGameState != Active </span><span class="cov8" title="1">{
+                return
+        }</span>
+
+        <span class="cov8" title="1">if c.MoveCount == 1 </span><span class="cov8" title="1">{
+                // Primera jugada de la JCC: centro si está libre...
+                if c.ArrayMoves[4] == 0 </span><span class="cov8" title="1">{
+                        c.showNPCMove(b, CenterIndex)
+                        c.CurrentGameState = c.CheckWinner(b)
+                        return
+                }</span>
+                // ...si no, una esquina aleatoria.
+                <span class="cov8" title="1">index, _ := c.randomFreeAmong(CornerIndices[0], CornerIndices[1], CornerIndices[2], CornerIndices[3])
+                c.showNPCMove(b, index)
+                c.CurrentGameState = c.CheckWinner(b)
+                return</span>
+        }
+
+        <span class="cov8" title="1">if c.ArrayMoves[4] == 0 </span><span class="cov0" title="0">{
+                c.showNPCMove(b, CenterIndex)
+                c.CurrentGameState = c.CheckWinner(b)
+                return
+        }</span>
+
+        <span class="cov8" title="1">index := c.heuristicNumericalMethod()
+        if c.ArrayMoves[4] == 3 &amp;&amp; c.heuristicSum == 5 </span><span class="cov8" title="1">{
+                // JCC en el centro y el usuario en esquinas opuestas -&gt; un lado aleatorio.
+                // Tal como en el original, la condición compara SIDE_INDICES[0] dos veces
+                // (index == SIDE_INDICES[0] || index == SIDE_INDICES[0] || ...[2] || ...[3]),
+                // así que el lado 3 (SIDE_INDICES[1]) nunca se elige aquí.
+                if side, ok := c.randomFreeAmong(SideIndices[0], SideIndices[0], SideIndices[2], SideIndices[3]); ok </span><span class="cov8" title="1">{
+                        c.showNPCMove(b, side)
+                        c.CurrentGameState = c.CheckWinner(b)
+                        return
+                }</span>
+        }
+        <span class="cov8" title="1">c.showNPCMove(b, index)
+        c.CurrentGameState = c.CheckWinner(b)</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
