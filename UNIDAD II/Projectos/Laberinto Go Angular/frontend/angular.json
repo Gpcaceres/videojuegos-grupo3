@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "projects": {
+    "laberinto": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/laberinto",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "polyfills": [
+              "zone.js"
+            ],
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "src/styles.css"
+            ]
+          }
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "buildTarget": "laberinto:build"
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": "cfae29b4-b23c-4f6b-bc47-58fa31761273"
+  }
+}

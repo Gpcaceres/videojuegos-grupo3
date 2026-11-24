@@ -1,0 +1,9 @@
+{
+  "name": "laberinto-javascript",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Laberinto original migrado a JavaScript puro con interfaz arcade",
+  "scripts": {
+    "test": "node --test tests/parity.test.cjs"
+  }
+}
